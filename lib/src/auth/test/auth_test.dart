@@ -130,6 +130,7 @@ void main() {
         expect(token, equals(testData.expectedToken));
         var tokenInfo = Auth.parseToken(token: token);
         expect(tokenInfo.accessKey, equals(auth.accessKey));
+        expect(tokenInfo.putPolicy, equals(null));
       });
     });
 
@@ -150,6 +151,7 @@ void main() {
         expect(token, equals(testData.expectedToken));
         var tokenInfo = Auth.parseToken(token: token);
         expect(tokenInfo.accessKey, equals(auth.accessKey));
+        expect(tokenInfo.putPolicy, equals(null));
       });
     });
   });
