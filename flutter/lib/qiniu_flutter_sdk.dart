@@ -1,6 +1,6 @@
 library flutter_sdk;
 
-import 'package:qiniu_sdk_base/sdk_base.dart';
+import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
 
 /// A Calculator.
 class Calculator {
