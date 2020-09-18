@@ -17,7 +17,7 @@ class PutPolicy {
 
   /// 获取 Bucket。
   /// 
-  /// 从 scope 中获取 Bucket。
+  /// 从 [scope] 中获取 Bucket。
   String getBucket() {
     return scope.split(':').first;
   }
