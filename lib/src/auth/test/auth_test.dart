@@ -39,13 +39,13 @@ class ManageTokenTestData {
 }
 
 void main() {
-  group('A test group of auth', () {
+  group('Auth', () {
     var auth = Auth(
       accessKey: 'iN7NgwM31j4-BZacMjPrOQBs34UG1maYCAQmhdCV',
       secretKey: '6QTOr2Jg1gcZEWDQXKOGZh5PziC2MCV5KsntT70j',
     );
 
-    test('Test generate upload token and parseToken should all well', () {
+    test('GenerateUploadToken and parseToken should all well', () {
       var testDataTable = <UploadTokenTestData>[
         UploadTokenTestData(
           PutPolicy(
@@ -92,7 +92,7 @@ void main() {
       });
     });
 
-    test('Test generate download token and parseToken should all well', () {
+    test('GenerateDownloadToken and parseToken should all well', () {
       var testDataTable = <DownloadTokenTestData>[
         DownloadTokenTestData(
           'testFileName',
@@ -134,7 +134,7 @@ void main() {
       });
     });
 
-    test('Test generate manage token and parseToken should all well', () {
+    test('GenerateAccessToken and parseToken should all well', () {
       var testDataTable = <ManageTokenTestData>[
         ManageTokenTestData(
           utf8.encode('POST /move/test\nHost: rs.qiniu.com\n\n'),
@@ -147,7 +147,7 @@ void main() {
       ];
 
       testDataTable.forEach((testData) {
-        var token = auth.generateManageToken(bytes: testData.bytes);
+        var token = auth.generateAccessToken(bytes: testData.bytes);
         expect(token, equals(testData.expectedToken));
         var tokenInfo = Auth.parseToken(token: token);
         expect(tokenInfo.accessKey, equals(auth.accessKey));

@@ -9,21 +9,26 @@ class TokenInfo {
   const TokenInfo(this.accessKey, this.putPolicy);
 }
 
-/// 提供用于鉴权的相关功能
+/// 提供用于鉴权的相关功能。
 ///
-/// 安全机制文档 ref https://developer.qiniu.com/kodo/manual/1644/security
+/// 安全机制文档请参阅
+///
+/// https://developer.qiniu.com/kodo/manual/1644/security
 class Auth {
-  /// 鉴权所需的 [AccessKey]
+  /// 鉴权所需的 [accessKey]。
   ///
   /// 如何生成以及查看请参阅：
+  ///
   /// http://developer.qiniu.com/article/developer/security/index.html
+  ///
   /// 使用须知请查看：
+  ///
   /// https://developer.qiniu.com/kodo/kb/1334/the-access-key-secret-key-encryption-key-safe-use-instructions
   final String accessKey;
 
-  /// 鉴权所需的 [SecretKey]
+  /// 鉴权所需的 [secretKey]。
   ///
-  /// 如何生成以及查看、使用等请参阅 [AccessKey] 的说明
+  /// 如何生成以及查看、使用等请参阅 [accessKey] 的说明
   final String secretKey;
 
   const Auth({
@@ -32,7 +37,7 @@ class Auth {
   })  : assert(accessKey != null),
         assert(secretKey != null);
 
-  /// 根据上传策略生成上传使用的 Token
+  /// 根据上传策略生成上传使用的 Token。
   ///
   /// 具体的上传策略说明请参考 [PutPolicy] 模块
   String generateUploadToken({
@@ -42,11 +47,11 @@ class Auth {
 
     var data = jsonEncode(putPolicy);
     var encodedPutPolicy = base64Encode(utf8.encode(data));
-    var baseToken = generateManageToken(bytes: utf8.encode(encodedPutPolicy));
-    return '${baseToken}:${encodedPutPolicy}';
+    var baseToken = generateAccessToken(bytes: utf8.encode(encodedPutPolicy));
+    return '$baseToken:$encodedPutPolicy';
   }
 
-  /// 生成针对私有空间资源的下载 Token
+  /// 生成针对私有空间资源的下载 Token。
   ///
   /// [key] 为对象的名称
   /// [deadline] 有效时间，单位为秒，例如 1451491200
@@ -60,25 +65,25 @@ class Auth {
     assert(deadline != null);
     assert(bucketDomain != null);
 
-    var downloadURL = '${bucketDomain}/${key}?e=${deadline}';
-    return generateManageToken(bytes: utf8.encode(downloadURL));
+    var downloadURL = '$bucketDomain/$key?e=$deadline';
+    return generateAccessToken(bytes: utf8.encode(downloadURL));
   }
 
-  /// 生成管理 Token（用于接口的访问鉴权）
+  /// 根据数据签名，生成 Token（用于接口的访问鉴权）。
   ///
   /// 访问七牛的接口需要对请求进行签名, 该方法提供 Token 签发服务
-  String generateManageToken({@required List<int> bytes}) {
+  String generateAccessToken({@required List<int> bytes}) {
     assert(bytes != null);
     var hmacEncoder = Hmac(sha1, utf8.encode(secretKey));
 
     var sign = hmacEncoder.convert(bytes);
     var encodedSign = Base64Encoder.urlSafe().convert(sign.bytes);
-    return '${accessKey}:${encodedSign}';
+    return '$accessKey:$encodedSign';
   }
 
-  /// 解析 token 信息
+  /// 解析 token 信息。
   ///
-  /// 从 Token 字符串中解析 AccessKey、PutPolicy 信息
+  /// 从 Token 字符串中解析 [accessKey]、[PutPolicy] 信息
   static TokenInfo parseToken({@required String token}) {
     assert(token != null && token != '');
     var segments = token.split(':');
@@ -89,9 +94,23 @@ class Auth {
     PutPolicy putPolicy;
     var accessKey = segments.first;
 
-    /// 具体的 token 信息可以参考这里 https://github.com/qbox/product/blob/master/kodo/auths/UpToken.md#admin-uptoken-authorization
+    /// 具体的 token 信息可以参考这里。
+    ///
+    /// https://github.com/qbox/product/blob/master/kodo/auths/UpToken.md#admin-uptoken-authorization
     if (segments.length >= 3) {
-      putPolicy = PutPolicy.fromJson(segments.last);
+      if (segments.last == null || segments.last == '') {
+        throw ArgumentError('invalid token');
+      }
+
+      putPolicy = PutPolicy.fromJson(
+        jsonDecode(
+          String.fromCharCodes(
+            base64.decode(
+              segments.last,
+            ),
+          ),
+        ),
+      );
     }
 
     return TokenInfo(accessKey, putPolicy);

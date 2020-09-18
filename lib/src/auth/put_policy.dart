@@ -1,9 +1,10 @@
-import 'dart:convert';
 import 'package:meta/meta.dart';
 
 /// 上传策略
 ///
-/// 关于具体信息查看 https://developer.qiniu.com/kodo/manual/1206/put-policy
+/// 关于具体信息查看
+///
+///  https://developer.qiniu.com/kodo/manual/1206/put-policy
 class PutPolicy {
   /// 指定上传的目标资源空间 Bucket 和资源键 Key（最大为 750 字节）。
   ///
@@ -44,8 +45,13 @@ class PutPolicy {
   /// [returnBody] 声明服务端的响应格式。
   ///
   /// 可以使用 <魔法变量> 和 <自定义变量>，必须是合法的 JSON 地址，
-  /// 关于 <魔法变量> 请参阅：https://developer.qiniu.com/kodo/manual/1235/vars#magicvar
-  /// 关于 <自定义变量> 请参阅： https://developer.qiniu.com/kodo/manual/1235/vars#xvar
+  /// 关于 <魔法变量> 请参阅：
+  ///
+  /// https://developer.qiniu.com/kodo/manual/1235/vars#magicvar
+  ///
+  /// 关于 <自定义变量> 请参阅：
+  ///
+  ///  https://developer.qiniu.com/kodo/manual/1235/vars#xvar
   final String returnBody;
 
   /// 上传成功后，七牛云向业务服务器发送 POST 请求的 URL。
@@ -74,8 +80,11 @@ class PutPolicy {
   /// 每个指令是一个 API 规格字符串，多个指令用 ; 分隔，
   /// 可以使用 <魔法变量> 和 <自定义变量>，
   /// 具体信息可以查看文档：
+  ///
   /// https://developer.qiniu.com/kodo/manual/1206/put-policy#persistentOps
+  ///
   /// 示例：
+  ///
   /// https://developer.qiniu.com/kodo/manual/1206/put-policy#demo
   final String persistentOps;
 
@@ -153,66 +162,54 @@ class PutPolicy {
         assert(deadline != null);
 
   Map<String, dynamic> toJson() {
-    final map = <String, dynamic>{};
-
-    // TODO: 放到 utils 里面去
-    void appendNotNull(String key, dynamic value) {
-      if (value != null) {
-        map[key] = value;
-      }
-    }
-
-    appendNotNull('scope', scope);
-    appendNotNull('isPrefixalScope', isPrefixalScope);
-    appendNotNull('deadline', deadline);
-    appendNotNull('insertOnly', insertOnly);
-    appendNotNull('endUser', endUser);
-    appendNotNull('returnUrl', returnUrl);
-    appendNotNull('returnBody', returnBody);
-    appendNotNull('callbackUrl', callbackUrl);
-    appendNotNull('callbackHost', callbackHost);
-    appendNotNull('callbackBody', callbackBody);
-    appendNotNull('callbackBodyType', callbackBodyType);
-    appendNotNull('persistentOps', persistentOps);
-    appendNotNull('persistentNotifyUrl', persistentNotifyUrl);
-    appendNotNull('persistentPipeline', persistentPipeline);
-    appendNotNull('forceSaveKey', forceSaveKey);
-    appendNotNull('saveKey', saveKey);
-    appendNotNull('fsizeMin', fsizeMin);
-    appendNotNull('fsizeLimit', fsizeLimit);
-    appendNotNull('detectMime', detectMime);
-    appendNotNull('mimeLimit', mimeLimit);
-    appendNotNull('fileType', fileType);
-
-    return map;
+    return <String, dynamic>{
+      'scope': scope,
+      'isPrefixalScope': isPrefixalScope,
+      'deadline': deadline,
+      'insertOnly': insertOnly,
+      'endUser': endUser,
+      'returnUrl': returnUrl,
+      'returnBody': returnBody,
+      'callbackUrl': callbackUrl,
+      'callbackHost': callbackHost,
+      'callbackBody': callbackBody,
+      'callbackBodyType': callbackBodyType,
+      'persistentOps': persistentOps,
+      'persistentNotifyUrl': persistentNotifyUrl,
+      'persistentPipeline': persistentPipeline,
+      'forceSaveKey': forceSaveKey,
+      'saveKey': saveKey,
+      'fsizeMin': fsizeMin,
+      'fsizeLimit': fsizeLimit,
+      'detectMime': detectMime,
+      'mimeLimit': mimeLimit,
+      'fileType': fileType,
+    }..removeWhere((key, value) => value == null);
   }
 
-  static PutPolicy fromJson(String string) {
-    assert(string != null && string != '');
-    var decodedString = String.fromCharCodes(base64.decode(string));
-    var propertyMap = jsonDecode(decodedString);
+  static PutPolicy fromJson(Map<String, dynamic> json) {
     return PutPolicy(
-      scope: propertyMap['scope'] as String,
-      deadline: propertyMap['deadline'] as int,
-      isPrefixalScope: propertyMap['isPrefixalScope'] as int,
-      insertOnly: propertyMap['insertOnly'] as int,
-      endUser: propertyMap['endUser'] as String,
-      returnUrl: propertyMap['returnUrl'] as String,
-      returnBody: propertyMap['returnBody'] as String,
-      callbackUrl: propertyMap['callbackUrl'] as String,
-      callbackHost: propertyMap['callbackHost'] as String,
-      callbackBody: propertyMap['callbackBody'] as String,
-      callbackBodyType: propertyMap['callbackBodyType'] as String,
-      persistentOps: propertyMap['persistentOps'] as String,
-      persistentNotifyUrl: propertyMap['persistentNotifyUrl'] as String,
-      persistentPipeline: propertyMap['persistentPipeline'] as String,
-      forceSaveKey: propertyMap['forceSaveKey'] as String,
-      saveKey: propertyMap['saveKey'] as String,
-      fsizeMin: propertyMap['fsizeMin'] as int,
-      fsizeLimit: propertyMap['fsizeLimit'] as int,
-      detectMime: propertyMap['detectMime'] as int,
-      mimeLimit: propertyMap['mimeLimit'] as String,
-      fileType: propertyMap['fileType'] as int,
+      scope: json['scope'] as String,
+      deadline: json['deadline'] as int,
+      isPrefixalScope: json['isPrefixalScope'] as int,
+      insertOnly: json['insertOnly'] as int,
+      endUser: json['endUser'] as String,
+      returnUrl: json['returnUrl'] as String,
+      returnBody: json['returnBody'] as String,
+      callbackUrl: json['callbackUrl'] as String,
+      callbackHost: json['callbackHost'] as String,
+      callbackBody: json['callbackBody'] as String,
+      callbackBodyType: json['callbackBodyType'] as String,
+      persistentOps: json['persistentOps'] as String,
+      persistentNotifyUrl: json['persistentNotifyUrl'] as String,
+      persistentPipeline: json['persistentPipeline'] as String,
+      forceSaveKey: json['forceSaveKey'] as String,
+      saveKey: json['saveKey'] as String,
+      fsizeMin: json['fsizeMin'] as int,
+      fsizeLimit: json['fsizeLimit'] as int,
+      detectMime: json['detectMime'] as int,
+      mimeLimit: json['mimeLimit'] as String,
+      fileType: json['fileType'] as int,
     );
   }
 }
