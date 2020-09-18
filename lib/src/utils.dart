@@ -1,24 +1,30 @@
-import 'dart:convert';
+import 'auth/auth.dart';
+import 'config.dart';
+import 'storage.dart';
 
-class PutPolicy {
-  String ak;
-  String bucket;
+typedef Listener = void Function();
 
-  PutPolicy({this.ak, this.bucket});
+mixin ListenersMixin {
+  List<Listener> listener = [];
+
+  void listen(Listener listener);
+
+  void unlisten(Listener listener);
+
+  void notifyListeners();
 }
 
-PutPolicy getPutPolicy(String token) {
-  final segments = token.split(':');
-  // token 构造的差异参考：https://github.com/qbox/product/blob/master/kodo/auths/UpToken.md#admin-uptoken-authorization
-  final ak = segments.length > 3 ? segments[1] : segments[0];
-  // {"scope":"xxx","deadline":1600280416}
-  Map data = jsonDecode((urlSafeBase64Decode(segments[segments.length - 1])));
+/// 根据 [token] 获取其中的 Bucket 对应的 Region 的上传地址
+Future<String> getHostByToken(String token,
+    [Protocol protocol = Protocol.Http]) async {
+  final tokenInfo = Auth.parseToken(token);
+  final url = protocol.value +
+      '://api.qiniu.com/v2/query?ak=' +
+      tokenInfo.accessKey +
+      '&bucket=' +
+      tokenInfo.putPolicy.getBucket();
 
-  return PutPolicy(ak: ak, bucket: data['scope'].split(':')[0]);
-}
+  final res = await http.get(url);
 
-String urlSafeBase64Decode(String url) {
-  final _url = url.replaceAll(RegExp('_'), '/').replaceAll(RegExp('-'), '+');
-
-  return String.fromCharCodes(base64.decode(_url));
+  return protocol.value + '://' + res.data['up']['acc']['main'][0];
 }

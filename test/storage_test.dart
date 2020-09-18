@@ -15,7 +15,7 @@ void main() {
         File(Directory.current.path + '/test/test.txt'),
         options: PutOptions(key: 'test.txt'));
     try {
-      final response = await put.task;
+      final response = await put.toFuture();
       expect(response.data['key'], 'test.txt');
     } catch (err) {
       print(err.response);

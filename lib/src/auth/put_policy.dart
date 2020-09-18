@@ -4,7 +4,7 @@ import 'package:meta/meta.dart';
 ///
 /// 关于具体信息查看
 ///
-///  https://developer.qiniu.com/kodo/manual/1206/put-policy
+/// https://developer.qiniu.com/kodo/manual/1206/put-policy
 class PutPolicy {
   /// 指定上传的目标资源空间 Bucket 和资源键 Key（最大为 750 字节）。
   ///
@@ -16,7 +16,7 @@ class PutPolicy {
   final String scope;
 
   /// 获取 Bucket。
-  /// 
+  ///
   /// 从 [scope] 中获取 Bucket。
   String getBucket() {
     return scope.split(':').first;
@@ -169,7 +169,7 @@ class PutPolicy {
         assert(deadline != null);
 
   Map<String, dynamic> toJson() {
-    return <String, dynamic>{
+    return {
       'scope': scope,
       'isPrefixalScope': isPrefixalScope,
       'deadline': deadline,
@@ -194,29 +194,29 @@ class PutPolicy {
     }..removeWhere((key, value) => value == null);
   }
 
-  static PutPolicy fromJson(Map<String, dynamic> json) {
+  factory PutPolicy.fromJson(Map<String, dynamic> json) {
     return PutPolicy(
-      scope: json['scope'] as String,
-      deadline: json['deadline'] as int,
-      isPrefixalScope: json['isPrefixalScope'] as int,
-      insertOnly: json['insertOnly'] as int,
-      endUser: json['endUser'] as String,
-      returnUrl: json['returnUrl'] as String,
-      returnBody: json['returnBody'] as String,
-      callbackUrl: json['callbackUrl'] as String,
-      callbackHost: json['callbackHost'] as String,
-      callbackBody: json['callbackBody'] as String,
-      callbackBodyType: json['callbackBodyType'] as String,
-      persistentOps: json['persistentOps'] as String,
-      persistentNotifyUrl: json['persistentNotifyUrl'] as String,
-      persistentPipeline: json['persistentPipeline'] as String,
-      forceSaveKey: json['forceSaveKey'] as String,
-      saveKey: json['saveKey'] as String,
-      fsizeMin: json['fsizeMin'] as int,
-      fsizeLimit: json['fsizeLimit'] as int,
-      detectMime: json['detectMime'] as int,
-      mimeLimit: json['mimeLimit'] as String,
-      fileType: json['fileType'] as int,
+      scope: json['scope'],
+      deadline: json['deadline'],
+      isPrefixalScope: json['isPrefixalScope'],
+      insertOnly: json['insertOnly'],
+      endUser: json['endUser'],
+      returnUrl: json['returnUrl'],
+      returnBody: json['returnBody'],
+      callbackUrl: json['callbackUrl'],
+      callbackHost: json['callbackHost'],
+      callbackBody: json['callbackBody'],
+      callbackBodyType: json['callbackBodyType'],
+      persistentOps: json['persistentOps'],
+      persistentNotifyUrl: json['persistentNotifyUrl'],
+      persistentPipeline: json['persistentPipeline'],
+      forceSaveKey: json['forceSaveKey'],
+      saveKey: json['saveKey'],
+      fsizeMin: json['fsizeMin'],
+      fsizeLimit: json['fsizeLimit'],
+      detectMime: json['detectMime'],
+      mimeLimit: json['mimeLimit'],
+      fileType: json['fileType'],
     );
   }
 }

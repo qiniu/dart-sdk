@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
 
 import 'config.dart';
+import 'task/task.dart';
 
 final http = Dio();
 
@@ -26,11 +27,14 @@ class Storage {
     });
 
     final cancelToken = CancelToken();
-    
     final host = await _regionProvider.getHostByToken(token, _upprotocol);
-    // TODO 进度
-    final task = http.post(host, data: formData, cancelToken: cancelToken);
-    final put = Put<Response<T>>(cancelToken: cancelToken, task: task);
+    final singleTask = SingleTask.create((cancelToken, progressReceiver) =>
+        http.post(host,
+            data: formData,
+            cancelToken: cancelToken,
+            onSendProgress: progressReceiver));
+
+    final put = Put<Response<T>>(cancelToken: cancelToken, task: singleTask);
 
     return put;
   }
@@ -62,8 +66,6 @@ class PutOptions {
   PutOptions({this.token, this.key, this.crc32, this.limit, this.accept});
 }
 
-class PutTask {}
-
 enum PutStatus { Processing, Done, Canceled }
 
 typedef PutStatusListener = void Function(PutStatus status);
@@ -89,9 +91,13 @@ mixin PutStatusListenersMixin {
 /// Storage 的 put 方法返回的控制器
 class Put<T> with PutStatusListenersMixin {
   final CancelToken _cancelToken;
-  final Future<T> task;
+  final AbstractRequestTask task;
 
   Put({this.task, cancelToken}) : _cancelToken = cancelToken;
+
+  Future<T> toFuture() {
+    return task.toFuture();
+  }
 
   /// stop and clean cache
   void stop() {

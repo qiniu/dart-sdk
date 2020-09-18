@@ -77,14 +77,14 @@ class Auth {
     var hmacEncoder = Hmac(sha1, utf8.encode(secretKey));
 
     var sign = hmacEncoder.convert(bytes);
-    var encodedSign = Base64Encoder.urlSafe().convert(sign.bytes);
+    var encodedSign = base64Url.encode(sign.bytes);
     return '$accessKey:$encodedSign';
   }
 
   /// 解析 token 信息。
   ///
   /// 从 Token 字符串中解析 [accessKey]、[PutPolicy] 信息
-  static TokenInfo parseToken({@required String token}) {
+  static TokenInfo parseToken(String token) {
     assert(token != null && token != '');
     var segments = token.split(':');
     if (segments.length < 2) {

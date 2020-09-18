@@ -1,7 +1,7 @@
 import 'dart:convert';
 
+import 'package:qiniu_sdk_base/src/auth/auth.dart';
 import 'package:test/test.dart';
-import 'package:qiniu_sdk_base/sdk_base.dart';
 import 'package:qiniu_sdk_base/src/auth/put_policy.dart';
 
 class UploadTokenTestData {
@@ -82,7 +82,7 @@ void main() {
         var token = auth.generateUploadToken(putPolicy: testData.putPolicy);
         expect(token, equals(testData.expectedToken));
 
-        var tokenInfo = Auth.parseToken(token: token);
+        var tokenInfo = Auth.parseToken(token);
         expect(tokenInfo.accessKey, equals(auth.accessKey));
 
         expect(
@@ -128,7 +128,7 @@ void main() {
         );
 
         expect(token, equals(testData.expectedToken));
-        var tokenInfo = Auth.parseToken(token: token);
+        var tokenInfo = Auth.parseToken(token);
         expect(tokenInfo.accessKey, equals(auth.accessKey));
         expect(tokenInfo.putPolicy, equals(null));
       });
@@ -149,7 +149,7 @@ void main() {
       testDataTable.forEach((testData) {
         var token = auth.generateAccessToken(bytes: testData.bytes);
         expect(token, equals(testData.expectedToken));
-        var tokenInfo = Auth.parseToken(token: token);
+        var tokenInfo = Auth.parseToken(token);
         expect(tokenInfo.accessKey, equals(auth.accessKey));
         expect(tokenInfo.putPolicy, equals(null));
       });

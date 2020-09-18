@@ -8,9 +8,6 @@ environment:
 
 dependencies:
   dio: ^3.0.10
-  meta: ^1.2.3
-
-dependencies:
   crypto: ^2.1.5
   meta: ^1.2.3
 

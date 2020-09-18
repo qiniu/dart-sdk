@@ -1,11 +1,11 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 
 import '../storage.dart';
-import '../utils.dart';
 
-/// 创建块的返回体
+/// initParts 的返回体
 class InitParts {
   String uploadId;
   String expireAt;
@@ -17,7 +17,7 @@ class InitParts {
   }
 }
 
-/// 上传块的返回体
+/// uploadParts 的返回体
 class UploadParts {
   String etag;
   String md5;
@@ -29,6 +29,19 @@ class UploadParts {
   }
 }
 
+/// completeParts 需要的区块信息
+class Part {
+  String etag;
+  int partNumber;
+
+  Part({this.etag, this.partNumber});
+
+  factory Part.fromJson(Map json) {
+    return Part(etag: json['map'], partNumber: json['partNumber']);
+  }
+}
+
+/// completeParts 的返回体
 class CompleteParts {
   /// 资源内容的 SHA1 值
   String hash;
@@ -56,7 +69,7 @@ class UploadPartsApi {
   Future<InitParts> initParts({String bucket, String key}) async {
     try {
       final response = await http.post(
-          '$host/buckets/$bucket/objects/${urlSafeBase64Decode(key)}/uploads',
+          '$host/buckets/$bucket/objects/${base64Url.decode(key)}/uploads',
           options: Options(headers: {
             'Content-Length': 0,
             'Authorization': 'UpToken $token'
@@ -95,19 +108,14 @@ class UploadPartsApi {
       {String bucket,
       String key,
       String uploadId,
-      String etag,
-      int partNumber,
-      Uint8List bytes}) async {
+      List<Part> parts,
+      int fileLength}) async {
     try {
       final response = await http.post(
           '$host/buckets/$bucket/objects/$key/uploads/$uploadId',
-          data: {
-            'parts': [
-              {'etag': etag, 'partNumber': partNumber}
-            ]
-          },
+          data: {'parts': parts},
           options: Options(headers: {
-            'Content-Length': bytes.lengthInBytes,
+            'Content-Length': fileLength,
             'Authorization': 'UpToken $token'
           }));
 

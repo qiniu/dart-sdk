@@ -1,6 +1,3 @@
-import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
-import 'package:qiniu_sdk_base/src/utils.dart';
-
 abstract class AbstractRegionProvider<T> {
   String getHostByRegion(T region);
 
@@ -15,17 +12,8 @@ class RegionProvider extends AbstractRegionProvider<Region> {
 
   @override
   Future<String> getHostByToken(String token,
-      [Protocol protocol = Protocol.Http]) async {
-    final putPolicy = getPutPolicy(token);
-    final url = protocol.value +
-        '://api.qiniu.com/v2/query?ak=' +
-        putPolicy.ak +
-        '&bucket=' +
-        putPolicy.bucket;
-
-    final res = await http.get(url);
-
-    return protocol.value + '://' + res.data['up']['acc']['main'][0];
+      [Protocol protocol = Protocol.Http]) {
+    return getHostByToken(token, protocol);
   }
 }
 
