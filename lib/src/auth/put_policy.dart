@@ -15,6 +15,13 @@ class PutPolicy {
   /// 具体信息一定请查看上述的上传策略文档！
   final String scope;
 
+  /// 获取 Bucket。
+  /// 
+  /// 从 scope 中获取 Bucket。
+  String getBucket() {
+    return scope.split(':').first;
+  }
+
   /// 若为 1，表示允许用户上传以 [scope] 的 KeyPrefix 为前缀的文件。
   final int isPrefixalScope;
 
