@@ -1,3 +1,7 @@
+import 'package:dio/dio.dart';
+
+import 'auth/auth.dart';
+
 abstract class AbstractRegionProvider<T> {
   String getHostByRegion(T region);
 
@@ -5,6 +9,7 @@ abstract class AbstractRegionProvider<T> {
 }
 
 class RegionProvider extends AbstractRegionProvider<Region> {
+  final http = Dio();
   @override
   String getHostByRegion(region) {
     return Protocol.Https.value + '://' + region.host;
@@ -12,8 +17,17 @@ class RegionProvider extends AbstractRegionProvider<Region> {
 
   @override
   Future<String> getHostByToken(String token,
-      [Protocol protocol = Protocol.Http]) {
-    return getHostByToken(token, protocol);
+      [Protocol protocol = Protocol.Http]) async {
+    final tokenInfo = Auth.parseToken(token);
+    final url = protocol.value +
+        '://api.qiniu.com/v2/query?ak=' +
+        tokenInfo.accessKey +
+        '&bucket=' +
+        tokenInfo.putPolicy.getBucket();
+
+    final res = await http.get(url);
+
+    return protocol.value + '://' + res.data['up']['acc']['main'][0];
   }
 }
 

@@ -1,42 +1,35 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
+import 'package:qiniu_sdk_base/src/task/task_manager.dart';
 
 import 'config.dart';
 import 'task/task.dart';
-
-final http = Dio();
+import 'task/put_task.dart';
 
 /// 客户端
 class Storage {
-  final String _token;
-  final AbstractRegionProvider _regionProvider;
-  final Protocol _upprotocol;
+  RequestTaskManager taskManager;
 
-  Storage({token, regionProvider, upprotocol})
-      : _regionProvider = RegionProvider(),
-        _token = token,
-        _upprotocol = upprotocol;
+  Storage(
+      {String token,
+      Protocol upprotocol,
+      AbstractRegionProvider regionProvider})
+      : taskManager = RequestTaskManager(
+            token: token,
+            upprotocol: upprotocol,
+            regionProvider: regionProvider ?? RegionProvider());
 
-  Future<Put<Response<T>>> put<T>(File file, {PutOptions options}) async {
-    final token = options?.token ?? _token;
-    final formData = FormData.fromMap({
-      'token': token,
-      'key': options?.key,
-      'file': await MultipartFile.fromFile(file.path)
-    });
+  PutTask<T> put<T>(File file, {PutOptions options}) {
+    final token = options?.token;
+    final key = options?.key;
+    final accept = options?.accept;
+    final crc32 = options?.crc32;
 
-    final cancelToken = CancelToken();
-    final host = await _regionProvider.getHostByToken(token, _upprotocol);
-    final singleTask = SingleTask.create((cancelToken, progressReceiver) =>
-        http.post(host,
-            data: formData,
-            cancelToken: cancelToken,
-            onSendProgress: progressReceiver));
+    final task = PutTask<T>(
+        token: token, key: key, file: file, accept: accept, crc32: crc32);
 
-    final put = Put<Response<T>>(cancelToken: cancelToken, task: singleTask);
-
-    return put;
+    return taskManager.addTask(task);
   }
 
   // 分片上传
@@ -66,44 +59,43 @@ class PutOptions {
   PutOptions({this.token, this.key, this.crc32, this.limit, this.accept});
 }
 
-enum PutStatus { Processing, Done, Canceled }
+// enum PutStatus { Processing, Done, Canceled }
 
-typedef PutStatusListener = void Function(PutStatus status);
+// typedef PutStatusListener = void Function(PutStatus status);
 
-mixin PutStatusListenersMixin {
-  final List<PutStatusListener> _statusListeners = [];
+// mixin PutStatusListenersMixin {
+//   final List<PutStatusListener> _statusListeners = [];
 
-  void addStatusListener(PutStatusListener listener) {
-    _statusListeners.add(listener);
-  }
+//   void addStatusListener(PutStatusListener listener) {
+//     _statusListeners.add(listener);
+//   }
 
-  void removeStatusListener(PutStatusListener listener) {
-    _statusListeners.remove(listener);
-  }
+//   void removeStatusListener(PutStatusListener listener) {
+//     _statusListeners.remove(listener);
+//   }
 
-  void notifyStatusListeners(PutStatus status) {
-    for (final listener in _statusListeners) {
-      listener(status);
-    }
-  }
-}
+//   void notifyStatusListeners(PutStatus status) {
+//     for (final listener in _statusListeners) {
+//       listener(status);
+//     }
+//   }
+// }
 
 /// Storage 的 put 方法返回的控制器
-class Put<T> with PutStatusListenersMixin {
-  final CancelToken _cancelToken;
+class Put<T> {
   final AbstractRequestTask task;
 
-  Put({this.task, cancelToken}) : _cancelToken = cancelToken;
+  Put({this.task});
 
   Future<T> toFuture() {
     return task.toFuture();
   }
 
-  /// stop and clean cache
-  void stop() {
-    _cancelToken.cancel();
-    notifyStatusListeners(PutStatus.Processing);
-  }
+  listen(void Function(Response<T>) onSuccess) {
+    final unlistenReceiveListener = task.onReceive(onSuccess);
 
-  PutStatus _status = PutStatus.Processing;
+    return () {
+      unlistenReceiveListener();
+    };
+  }
 }
