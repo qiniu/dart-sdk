@@ -28,11 +28,11 @@ class DownloadTokenTestData {
   );
 }
 
-class ManageTokenTestData {
+class AccessTokenTestData {
   final List<int> bytes;
   final String expectedToken;
 
-  ManageTokenTestData(
+  AccessTokenTestData(
     this.bytes,
     this.expectedToken,
   );
@@ -68,6 +68,15 @@ void main() {
             returnBody: '{"key": \$(key)}',
           ),
           'iN7NgwM31j4-BZacMjPrOQBs34UG1maYCAQmhdCV:eoB_J567JC0ihTlAIlPC40ypH1s=:eyJzY29wZSI6InRlc3RCdWNrZXQiLCJkZWFkbGluZSI6MTYwMDAwMDAwMCwicmV0dXJuQm9keSI6IntcImtleVwiOiAkKGtleSl9In0=',
+        ),
+        UploadTokenTestData(
+          PutPolicy(
+            scope: 'testBucket',
+            deadline: 1600000000,
+            returnBody: '{"key": \$(key)}',
+            callbackUrl: 'http://test.qiniu.com'
+          ),
+          'iN7NgwM31j4-BZacMjPrOQBs34UG1maYCAQmhdCV:noK7jkMNZbw-padaaHy71buHpy8=:eyJzY29wZSI6InRlc3RCdWNrZXQiLCJkZWFkbGluZSI6MTYwMDAwMDAwMCwicmV0dXJuQm9keSI6IntcImtleVwiOiAkKGtleSl9IiwiY2FsbGJhY2tVcmwiOiJodHRwOi8vdGVzdC5xaW5pdS5jb20ifQ==',
         ),
         UploadTokenTestData(
           PutPolicy(
@@ -135,12 +144,12 @@ void main() {
     });
 
     test('GenerateAccessToken and parseToken should all well', () {
-      var testDataTable = <ManageTokenTestData>[
-        ManageTokenTestData(
+      var testDataTable = <AccessTokenTestData>[
+        AccessTokenTestData(
           utf8.encode('POST /move/test\nHost: rs.qiniu.com\n\n'),
           'iN7NgwM31j4-BZacMjPrOQBs34UG1maYCAQmhdCV:-m6mplPX8YzlVQ-NE08BqHvFC-Y=',
         ),
-        ManageTokenTestData(
+        AccessTokenTestData(
           utf8.encode(''),
           'iN7NgwM31j4-BZacMjPrOQBs34UG1maYCAQmhdCV:6RuDjSaXfS6YN6FjMLgjOHRbQ2I=',
         ),
