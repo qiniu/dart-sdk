@@ -1,169 +1,163 @@
 import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
+import 'package:qiniu_sdk_base/src/config/config.dart';
 
-import '../config.dart';
-import '../utils.dart';
+import 'task_manager.dart';
+import 'abstract_task.dart';
 
 typedef ProgressListener = void Function(int sent, int total);
 
 mixin ProgressListenersMixin {
   final List<ProgressListener> progressListeners = [];
 
-  void listenProgress(ProgressListener listener);
+  void listenProgress(ProgressListener listener) {
+    progressListeners.add(listener);
+  }
 
-  void unlistenProgress(ProgressListener listener);
+  void unlistenProgress(ProgressListener listener) {
+    progressListeners.remove(listener);
+  }
 
-  void notifyProgressListeners(int sent, int total);
+  void notifyProgressListeners(int sent, int total) {
+    for (final listener in progressListeners) {
+      listener(sent, total);
+    }
+  }
 }
 
-typedef TaskListener<T> = void Function(void Function(T data) onData,
-    {Function onError, void Function() onDone, bool cancelOnError});
+mixin CancelableTaskMixin {
+  /// 取消任务
+  void cancel();
 
-mixin TaskListenersMixin {
-  List<TaskListener> taskListener = [];
-
-  void listenTask(TaskListener listener);
-
-  void unlistenTask(TaskListener listener);
-
-  void notifyTaskListeners(dynamic value);
+  /// 恢复取消的任务，继续执行
+  ///
+  /// 如果当前任务没有被取消则无法恢复，建议使用 [TaskManager.restartTask]
+  void resume();
 }
 
-class RequestTaskConfig {
-  RegionProvider regionProvider;
-  String token;
-  Protocol upprotocol;
+enum RequestStatus { None, Request, Done, Cancel, Error }
 
-  RequestTaskConfig({this.regionProvider, this.token, this.upprotocol});
+typedef RequestStatusListener = void Function(RequestStatus status);
+
+mixin RequestStatusMixin {
+  RequestStatus status = RequestStatus.None;
+
+  final List<RequestStatusListener> _statusListeners = [];
+
+  void addStatusListener(RequestStatusListener listener) {
+    _statusListeners.add(listener);
+  }
+
+  void removeStatusListener(RequestStatus listener) {
+    _statusListeners.remove(listener);
+  }
+
+  void notifyStatusListeners(RequestStatus status) {
+    for (final listener in _statusListeners) {
+      listener(status);
+    }
+  }
 }
 
-typedef ReceiveListener<T> = void Function(Response<T>)
+typedef ReceiveListener<T> = void Function(T);
+typedef CancelListener = void Function(DioError);
+typedef ErrorListener = void Function(dynamic);
 
-abstract class AbstractRequestTask<T> with ProgressListenersMixin {
+abstract class AbstractRequestTask<T> extends AbstractTask<T>
+    with ProgressListenersMixin, CancelableTaskMixin, RequestStatusMixin {
   final Dio client = Dio();
-  final cancelToken = CancelToken();
+  final _cancelToken = CancelToken();
 
-  /// TaskManager 那边实现
-  RequestTaskConfig config;
+  /// [RequestTaskManager.addRequestTask] 会初始化这个
+  Config config;
+  RequestTaskManager manager;
 
-  Future request;
+  final List<ReceiveListener<T>> _receiveListeners = [];
 
-  final List<ReceiveListener<T>> _reseiveListeners = [];
-  void Function(ReceiveListener<T>) onReceive(ReceiveListener<T> listener) {
-    _reseiveListeners.add(listener);
+  @mustCallSuper
+  void onReceive(ReceiveListener<T> listener) {
+    _receiveListeners.add(listener);
   }
 
-  void Function(DioError) onError;
+  final List<ErrorListener> _errorListeners = [];
 
-  void Function() onDone;
+  void onError(ErrorListener listener) {
+    _errorListeners.add(listener);
+  }
 
-  void Function() onCancel;
+  final List<CancelListener> _cancelListeners = [];
 
-  Future createRequest();
+  @mustCallSuper
+  void onCancel(CancelListener listener) {
+    _cancelListeners.add(listener);
+  }
 
+  /// 取消任务，子类可以覆盖此方法实现自己的逻辑
+  @override
   void cancel() {
-    cancelToken.cancel();
-  }
-
-  @mustCallSuper
-  void preStart() {
-    client.interceptors.add(InterceptorsWrapper(onError: (error) {
-      postError(error);
-    }, onResponse: (response) {
-      postReceive(response);
-      postComplete();
-    }));
-  }
-
-  @mustCallSuper
-  void postReceive(Response<T> data) {
-    for (final listener in _reseiveListeners) {
-      listener(data);
+    if (status != RequestStatus.Request) {
+      throw UnsupportedError(
+          'cancel method can not be call before request havnt be posted. ');
+    }
+    if (!_cancelToken.isCancelled) {
+      _cancelToken.cancel();
     }
   }
 
-  @mustCallSuper
-  void postComplete() {
-    onDone?.call();
+  @override
+  void resume() {
+    if (_cancelToken.isCancelled) {
+      manager.restartTask(this);
+    }
   }
 
+  @override
   @mustCallSuper
-  void postCancel() {
-    /// TODO
-    onCancel?.call();
+  void preStart() {
+    super.preStart();
+    client.interceptors.add(InterceptorsWrapper(onRequest: (options) {
+      status = RequestStatus.Request;
+      notifyStatusListeners(status);
+      options.cancelToken = _cancelToken;
+      options.onSendProgress = notifyProgressListeners;
+
+      return options;
+    }));
   }
 
+  @override
   @mustCallSuper
-  void postError(DioError error) {
-    onError?.call(error);
+  void postReceive(T data) {
+    status = RequestStatus.Done;
+    for (final listener in _receiveListeners) {
+      listener(data);
+    }
+    manager.removeTask(this);
+    super.postReceive(data);
+  }
+
+  /// [creatTask] 被取消后触发
+  @mustCallSuper
+  void postCancel(DioError error) {
+    status = RequestStatus.Cancel;
+    notifyStatusListeners(status);
+    for (final listener in _cancelListeners) {
+      listener(error);
+    }
+  }
+
+  @override
+  @mustCallSuper
+  void postError(error) {
+    if (error is DioError && error.type == DioErrorType.CANCEL) {
+      postCancel(error);
+    } else {
+      status = RequestStatus.Error;
+      notifyStatusListeners(status);
+      for (final listener in _errorListeners) {
+        listener(error);
+      }
+    }
+    super.postError(error);
   }
 }
-
-// class SingleTask<T> extends AbstractRequestTask with ListenersMixin {
-//   CancelToken _cancelToken;
-//   void Function(int sent, int total) progressReceiver;
-//   final Dio http = Dio();
-
-//   SingleTask({CancelToken cancelToken}) : _cancelToken = cancelToken;
-
-//   factory SingleTask.create(
-//       dynamic Function(CancelToken cancelToken,
-//               void Function(int sent, int total) progressReceiver)
-//           runnable) {
-//     final cancelToken = CancelToken();
-//     final task = SingleTask(cancelToken: cancelToken);
-//     final progressReceiver = (int sent, int total) {
-//       task.notifyProgressListeners(sent, total);
-//     };
-//     final request = runnable(cancelToken, progressReceiver).catchError((e) {
-//       print(e);
-//     });
-//     task.request = request;
-
-//     return task;
-//   }
-
-//   @override
-//   Future<T> toFuture() {
-//     return _request;
-//   }
-
-//   void cancel() {
-//     _cancelToken.cancel();
-//   }
-
-//   @override
-//   void listenProgress(ProgressListener listener) {
-//     _progressListeners.add(listener);
-//   }
-
-//   @override
-//   void unlistenProgress(ProgressListener listener) {
-//     _progressListeners.remove(listener);
-//   }
-
-//   @override
-//   void notifyProgressListeners(int sent, int total) {
-//     for (final listener in _progressListeners) {
-//       listener(sent, total);
-//     }
-//   }
-
-//   @override
-//   void listen(listener) {
-//     // TODO: implement listen
-//   }
-
-//   @override
-//   void notifyListeners() {
-//     // TODO: implement notifyListeners
-//   }
-
-//   @override
-//   void unlisten(listener) {
-//     // TODO: implement unlisten
-//   }
-
-//   @override
-//   void run() {}
-// }

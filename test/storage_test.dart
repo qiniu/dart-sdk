@@ -1,30 +1,105 @@
 import 'dart:io';
 
+import 'package:dio/dio.dart';
+import 'package:qiniu_sdk_base/src/config/config.dart';
+import 'package:qiniu_sdk_base/src/task/put_parts_task.dart';
+import 'package:qiniu_sdk_base/src/storage.dart';
+import 'package:qiniu_sdk_base/src/task/task.dart';
+
+@Timeout(Duration(seconds: 100))
 import 'package:test/test.dart';
 
-import 'package:qiniu_sdk_base/src/storage.dart';
-
-import 'token.dart';
+import 'config.dart';
 
 void main() {
-  final storage = Storage(token: token);
+  configEnv();
+
+  Storage storage;
+  setUpAll(() {
+    storage = Storage(token: token);
+  });
 
   test('put should works well.', () async {
-    final putTask = storage.put(File(Directory.current.path + '/test/test.txt'),
-        options: PutOptions(key: 'test.txt'));
+    final putTask = storage.put(File('test_resource/test_for_put.txt'),
+        options: PutOptions(key: 'test_for_put.txt'));
     try {
-      final response = await putTask.request;
-      expect(response.data['key'], 'test.txt');
+      final response = await putTask.toFuture();
+      expect(response.key, 'test_for_put.txt');
     } catch (err) {
-      print(err.response);
+      print(err);
     }
   });
 
   test('put can be canceled.', () async {
-    final putTask = await storage.put(
-        File(Directory.current.path + '/test/test.txt'),
-        options: PutOptions(key: 'test.txt'));
+    final putTask = storage.put(File('test_resource/test_for_put.txt'),
+        options: PutOptions(
+          key: 'test_for_put.txt',
+          region: Region.Z0,
+        ));
 
-    putTask.cancel();
+    try {
+      Future.delayed(Duration(milliseconds: 1), () {
+        putTask.cancel();
+      });
+      final response = await putTask.toFuture();
+      expect(response.key, 'test_for_put.txt');
+    } catch (err) {
+      expect(err, isA<DioError>());
+      expect(err.type, DioErrorType.CANCEL);
+    }
+  });
+
+  test('putParts should works well.', () async {
+    final putPartsTask = storage.putParts(
+        File('test_resource/test_for_put_parts.mp4'),
+        options: PutPartsOptions(
+            key: 'test_for_put_parts.mp4', region: Region.Z0, chunkSize: 1));
+    try {
+      final response = await putPartsTask.toFuture();
+      expect(response, isA<CompleteParts>());
+    } catch (err) {
+      if (err is DioError) {
+        print(err.response);
+        return;
+      }
+      print(err);
+    }
+  });
+
+  test('putParts can be canceld.', () async {
+    final putPartsTask = storage.putParts(
+        File('test_resource/test_for_put_parts.mp4'),
+        options: PutPartsOptions(
+            key: 'test_for_put_parts.mp4', region: Region.Z0, chunkSize: 1));
+    putPartsTask.addStatusListener((status) {
+      if (status == RequestStatus.Request) {
+        putPartsTask.cancel();
+      }
+    });
+    try {
+      final response = await putPartsTask.toFuture();
+      print(response);
+    } catch (err) {
+      expect(err, isA<DioError>());
+    }
+  });
+
+  test('putParts can be resumed.', () async {
+    final putPartsTask = storage.putParts(
+        File('test_resource/test_for_put_parts.mp4'),
+        options: PutPartsOptions(
+            key: 'test_for_put_parts.mp4', region: Region.Z0, chunkSize: 1));
+    try {
+      Future.delayed(Duration(milliseconds: 1), () {
+        putPartsTask.cancel();
+      });
+      await putPartsTask.toFuture();
+    } catch (err) {
+      expect(err, isA<DioError>());
+      expect(err.type, DioErrorType.CANCEL);
+    }
+    putPartsTask.resume();
+    final response = await putPartsTask.toFuture();
+    expect(response, isA<CompleteParts>());
   });
 }

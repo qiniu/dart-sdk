@@ -3,6 +3,8 @@ import 'package:meta/meta.dart';
 import 'package:crypto/crypto.dart';
 import './put_policy.dart';
 
+export 'put_policy.dart';
+
 class TokenInfo {
   final String accessKey;
   final PutPolicy putPolicy;

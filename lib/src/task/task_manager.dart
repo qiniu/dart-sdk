@@ -1,26 +1,46 @@
-import 'package:qiniu_sdk_base/src/config.dart';
-import 'package:qiniu_sdk_base/src/task/task.dart';
+import 'package:meta/meta.dart';
+import 'package:qiniu_sdk_base/src/config/config.dart';
+import 'abstract_task.dart';
+import 'task.dart';
 
-class RequestTaskManager {
-  final List<AbstractRequestTask> tasks = [];
+class TaskManager<T extends AbstractTask> {
+  @protected
+  final List<AbstractTask> workingTasks = [];
 
-  final RequestTaskConfig config;
-
-  RequestTaskManager(
-      {RegionProvider regionProvider, String token, Protocol upprotocol})
-      : config = RequestTaskConfig(
-            regionProvider: regionProvider,
-            token: token,
-            upprotocol: upprotocol);
-
-  T addTask<T extends AbstractRequestTask>(T task) {
-    tasks.add(task);
-    task.config = config;
+  /// 添加一个 [AbstractTask]
+  ///
+  /// 被添加的 [task] 会被立即执行 [createTask]
+  @mustCallSuper
+  T addTask(T task) {
+    workingTasks.add(task);
     task.preStart();
-    task.request = task.createRequest();
+    task.createTask().then(task.postReceive).catchError(task.postError);
+    task.postStart();
 
     return task;
   }
 
-  void cancel() {}
+  @mustCallSuper
+  void removeTask(T task) {
+    workingTasks.remove(task);
+  }
+
+  @mustCallSuper
+  void restartTask(T task) {
+    task.preRestart();
+    task.createTask().then(task.postReceive).catchError(task.postError);
+    task.postRestart();
+  }
+}
+
+class RequestTaskManager<T extends AbstractRequestTask> extends TaskManager {
+  Config config;
+
+  RequestTaskManager({this.config});
+
+  T addRequestTask(T task) {
+    task.manager = this;
+    task.config = config;
+    return addTask(task);
+  }
 }
