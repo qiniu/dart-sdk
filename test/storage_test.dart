@@ -4,9 +4,8 @@ import 'package:dio/dio.dart';
 import 'package:qiniu_sdk_base/src/config/config.dart';
 import 'package:qiniu_sdk_base/src/task/put_parts_task.dart';
 import 'package:qiniu_sdk_base/src/storage.dart';
-import 'package:qiniu_sdk_base/src/task/task.dart';
 
-@Timeout(Duration(seconds: 100))
+@Timeout(const Duration(seconds: 60))
 import 'package:test/test.dart';
 
 import 'config.dart';
@@ -71,14 +70,9 @@ void main() {
         File('test_resource/test_for_put_parts.mp4'),
         options: PutPartsOptions(
             key: 'test_for_put_parts.mp4', region: Region.Z0, chunkSize: 1));
-    putPartsTask.addStatusListener((status) {
-      if (status == RequestStatus.Request) {
-        putPartsTask.cancel();
-      }
-    });
+    Future.delayed(Duration(milliseconds: 1), () => putPartsTask.cancel());
     try {
-      final response = await putPartsTask.toFuture();
-      print(response);
+      await putPartsTask.toFuture();
     } catch (err) {
       expect(err, isA<DioError>());
     }
@@ -88,17 +82,19 @@ void main() {
     final putPartsTask = storage.putParts(
         File('test_resource/test_for_put_parts.mp4'),
         options: PutPartsOptions(
-            key: 'test_for_put_parts.mp4', region: Region.Z0, chunkSize: 1));
+            key: 'test_for_put_parts.mp4', region: Region.Z0, chunkSize: 4));
+    Future.delayed(Duration(milliseconds: 1), () {
+      putPartsTask.cancel();
+    });
     try {
-      Future.delayed(Duration(milliseconds: 1), () {
-        putPartsTask.cancel();
-      });
       await putPartsTask.toFuture();
     } catch (err) {
       expect(err, isA<DioError>());
       expect(err.type, DioErrorType.CANCEL);
     }
-    putPartsTask.resume();
+    Future.delayed(Duration(milliseconds: 100), () {
+      putPartsTask.resume();
+    });
     final response = await putPartsTask.toFuture();
     expect(response, isA<CompleteParts>());
   });

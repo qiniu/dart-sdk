@@ -5,8 +5,6 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
 import 'package:qiniu_sdk_base/src/auth/auth.dart';
-import 'package:qiniu_sdk_base/src/task/task_manager.dart';
-import 'abstract_task.dart';
 import 'task.dart';
 
 /// initParts 的返回体
@@ -35,16 +33,10 @@ class InitPartsTask<T extends InitParts> extends AbstractRequestTask<T> {
   });
 
   @override
-  void preStart() {
-    super.preStart();
-    token = token ?? config.token;
-    bucket = Auth.parseToken(token).putPolicy.getBucket();
-  }
-
-  @override
   Future<T> createTask() async {
     final response = await client.post(
         '$host/buckets/$bucket/objects/${base64Url.encode(utf8.encode(key))}/uploads',
+        data: {},
         options: Options(
             headers: {'Content-Length': 0, 'Authorization': 'UpToken $token'}));
 
@@ -226,19 +218,19 @@ class UploadPartsTask<T extends List<Part>> extends AbstractRequestTask<T> {
         partNumber: __partNumber,
       );
 
-      task.onReceive((data) {
+      task.onReceive = (data) {
         _currentWorkingTasks.remove(task);
         _canceledTasks.remove(task);
         _parts.add(Part(partNumber: __partNumber, etag: data.etag));
-      });
+      };
 
-      task.onCancel((error) {
+      task.onCancel = (error) {
         _canceledTasks.add(task);
-      });
+      };
 
-      task.onError((error) {
+      task.onError = (error) {
         postError(error);
-      });
+      };
 
       manager.addRequestTask(task);
 
@@ -292,8 +284,19 @@ class PutPartsTask extends AbstractRequestTask<CompleteParts> {
   }
 
   @override
+  void postReceive(CompleteParts data) {
+    _currentWorkingTask = null;
+    super.postReceive(data);
+  }
+
+  @override
+  void cancel() {
+    _currentWorkingTask?.cancel();
+    super.cancel();
+  }
+
+  @override
   Future<CompleteParts> createTask() async {
-    await Future.delayed(Duration(seconds: 0));
     final com = Completer<CompleteParts>();
 
     final host = region != null
@@ -312,53 +315,58 @@ class PutPartsTask extends AbstractRequestTask<CompleteParts> {
   /// 初始化上传信息，分片上传的第一步
   void _createInitParts(void Function(CompleteParts) done,
       void Function(dynamic) error, String host) {
-    final task = InitPartsTask(
-      token: token,
-      host: host,
-      bucket: bucket,
-      key: key,
-    );
+    InitPartsTask task;
+    if (_currentWorkingTask is InitPartsTask) {
+      task = _currentWorkingTask;
+      task.resume();
+    } else {
+      task = InitPartsTask(
+        token: token,
+        host: host,
+        bucket: bucket,
+        key: key,
+      );
+      _currentWorkingTask = manager.addRequestTask(task);
+    }
 
-    task.onReceive((data) {
+    task.onReceive = (data) {
       uploadId = data.uploadId;
 
       _createUploadParts(done, error, host);
-    });
+    };
 
-    task.onCancel(error);
+    task.onCancel = error;
 
-    task.onError(error);
-
-    _currentWorkingTask = manager.addRequestTask(task);
-
-    status = RequestStatus.Request;
-    notifyStatusListeners(status);
+    task.onError = error;
   }
 
   void _createUploadParts(void Function(CompleteParts) done,
       void Function(dynamic) error, String host) {
-    final task = UploadPartsTask(
-      token: token,
-      host: host,
-      bucket: bucket,
-      key: key,
-      file: file,
-      chunkSize: chunkSize,
-      uploadId: uploadId,
-      maxPartsRequestNumber: maxPartsRequestNumber,
-    );
+    UploadPartsTask task;
+    if (_currentWorkingTask is UploadPartsTask) {
+      task = _currentWorkingTask;
+      task.resume();
+    } else {
+      task = UploadPartsTask(
+        token: token,
+        host: host,
+        bucket: bucket,
+        key: key,
+        file: file,
+        chunkSize: chunkSize,
+        uploadId: uploadId,
+        maxPartsRequestNumber: maxPartsRequestNumber,
+      );
+      _currentWorkingTask = manager.addRequestTask(task);
+    }
 
-    task.onReceive((data) {
+    task.onReceive = (data) {
       _createCompleteParts(done, error, data, host);
-    });
+    };
 
-    task.onCancel((err) {
-      error(err);
-    });
+    task.onCancel = error;
 
-    task.onError(error);
-
-    _currentWorkingTask = manager.addRequestTask(task);
+    task.onError = error;
   }
 
   /// 创建文件，分片上传的最后一步
@@ -368,39 +376,29 @@ class PutPartsTask extends AbstractRequestTask<CompleteParts> {
     List<Part> parts,
     String host,
   ) async {
-    final task = CompletePartsTask(
-      token: token,
-      host: host,
-      bucket: bucket,
-      key: key,
-      uploadId: uploadId,
-      parts: parts,
-    );
-
-    task.onReceive((response) {
+    CompletePartsTask task;
+    if (_currentWorkingTask is CompletePartsTask) {
+      task = _currentWorkingTask;
+      task.resume();
+    } else {
+      task = CompletePartsTask(
+        token: token,
+        host: host,
+        bucket: bucket,
+        key: key,
+        uploadId: uploadId,
+        parts: parts,
+      );
+      _currentWorkingTask = manager.addRequestTask(task);
+    }
+    task.onReceive = (response) {
       done(response);
-    });
+    };
 
-    task.onCancel(error);
+    task.onCancel = error;
 
-    task.onError(error);
-
-    _currentWorkingTask = manager.addRequestTask(task);
-  }
-
-  @override
-  void postReceive(CompleteParts data) {
-    _currentWorkingTask = null;
-    super.postReceive(data);
-  }
-
-  @override
-  void cancel() {
-    _currentWorkingTask?.cancel();
-  }
-
-  @override
-  void resume() {
-    _currentWorkingTask?.resume();
+    task.onError = (e) {
+      error(e);
+    };
   }
 }

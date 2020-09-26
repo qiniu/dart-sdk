@@ -47,7 +47,6 @@ class Storage {
   // 分片上传
   PutPartsTask putParts(File file, {PutPartsOptions options}) {
     final token = options?.token ?? _config.token;
-
     final task = PutPartsTask(
       token: token,
       key: options?.key,

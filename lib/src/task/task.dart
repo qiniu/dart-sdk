@@ -35,11 +35,26 @@ mixin CancelableTaskMixin {
   void resume();
 }
 
-enum RequestStatus { None, Request, Done, Cancel, Error }
+enum RequestStatus {
+  None,
+
+  /// 请求准备发出的时候触发
+  Request,
+
+  /// 请求完成后触发
+  Done,
+
+  /// 请求被取消后触发
+  Cancel,
+
+  /// 请求出错后触发
+  Error
+}
 
 typedef RequestStatusListener = void Function(RequestStatus status);
 
 mixin RequestStatusMixin {
+  @protected
   RequestStatus status = RequestStatus.None;
 
   final List<RequestStatusListener> _statusListeners = [];
@@ -59,54 +74,34 @@ mixin RequestStatusMixin {
   }
 }
 
-typedef ReceiveListener<T> = void Function(T);
-typedef CancelListener = void Function(DioError);
-typedef ErrorListener = void Function(dynamic);
-
 abstract class AbstractRequestTask<T> extends AbstractTask<T>
     with ProgressListenersMixin, CancelableTaskMixin, RequestStatusMixin {
   final Dio client = Dio();
-  final _cancelToken = CancelToken();
+  CancelToken _cancelToken = CancelToken();
 
   /// [RequestTaskManager.addRequestTask] 会初始化这个
   Config config;
   RequestTaskManager manager;
 
-  final List<ReceiveListener<T>> _receiveListeners = [];
+  void Function(T) onReceive;
+
+  void Function(dynamic) onError;
+
+  void Function(dynamic) onCancel;
 
   @mustCallSuper
-  void onReceive(ReceiveListener<T> listener) {
-    _receiveListeners.add(listener);
-  }
-
-  final List<ErrorListener> _errorListeners = [];
-
-  void onError(ErrorListener listener) {
-    _errorListeners.add(listener);
-  }
-
-  final List<CancelListener> _cancelListeners = [];
-
-  @mustCallSuper
-  void onCancel(CancelListener listener) {
-    _cancelListeners.add(listener);
-  }
-
-  /// 取消任务，子类可以覆盖此方法实现自己的逻辑
   @override
   void cancel() {
-    if (status != RequestStatus.Request) {
-      throw UnsupportedError(
-          'cancel method can not be call before request havnt be posted. ');
-    }
     if (!_cancelToken.isCancelled) {
       _cancelToken.cancel();
     }
   }
 
+  @mustCallSuper
   @override
   void resume() {
     if (_cancelToken.isCancelled) {
+      _cancelToken = CancelToken();
       manager.restartTask(this);
     }
   }
@@ -114,7 +109,6 @@ abstract class AbstractRequestTask<T> extends AbstractTask<T>
   @override
   @mustCallSuper
   void preStart() {
-    super.preStart();
     client.interceptors.add(InterceptorsWrapper(onRequest: (options) {
       status = RequestStatus.Request;
       notifyStatusListeners(status);
@@ -123,15 +117,14 @@ abstract class AbstractRequestTask<T> extends AbstractTask<T>
 
       return options;
     }));
+    super.preStart();
   }
 
   @override
   @mustCallSuper
   void postReceive(T data) {
     status = RequestStatus.Done;
-    for (final listener in _receiveListeners) {
-      listener(data);
-    }
+    onReceive?.call(data);
     manager.removeTask(this);
     super.postReceive(data);
   }
@@ -141,9 +134,7 @@ abstract class AbstractRequestTask<T> extends AbstractTask<T>
   void postCancel(DioError error) {
     status = RequestStatus.Cancel;
     notifyStatusListeners(status);
-    for (final listener in _cancelListeners) {
-      listener(error);
-    }
+    onCancel?.call(error);
   }
 
   @override
@@ -154,9 +145,7 @@ abstract class AbstractRequestTask<T> extends AbstractTask<T>
     } else {
       status = RequestStatus.Error;
       notifyStatusListeners(status);
-      for (final listener in _errorListeners) {
-        listener(error);
-      }
+      onError?.call(error);
     }
     super.postError(error);
   }

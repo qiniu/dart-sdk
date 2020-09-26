@@ -14,8 +14,12 @@ class TaskManager<T extends AbstractTask> {
   T addTask(T task) {
     workingTasks.add(task);
     task.preStart();
-    task.createTask().then(task.postReceive).catchError(task.postError);
-    task.postStart();
+
+    /// 把同步的任务改成异步，防止 [AbstractRequestTask.addStatusListener] 没有被触发
+    Future.delayed(Duration(milliseconds: 0), () {
+      task.createTask().then(task.postReceive).catchError(task.postError);
+      task.postStart();
+    });
 
     return task;
   }
@@ -28,8 +32,10 @@ class TaskManager<T extends AbstractTask> {
   @mustCallSuper
   void restartTask(T task) {
     task.preRestart();
-    task.createTask().then(task.postReceive).catchError(task.postError);
-    task.postRestart();
+    Future.delayed(Duration(milliseconds: 0), () {
+      task.createTask().then(task.postReceive).catchError(task.postError);
+      task.postRestart();
+    });
   }
 }
 
