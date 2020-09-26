@@ -48,7 +48,7 @@ class Auth {
     assert(putPolicy != null);
 
     var data = jsonEncode(putPolicy);
-    var encodedPutPolicy = base64Encode(utf8.encode(data));
+    var encodedPutPolicy = base64Url.encode(utf8.encode(data));
     var baseToken = generateAccessToken(bytes: utf8.encode(encodedPutPolicy));
     return '$baseToken:$encodedPutPolicy';
   }
@@ -100,14 +100,14 @@ class Auth {
     ///
     /// https://github.com/qbox/product/blob/master/kodo/auths/UpToken.md#admin-uptoken-authorization
     if (segments.length >= 3) {
-      if (segments.last == null || segments.last == '') {
+      if (segments.last == '') {
         throw ArgumentError('invalid token');
       }
 
       putPolicy = PutPolicy.fromJson(
         jsonDecode(
           String.fromCharCodes(
-            base64.decode(
+            base64Url.decode(
               segments.last,
             ),
           ),
