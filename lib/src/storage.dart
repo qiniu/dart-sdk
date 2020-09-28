@@ -53,7 +53,7 @@ class Storage {
       token: token,
       key: options?.key,
       file: file,
-      chunkSize: options?.chunkSize,
+      partSize: options?.partSize,
       region: options?.region,
       maxPartsRequestNumber: options?.maxPartsRequestNumber,
     );
@@ -73,9 +73,6 @@ class PutOptions {
   // 资源名。如果不传则后端自动生成
   String key;
 
-  /// 超过 4m 自动开启分片上传
-  int limit = 4 * 1024 * 1024;
-
   /// 上传内容的 crc32 校验码。如填入，则七牛服务器会使用此值进行内容检验。
   String crc32;
 
@@ -87,8 +84,7 @@ class PutOptions {
   /// 如果能提供此选项则无需发请求去后端根据 token 拿对应的区域
   dynamic region;
 
-  PutOptions(
-      {this.token, this.key, this.crc32, this.limit, this.accept, this.region});
+  PutOptions({this.token, this.key, this.crc32, this.accept, this.region});
 }
 
 class PutPartsOptions {
@@ -103,9 +99,9 @@ class PutPartsOptions {
 
   /// 切片大小
   ///
-  /// 超出 [chunkSize] 的文件大小会把每片按照 [chunkSize] 的大小切片并上传
-  /// 默认 4MB，最小不得小于 4
-  int chunkSize;
+  /// 超出 [partSize] 的文件大小会把每片按照 [partSize] 的大小切片并上传
+  /// 默认 4MB，最小不得小于 1
+  int partSize;
 
   /// 上传区域
   ///
@@ -117,16 +113,17 @@ class PutPartsOptions {
   /// 可选的有 [Protocol.Http] 和 [Protocol.Https]
   Protocol protocol;
 
-  PutPartsOptions(
-      {this.token,
-      this.key,
-      this.chunkSize = 4,
-      this.maxPartsRequestNumber = 5,
-      this.region,
-      this.protocol}) {
-    if (chunkSize < 1 || chunkSize > 1024) {
-      throw RangeError.range(chunkSize, 1, 1024, 'chunkSize',
-          'chunkSize must be greater than 1 and less than 1024');
+  PutPartsOptions({
+    this.token,
+    this.key,
+    this.partSize = 4,
+    this.maxPartsRequestNumber = 5,
+    this.region,
+    this.protocol,
+  }) {
+    if (partSize < 1 || partSize > 1024) {
+      throw RangeError.range(partSize, 1, 1024, 'partSize',
+          'partSize must be greater than 1 and less than 1024');
     }
   }
 }

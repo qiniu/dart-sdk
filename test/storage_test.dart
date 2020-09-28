@@ -64,7 +64,7 @@ void main() {
     final putPartsTask = storage.putParts(
         File('test_resource/test_for_put_parts.mp4'),
         options: PutPartsOptions(
-            key: 'test_for_put_parts.mp4', region: Region.Z0, chunkSize: 1));
+            key: 'test_for_put_parts.mp4', region: Region.Z0, partSize: 1));
     final response = await putPartsTask.future;
     expect(response, isA<CompleteParts>());
   });
@@ -73,7 +73,7 @@ void main() {
     final putPartsTask = storage.putParts(
         File('test_resource/test_for_put_parts.mp4'),
         options: PutPartsOptions(
-            key: 'test_for_put_parts.mp4', region: Region.Z0, chunkSize: 1));
+            key: 'test_for_put_parts.mp4', region: Region.Z0, partSize: 1));
     Future.delayed(Duration(milliseconds: 1), () => putPartsTask.cancel());
     try {
       await putPartsTask.future;
@@ -86,7 +86,7 @@ void main() {
     final putPartsTask = storage.putParts(
         File('test_resource/test_for_put_parts.mp4'),
         options: PutPartsOptions(
-            key: 'test_for_put_parts.mp4', region: Region.Z0, chunkSize: 1));
+            key: 'test_for_put_parts.mp4', region: Region.Z0, partSize: 1));
 
     Future.delayed(Duration(milliseconds: 1), () {
       putPartsTask.cancel();
@@ -101,7 +101,7 @@ void main() {
     final response = await storage
         .putParts(File('test_resource/test_for_put_parts.mp4'),
             options: PutPartsOptions(
-                key: 'test_for_put_parts.mp4', region: Region.Z0, chunkSize: 1))
+                key: 'test_for_put_parts.mp4', region: Region.Z0, partSize: 1))
         .future;
 
     expect(response, isA<CompleteParts>());
@@ -111,7 +111,7 @@ void main() {
     final putPartsTask = storage.putParts(
         File('test_resource/test_for_put_parts.mp4'),
         options: PutPartsOptions(
-            key: 'test_for_put_parts.mp4', region: Region.Z0, chunkSize: 1));
+            key: 'test_for_put_parts.mp4', region: Region.Z0, partSize: 1));
     int _sent, _total;
     putPartsTask.addProgressListener((sent, total) {
       _sent = sent;

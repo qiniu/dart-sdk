@@ -18,7 +18,7 @@ class PutPartsTask extends AbstractRequestTask<CompleteParts> {
   String key;
   String token;
   String bucket;
-  int chunkSize;
+  int partSize;
   dynamic region;
   int maxPartsRequestNumber;
   Protocol protocol;
@@ -27,7 +27,7 @@ class PutPartsTask extends AbstractRequestTask<CompleteParts> {
     this.key,
     this.file,
     this.token,
-    this.chunkSize,
+    this.partSize,
     this.region,
     this.maxPartsRequestNumber,
     this.protocol,
@@ -88,7 +88,7 @@ class PutPartsTask extends AbstractRequestTask<CompleteParts> {
       bucket: bucket,
       key: key,
       file: file,
-      chunkSize: chunkSize,
+      partSize: partSize,
       uploadId: uploadId,
       maxPartsRequestNumber: maxPartsRequestNumber,
     );

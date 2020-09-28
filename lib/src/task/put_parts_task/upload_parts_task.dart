@@ -20,16 +20,16 @@ class UploadPartsTask extends AbstractRequestTask<List<Part>> {
   File file;
   String bucket;
   String key;
-  int chunkSize;
+  int partSize;
   int maxPartsRequestNumber;
 
   /// 文件 bytes 长度
-  int _fileLength;
+  int _fileByteLength;
 
-  /// 每个上传区块的长度
+  /// 每个上传分片的字节长度
   ///
   /// 文件会按照此长度切片
-  int _partLength;
+  int _partByteLength;
 
   /// 上传成功后把 part 信息存起来
   final List<Part> _parts = [];
@@ -46,15 +46,15 @@ class UploadPartsTask extends AbstractRequestTask<List<Part>> {
   UploadPartsTask({
     this.token,
     this.host,
-    this.chunkSize,
+    this.partSize,
     this.uploadId,
     this.file,
     this.bucket,
     this.key,
     this.maxPartsRequestNumber,
   }) {
-    _fileLength = file.lengthSync();
-    _partLength = chunkSize * 1024 * 1024;
+    _fileByteLength = file.lengthSync();
+    _partByteLength = partSize * 1024 * 1024;
     _idleRequestNumber = maxPartsRequestNumber;
   }
 
@@ -73,7 +73,7 @@ class UploadPartsTask extends AbstractRequestTask<List<Part>> {
 
   void _uploadParts(void Function() done, void Function(dynamic) error) {
     /// 超出文件长度说明上传完毕，立即结束
-    if (_byteStartOffset >= _fileLength) {
+    if (_byteStartOffset >= _fileByteLength) {
       return;
     }
 
@@ -92,13 +92,13 @@ class UploadPartsTask extends AbstractRequestTask<List<Part>> {
       }
 
       /// 读文件终点偏移量
-      final byteEndOffset = _byteStartOffset + _partLength;
+      final byteEndOffset = _byteStartOffset + _partByteLength;
       final byteStream = file.openRead(_byteStartOffset, byteEndOffset);
 
       /// 上传分片(part)的字节大小
-      final _byteLength = byteEndOffset > _fileLength
-          ? _fileLength - _byteStartOffset
-          : _partLength;
+      final _byteLength = byteEndOffset > _fileByteLength
+          ? _fileByteLength - _byteStartOffset
+          : _partByteLength;
       _byteStartOffset += _byteLength;
       final partNumber = _partNumber;
 
@@ -121,7 +121,7 @@ class UploadPartsTask extends AbstractRequestTask<List<Part>> {
       task.future.then((data) {
         _idleRequestNumber++;
         _parts.add(Part(partNumber: partNumber, etag: data.etag));
-        if (_parts.length == (_fileLength / _partLength).ceil()) {
+        if (_parts.length == (_fileByteLength / _partByteLength).ceil()) {
           done();
         } else {
           _uploadParts(done, error);
@@ -129,7 +129,7 @@ class UploadPartsTask extends AbstractRequestTask<List<Part>> {
       }).catchError(error);
 
       manager.addRequestTask(task);
-    } while (_idleRequestNumber > 0 && _byteStartOffset < _fileLength);
+    } while (_idleRequestNumber > 0 && _byteStartOffset < _fileByteLength);
   }
 
   /// 已发送的数据记录，key 是 partNumber, value 是 已发送的长度
@@ -137,7 +137,7 @@ class UploadPartsTask extends AbstractRequestTask<List<Part>> {
 
   void notifyProgress() {
     final _sent = _sentMap.values.reduce((value, element) => value + element);
-    notifyProgressListeners(_sent, _fileLength);
+    notifyProgressListeners(_sent, _fileByteLength);
   }
 }
 
