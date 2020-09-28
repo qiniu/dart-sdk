@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
+import 'package:qiniu_sdk_base/src/config/config.dart';
 
 import 'abstract_request_task.dart';
 
@@ -23,11 +24,11 @@ class PutTask<T extends Put> extends AbstractRequestTask<T> {
   // 资源名。如果不传则后端自动生成
   String key;
 
-  /// 上传内容的 crc32 校验码。如填入，则七牛服务器会使用此值进行内容检验。
-  String crc32;
+  Protocol putprotocol;
 
-  /// 当 HTTP 请求指定 accept 头部时，七牛会返回 content-type 头部的值。该值用于兼容低版本 IE 浏览器行为。低版本 IE 浏览器在表单上传时，返回 application/json 表示下载，返回 text/plain 才会显示返回内容。
-  String accept;
+  /// 上传内容的 crc32 校验码。如填入，则七牛服务器会使用此值进行内容检验。
+  // TODO 实现这个
+  String crc32;
 
   /// 上传区域
   dynamic region;
@@ -38,24 +39,23 @@ class PutTask<T extends Put> extends AbstractRequestTask<T> {
   PutTask({
     @required this.token,
     @required this.file,
-    this.accept,
-    this.crc32,
     this.key,
     this.region,
+    this.putprotocol = Protocol.Http,
   })  : assert(token != null),
         assert(file != null);
 
   @override
   Future<T> createTask() async {
+    final _token = token ?? config?.token;
     final formData = FormData.fromMap({
-      'token': token ?? config?.token,
+      'token': _token,
       'key': key,
       'file': await MultipartFile.fromFile(file.path)
     });
     final host = region != null
         ? config.regionProvider.getHostByRegion(region)
-        : await config.regionProvider
-            .getHostByToken(config.token, config.protocol);
+        : await config.regionProvider.getHostByToken(_token, putprotocol);
     final response = await client.post(host, data: formData);
 
     return Put.fromJson(response.data);

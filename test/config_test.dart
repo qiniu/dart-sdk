@@ -9,9 +9,9 @@ void main() {
   test('RegionProvider should works well.', () async {
     final regionProvider = RegionProvider();
 
-    final zoHost = regionProvider.getHostByRegion(Region.Z0);
+    final z0Host = regionProvider.getHostByRegion(Region.Z0);
 
-    expect(zoHost, 'https://upload.qiniup.com');
+    expect(z0Host, 'https://upload.qiniup.com');
 
     final hostInToken = await regionProvider.getHostByToken(token);
 

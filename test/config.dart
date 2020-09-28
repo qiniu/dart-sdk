@@ -20,10 +20,11 @@ void configEnv() {
     );
 
     token = auth.generateUploadToken(
-        putPolicy: PutPolicy(
-            insertOnly: 0,
-            scope: env['QINIU_DART_SDK_TOKEN_SCOPE'],
-            deadline: DateTime.now().millisecondsSinceEpoch + 3600));
+      putPolicy: PutPolicy(
+          insertOnly: 0,
+          scope: env['QINIU_DART_SDK_TOKEN_SCOPE'],
+          deadline: DateTime.now().millisecondsSinceEpoch + 3600),
+    );
   });
 
   tearDownAll(() {

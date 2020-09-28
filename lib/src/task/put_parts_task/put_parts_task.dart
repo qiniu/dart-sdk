@@ -21,7 +21,7 @@ class PutPartsTask extends AbstractRequestTask<CompleteParts> {
   int partSize;
   dynamic region;
   int maxPartsRequestNumber;
-  Protocol protocol;
+  Protocol putprotocol;
 
   PutPartsTask({
     this.key,
@@ -30,7 +30,7 @@ class PutPartsTask extends AbstractRequestTask<CompleteParts> {
     this.partSize,
     this.region,
     this.maxPartsRequestNumber,
-    this.protocol,
+    this.putprotocol,
   });
 
   AbstractRequestTask _currentWorkingTask;
@@ -57,7 +57,7 @@ class PutPartsTask extends AbstractRequestTask<CompleteParts> {
   Future<CompleteParts> createTask() async {
     final host = region != null
         ? config.regionProvider.getHostByRegion(region)
-        : await config.regionProvider.getHostByToken(token);
+        : await config.regionProvider.getHostByToken(token, putprotocol);
 
     final initParts = await _createInitParts(host).future;
 

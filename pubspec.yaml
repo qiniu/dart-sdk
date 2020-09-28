@@ -1,7 +1,7 @@
 name: qiniu_sdk_base
 version: 0.0.1
-homepage: https://qiniu.com
-description: The sdk basic of Qiniu business lines
+homepage: https://github.com/qiniu/dart-sdk
+description: The sdk basic of Qiniu products
 
 environment:
   sdk: '>=2.7.0 <3.0.0'
