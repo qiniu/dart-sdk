@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:qiniu_sdk_base/src/task/put_parts_task.dart';
+import 'package:qiniu_sdk_base/src/task/put_parts_task/put_parts_task.dart';
 import 'package:qiniu_sdk_base/src/task/task_manager.dart';
 
 import 'config/config.dart';
@@ -14,12 +14,14 @@ class Storage {
     String token,
     Protocol protocol,
     AbstractRegionProvider regionProvider,
+    AbstractCacheProvider cacheProvider,
     dynamic region,
   }) {
     _config = Config(
       token: token,
       protocol: protocol,
       region: region,
+      cacheProvider: cacheProvider ?? CacheProvider(),
       regionProvider: regionProvider ?? RegionProvider(),
     );
     _taskManager = RequestTaskManager(config: _config);

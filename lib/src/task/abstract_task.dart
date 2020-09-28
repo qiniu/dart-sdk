@@ -7,12 +7,9 @@ import 'package:meta/meta.dart';
 /// 异步的任务，比如请求，批处理都可以继承这个类实现一个 Task
 abstract class AbstractTask<T> {
   @protected
-  Completer<T> completer;
+  Completer<T> completer = Completer();
 
-  Future<T> toFuture() {
-    completer = Completer<T>();
-    return completer.future;
-  }
+  Future<T> get future => completer.future;
 
   /// 创建任务的抽象方法
   Future<T> createTask();
@@ -28,15 +25,13 @@ abstract class AbstractTask<T> {
   /// 在 [createTask] 的返回值接受到结果之后调用
   @mustCallSuper
   void postReceive(T data) {
-    completer?.complete(data);
-    completer = null;
+    completer.complete(data);
   }
 
   /// 在 [createTask] 的返回值出错之后调用
   @mustCallSuper
   void postError(error) {
-    completer?.completeError(error);
-    completer = null;
+    completer.completeError(error);
   }
 
   /// Task 被重启之前执行，[AbstractTask.restart] 调用后立即执行

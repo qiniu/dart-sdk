@@ -4,9 +4,11 @@ import 'package:qiniu_sdk_base/src/task/task_manager.dart';
 
 part 'protocol.dart';
 part 'region.dart';
+part 'cache.dart';
 
 class Config {
   RegionProvider regionProvider;
+  CacheProvider cacheProvider;
   String token;
   RequestTaskManager manager;
   dynamic region;
@@ -14,6 +16,7 @@ class Config {
 
   Config({
     this.regionProvider,
+    this.cacheProvider,
     this.token,
     this.region,
     this.protocol,
