@@ -1,0 +1,32 @@
+language: dart
+
+dart:
+  - dev
+
+jobs:
+  include:
+    # 检查 lint 并在 warnings、infos 时报错退出
+    - stage: analyze_and_format
+      name: "Analyze"
+      os: linux
+      script: dartanalyzer --fatal-warnings --fatal-infos .
+
+    # 检查格式并在异常时退出
+    - stage: analyze_and_format
+      name: "Format"
+      os: linux
+      script: dartfmt -n --set-exit-if-changed .
+
+    # 执行测试（已开启 null safe）
+    - stage: test
+      name: "Vm Tests"
+      os: linux
+      script: pub run --enable-experiment=non-nullable test -p vm
+
+stages:
+  - analyze_and_format
+  - test
+
+cache:
+  directories:
+    - $HOME/.pub-cache
