@@ -12,18 +12,18 @@ class Storage {
 
   Storage({
     String token,
-    AbstractRegionProvider regionProvider,
+    AbstractHostProvider hostProvider,
     AbstractCacheProvider cacheProvider,
   }) {
     _config = Config(
       token: token,
       cacheProvider: cacheProvider ?? CacheProvider(),
-      regionProvider: regionProvider ?? RegionProvider(),
+      hostProvider: hostProvider ?? HostProvider(),
     );
     _taskManager = RequestTaskManager(config: _config);
   }
 
-  PutTask<Put> put(File file, {PutOptions options}) {
+  PutTask put(File file, {PutOptions options}) {
     final token = options?.token ?? _config.token;
     final key = options?.key;
     final region = options?.region;
@@ -36,7 +36,7 @@ class Storage {
       putprotocol: options?.putprotocol,
     );
 
-    return _taskManager.addRequestTask(task);
+    return _taskManager.addRequestTask(task) as PutTask;
   }
 
   // 分片上传
@@ -52,7 +52,7 @@ class Storage {
       putprotocol: options?.putprotocol,
     );
 
-    return _taskManager.addRequestTask(task);
+    return _taskManager.addRequestTask(task) as PutPartsTask;
   }
 
   String get(String key) {

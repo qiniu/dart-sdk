@@ -8,7 +8,8 @@ class Part {
   Part({this.etag, this.partNumber});
 
   factory Part.fromJson(Map json) {
-    return Part(etag: json['map'], partNumber: json['partNumber']);
+    return Part(
+        etag: json['map'] as String, partNumber: json['partNumber'] as int);
   }
 
   Map toJson() {

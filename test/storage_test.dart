@@ -33,9 +33,7 @@ void main() {
         ));
 
     try {
-      Future.delayed(Duration(milliseconds: 1), () {
-        putTask.cancel();
-      });
+      Future.delayed(Duration(milliseconds: 1), putTask.cancel);
       final response = await putTask.future;
       expect(response.key, 'test_for_put.txt');
     } catch (err) {
@@ -74,7 +72,7 @@ void main() {
         File('test_resource/test_for_put_parts.mp4'),
         options: PutPartsOptions(
             key: 'test_for_put_parts.mp4', region: Region.Z0, partSize: 1));
-    Future.delayed(Duration(milliseconds: 1), () => putPartsTask.cancel());
+    Future.delayed(Duration(milliseconds: 1), putPartsTask.cancel);
     try {
       await putPartsTask.future;
     } catch (err) {
@@ -88,9 +86,7 @@ void main() {
         options: PutPartsOptions(
             key: 'test_for_put_parts.mp4', region: Region.Z0, partSize: 1));
 
-    Future.delayed(Duration(milliseconds: 1), () {
-      putPartsTask.cancel();
-    });
+    Future.delayed(Duration(milliseconds: 1), putPartsTask.cancel);
 
     try {
       await putPartsTask.future;

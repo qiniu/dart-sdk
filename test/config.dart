@@ -27,7 +27,5 @@ void configEnv() {
     );
   });
 
-  tearDownAll(() {
-    clean();
-  });
+  tearDownAll(clean);
 }

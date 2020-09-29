@@ -13,11 +13,11 @@ class Put {
   Put({this.key, this.hash});
 
   factory Put.fromJson(Map json) {
-    return Put(key: json['key'], hash: json['hash']);
+    return Put(key: json['key'] as String, hash: json['hash'] as String);
   }
 }
 
-class PutTask<T extends Put> extends AbstractRequestTask<T> {
+class PutTask extends AbstractRequestTask<Put> {
   /// 上传凭证
   String token;
 
@@ -25,10 +25,6 @@ class PutTask<T extends Put> extends AbstractRequestTask<T> {
   String key;
 
   Protocol putprotocol;
-
-  /// 上传内容的 crc32 校验码。如填入，则七牛服务器会使用此值进行内容检验。
-  // TODO 实现这个
-  String crc32;
 
   /// 上传区域
   dynamic region;
@@ -46,7 +42,7 @@ class PutTask<T extends Put> extends AbstractRequestTask<T> {
         assert(file != null);
 
   @override
-  Future<T> createTask() async {
+  Future<Put> createTask() async {
     final _token = token ?? config?.token;
     final formData = FormData.fromMap({
       'token': _token,
@@ -54,9 +50,9 @@ class PutTask<T extends Put> extends AbstractRequestTask<T> {
       'file': await MultipartFile.fromFile(file.path)
     });
     final host = region != null
-        ? config.regionProvider.getHostByRegion(region)
-        : await config.regionProvider.getHostByToken(_token, putprotocol);
-    final response = await client.post(host, data: formData);
+        ? config.hostProvider.getHostByRegion(region)
+        : await config.hostProvider.getHostByToken(_token, putprotocol);
+    final response = await client.post<Map>(host, data: formData);
 
     return Put.fromJson(response.data);
   }

@@ -6,12 +6,12 @@ part 'region.dart';
 part 'cache.dart';
 
 class Config {
-  RegionProvider regionProvider;
-  CacheProvider cacheProvider;
+  AbstractHostProvider hostProvider;
+  AbstractCacheProvider cacheProvider;
   String token;
 
   Config({
-    this.regionProvider,
+    this.hostProvider,
     this.cacheProvider,
     this.token,
   });

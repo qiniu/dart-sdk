@@ -8,12 +8,14 @@ class InitParts {
   InitParts({this.uploadId, this.expireAt});
 
   factory InitParts.fromJson(Map json) {
-    return InitParts(uploadId: json['uploadId'], expireAt: json['expireAt']);
+    return InitParts(
+        uploadId: json['uploadId'] as String,
+        expireAt: json['expireAt'] as int);
   }
 }
 
 /// 初始化一个分片上传任务，为 [UploadPartsTask] 提供 uploadId
-class InitPartsTask<T extends InitParts> extends AbstractRequestTask<T> {
+class InitPartsTask extends AbstractRequestTask<InitParts> {
   String token;
   String bucket;
   String host;
@@ -27,13 +29,14 @@ class InitPartsTask<T extends InitParts> extends AbstractRequestTask<T> {
   });
 
   @override
-  Future<T> createTask() async {
+  Future<InitParts> createTask() async {
     final initParts = config.cacheProvider.getItem('init_parts');
     if (initParts != null) {
-      return InitParts.fromJson(json.decode(initParts));
+      return InitParts.fromJson(json.decode(initParts) as Map);
     }
-    final response = await client.post(
+    final response = await client.post<Map>(
         '$host/buckets/$bucket/objects/${base64Url.encode(utf8.encode(key))}/uploads',
+
         /// data 不传，取消的话会有问题
         data: {},
         options: Options(

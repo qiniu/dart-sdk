@@ -8,7 +8,7 @@ class UploadPart {
   UploadPart({this.etag, this.md5});
 
   factory UploadPart.fromJson(Map json) {
-    return UploadPart(etag: json['etag'], md5: json['md5']);
+    return UploadPart(etag: json['etag'] as String, md5: json['md5'] as String);
   }
 }
 
@@ -62,11 +62,10 @@ class UploadPartsTask extends AbstractRequestTask<List<Part>> {
   Future<List<Part>> createTask() async {
     final uploadParts = config.cacheProvider.getItem('upload_parts');
     if (uploadParts != null) {
-      _parts.addAll(json.decode(uploadParts));
+      _parts.addAll(json.decode(uploadParts) as List<Part>);
     }
     final com = Completer<List<Part>>();
-    _uploadParts(
-        () => com.complete(_parts), (error) => com.completeError(error));
+    _uploadParts(() => com.complete(_parts), com.completeError);
 
     return com.future;
   }
@@ -111,12 +110,10 @@ class UploadPartsTask extends AbstractRequestTask<List<Part>> {
         byteStream: byteStream,
         uploadId: uploadId,
         partNumber: _partNumber,
-      );
-
-      task.addProgressListener((sent, total) {
-        _sentMap[partNumber] = sent;
-        notifyProgress();
-      });
+      )..addProgressListener((sent, total) {
+          _sentMap[partNumber] = sent;
+          notifyProgress();
+        });
 
       task.future.then((data) {
         _idleRequestNumber++;
@@ -129,6 +126,7 @@ class UploadPartsTask extends AbstractRequestTask<List<Part>> {
       }).catchError(error);
 
       manager.addRequestTask(task);
+    // ignore: invariant_booleans
     } while (_idleRequestNumber > 0 && _byteStartOffset < _fileByteLength);
   }
 
@@ -142,7 +140,7 @@ class UploadPartsTask extends AbstractRequestTask<List<Part>> {
 }
 
 /// 上传一个 part 的任务
-class UploadPartTask<T extends UploadPart> extends AbstractRequestTask<T> {
+class UploadPartTask extends AbstractRequestTask<UploadPart> {
   String token;
   String host;
   String bucket;
@@ -169,8 +167,8 @@ class UploadPartTask<T extends UploadPart> extends AbstractRequestTask<T> {
   });
 
   @override
-  Future<T> createTask() async {
-    final response = await client.put(
+  Future<UploadPart> createTask() async {
+    final response = await client.put<Map>(
         '$host/buckets/$bucket/objects/${base64Url.encode(utf8.encode(key))}/uploads/$uploadId/$partNumber',
         data: byteStream,
         options: Options(headers: {

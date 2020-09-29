@@ -1,7 +1,8 @@
 import 'package:meta/meta.dart';
 import 'package:qiniu_sdk_base/src/config/config.dart';
-import 'abstract_task.dart';
+
 import 'abstract_request_task.dart';
+import 'abstract_task.dart';
 
 class TaskManager<T extends AbstractTask> {
   @protected
@@ -39,14 +40,15 @@ class TaskManager<T extends AbstractTask> {
   }
 }
 
-class RequestTaskManager<T extends AbstractRequestTask> extends TaskManager {
+class RequestTaskManager<T extends AbstractRequestTask> extends TaskManager<T> {
   Config config;
 
   RequestTaskManager({this.config});
 
   T addRequestTask(T task) {
-    task.manager = this;
-    task.config = config;
+    task
+      ..manager = this
+      ..config = config;
     return addTask(task);
   }
 }

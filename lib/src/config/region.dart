@@ -2,7 +2,7 @@ part of 'config.dart';
 
 enum Region { Z0, Z1, Z2, Na0, As0 }
 
-final Map regionMap = {
+final Map<Region, String> regionMap = {
   Region.Z0: 'upload.qiniup.com',
   Region.Z1: 'upload-z1.qiniup.com',
   Region.Z2: 'upload-z2.qiniup.com',
@@ -10,13 +10,13 @@ final Map regionMap = {
   Region.As0: 'upload-as0.qiniup.com'
 };
 
-abstract class AbstractRegionProvider {
+abstract class AbstractHostProvider {
   String getHostByRegion(region);
 
   Future<String> getHostByToken(String token, [Protocol protocol]);
 }
 
-class RegionProvider extends AbstractRegionProvider {
+class HostProvider extends AbstractHostProvider {
   final http = Dio();
 
   @override
@@ -35,7 +35,8 @@ class RegionProvider extends AbstractRegionProvider {
         tokenInfo.putPolicy.getBucket();
 
     final res = await http.get<Map>(url);
+    final host = res.data['up']['acc']['main'][0] as String;
 
-    return protocol.value + '://' + res.data['up']['acc']['main'][0];
+    return protocol.value + '://' + host;
   }
 }

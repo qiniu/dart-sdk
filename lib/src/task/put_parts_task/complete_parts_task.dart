@@ -11,13 +11,13 @@ class CompleteParts {
   CompleteParts({this.hash, this.key});
 
   factory CompleteParts.fromJson(Map json) {
-    return CompleteParts(hash: json['hash'], key: json['key']);
+    return CompleteParts(
+        hash: json['hash'] as String, key: json['key'] as String);
   }
 }
 
 /// 创建文件，把切片信息合成为一个文件
-class CompletePartsTask<T extends CompleteParts>
-    extends AbstractRequestTask<T> {
+class CompletePartsTask extends AbstractRequestTask<CompleteParts> {
   String token;
   String host;
   String bucket;
@@ -35,8 +35,8 @@ class CompletePartsTask<T extends CompleteParts>
   });
 
   @override
-  Future<T> createTask() async {
-    final response = await client.post(
+  Future<CompleteParts> createTask() async {
+    final response = await client.post<Map>(
         '$host/buckets/$bucket/objects/${base64Url.encode(utf8.encode(key))}/uploads/$uploadId',
         data: {
           'parts': parts

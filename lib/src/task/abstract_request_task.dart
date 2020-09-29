@@ -2,8 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
 import 'package:qiniu_sdk_base/src/config/config.dart';
 
-import 'task_manager.dart';
 import 'abstract_task.dart';
+import 'task_manager.dart';
 
 typedef ProgressListener = void Function(int sent, int total);
 
@@ -88,8 +88,9 @@ abstract class AbstractRequestTask<T> extends AbstractTask<T>
     client.interceptors.add(InterceptorsWrapper(onRequest: (options) {
       status = RequestStatus.Request;
       notifyStatusListeners(status);
-      options.cancelToken = _cancelToken;
-      options.onSendProgress = notifyProgressListeners;
+      options
+        ..cancelToken = _cancelToken
+        ..onSendProgress = notifyProgressListeners;
 
       return options;
     }));

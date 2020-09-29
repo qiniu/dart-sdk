@@ -56,8 +56,8 @@ class PutPartsTask extends AbstractRequestTask<CompleteParts> {
   @override
   Future<CompleteParts> createTask() async {
     final host = region != null
-        ? config.regionProvider.getHostByRegion(region)
-        : await config.regionProvider.getHostByToken(token, putprotocol);
+        ? config.hostProvider.getHostByRegion(region)
+        : await config.hostProvider.getHostByToken(token, putprotocol);
 
     final initParts = await _createInitParts(host).future;
 
@@ -78,7 +78,7 @@ class PutPartsTask extends AbstractRequestTask<CompleteParts> {
       key: key,
     );
 
-    return _currentWorkingTask = manager.addRequestTask(task);
+    return _currentWorkingTask = manager.addRequestTask(task) as InitPartsTask;
   }
 
   UploadPartsTask _createUploadParts(String host, String uploadId) {
@@ -91,13 +91,10 @@ class PutPartsTask extends AbstractRequestTask<CompleteParts> {
       partSize: partSize,
       uploadId: uploadId,
       maxPartsRequestNumber: maxPartsRequestNumber,
-    );
+    )..addProgressListener(notifyProgress);
 
-    task.addProgressListener((sent, total) {
-      notifyProgress(sent, total);
-    });
-
-    return _currentWorkingTask = manager.addRequestTask(task);
+    return _currentWorkingTask =
+        manager.addRequestTask(task) as UploadPartsTask;
   }
 
   /// 创建文件，分片上传的最后一步
@@ -113,13 +110,12 @@ class PutPartsTask extends AbstractRequestTask<CompleteParts> {
       key: key,
       uploadId: uploadId,
       parts: parts,
-    );
+    )..addProgressListener((sent, total) {
+        notifyProgress();
+      });
 
-    task.addProgressListener((sent, total) {
-      notifyProgress();
-    });
-
-    return _currentWorkingTask = manager.addRequestTask(task);
+    return _currentWorkingTask =
+        manager.addRequestTask(task) as CompletePartsTask;
   }
 
   int _sent = 0;
