@@ -5,7 +5,6 @@ import 'package:qiniu_sdk_base/src/config/config.dart';
 import 'package:qiniu_sdk_base/src/task/put_parts_task/put_parts_task.dart';
 import 'package:qiniu_sdk_base/src/storage.dart';
 
-@Timeout(Duration(seconds: 60))
 import 'package:test/test.dart';
 
 import 'config.dart';
