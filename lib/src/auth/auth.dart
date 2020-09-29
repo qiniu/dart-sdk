@@ -104,15 +104,13 @@ class Auth {
         throw ArgumentError('invalid token');
       }
 
-      putPolicy = PutPolicy.fromJson(
-        jsonDecode(
-          String.fromCharCodes(
-            base64Url.decode(
-              segments.last,
-            ),
+      putPolicy = PutPolicy.fromJson(jsonDecode(
+        String.fromCharCodes(
+          base64Url.decode(
+            segments.last,
           ),
         ),
-      );
+      ) as Map<String, dynamic>);
     }
 
     return TokenInfo(accessKey, putPolicy);
