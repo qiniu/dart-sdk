@@ -71,12 +71,7 @@ class UploadPartsTask extends AbstractRequestTask<List<Part>> {
   }
 
   void _uploadParts(void Function() done, void Function(dynamic) error) {
-    /// 超出文件长度说明上传完毕，立即结束
-    if (_byteStartOffset >= _fileByteLength) {
-      return;
-    }
-
-    do {
+    while (_idleRequestNumber > 0 && _byteStartOffset < _fileByteLength) {
       _partNumber++;
 
       _idleRequestNumber--;
@@ -126,8 +121,7 @@ class UploadPartsTask extends AbstractRequestTask<List<Part>> {
       }).catchError(error);
 
       manager.addRequestTask(task);
-    // ignore: invariant_booleans
-    } while (_idleRequestNumber > 0 && _byteStartOffset < _fileByteLength);
+    }
   }
 
   /// 已发送的数据记录，key 是 partNumber, value 是 已发送的长度
