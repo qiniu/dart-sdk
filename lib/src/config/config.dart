@@ -2,17 +2,18 @@ import 'package:dio/dio.dart';
 import 'package:qiniu_sdk_base/src/auth/auth.dart';
 
 part 'protocol.dart';
-part 'region.dart';
+part 'host.dart';
 part 'cache.dart';
 
 class Config {
   AbstractHostProvider hostProvider;
   AbstractCacheProvider cacheProvider;
-  String token;
 
   Config({
     this.hostProvider,
     this.cacheProvider,
-    this.token,
-  });
+  }) {
+    hostProvider = hostProvider ?? HostProvider();
+    cacheProvider = cacheProvider ?? CacheProvider();
+  }
 }

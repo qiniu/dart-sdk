@@ -22,7 +22,7 @@ abstract class AbstractTask<T> {
   @mustCallSuper
   void postStart() {}
 
-  /// 在 [createTask] 的返回值接受到结果之后调用
+  /// 在 [createTask] 的返回值接收到结果之后调用
   @mustCallSuper
   void postReceive(T data) {
     completer.complete(data);

@@ -8,31 +8,20 @@ import 'task/put_task.dart';
 /// 客户端
 class Storage {
   RequestTaskManager _taskManager;
-  Config _config;
+  Config config;
 
-  Storage({
-    String token,
-    AbstractHostProvider hostProvider,
-    AbstractCacheProvider cacheProvider,
-  }) {
-    _config = Config(
-      token: token,
-      cacheProvider: cacheProvider ?? CacheProvider(),
-      hostProvider: hostProvider ?? HostProvider(),
-    );
-    _taskManager = RequestTaskManager(config: _config);
+  Storage({this.config}) {
+    config = config ?? Config();
+    _taskManager = RequestTaskManager(config: config);
   }
 
-  PutTask put(File file, {PutOptions options}) {
-    final token = options?.token ?? _config.token;
-    final key = options?.key;
-    final region = options?.region;
+  PutTask putFile(File file, String token, {PutOptions options}) {
+    final key = options.key;
 
     final task = PutTask(
       token: token,
       key: key,
       file: file,
-      region: region,
       putprotocol: options?.putprotocol,
     );
 
@@ -40,16 +29,15 @@ class Storage {
   }
 
   // 分片上传
-  PutPartsTask putParts(File file, {PutPartsOptions options}) {
-    final token = options?.token ?? _config.token;
+  PutPartsTask putFileParts(File file, String token,
+      {PutPartsOptions options}) {
     final task = PutPartsTask(
       token: token,
-      key: options?.key,
+      key: options.key,
       file: file,
-      partSize: options?.partSize,
-      region: options?.region,
-      maxPartsRequestNumber: options?.maxPartsRequestNumber,
-      putprotocol: options?.putprotocol,
+      partSize: options.partSize,
+      maxPartsRequestNumber: options.maxPartsRequestNumber,
+      putprotocol: options.putprotocol,
     );
 
     return _taskManager.addRequestTask(task) as PutPartsTask;
@@ -61,27 +49,19 @@ class Storage {
 }
 
 class PutOptions {
-  /// 上传凭证
-  String token;
-
   // 资源名。如果不传则后端自动生成
   String key;
 
   /// 上传协议
   Protocol putprotocol;
 
-  /// 上传区域
-  ///
-  /// 如果能提供此选项则无需发请求去后端根据 token 拿对应的区域
-  dynamic region;
-
-  PutOptions({this.token, this.key, this.region, this.putprotocol});
+  PutOptions({
+    this.key,
+    this.putprotocol,
+  });
 }
 
 class PutPartsOptions {
-  /// 上传凭证
-  String token;
-
   // 资源名。如果不传则后端自动生成
   String key;
 
@@ -97,17 +77,10 @@ class PutPartsOptions {
   /// 默认 4MB，最小不得小于 1
   int partSize;
 
-  /// 上传区域
-  ///
-  /// 如果能提供此选项则无需发请求去后端根据 token 拿对应的区域
-  dynamic region;
-
   PutPartsOptions({
-    this.token,
     this.key,
     this.partSize = 4,
     this.maxPartsRequestNumber = 5,
-    this.region,
     this.putprotocol,
   }) {
     if (partSize < 1 || partSize > 1024) {

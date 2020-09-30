@@ -9,13 +9,9 @@ void main() {
   test('RegionProvider should works well.', () async {
     final hostProvider = HostProvider();
 
-    final z0Host = hostProvider.getHostByRegion(Region.Z0);
-
-    expect(z0Host, 'https://upload.qiniup.com');
-
     final hostInToken = await hostProvider.getHostByToken(token);
 
     // 根据传入的 token 的 bucket 对应的区域，需要对应的修改这里
-    expect(hostInToken, 'http://' + regionMap[Region.Z0]);
+    expect(hostInToken, 'http://upload.qiniup.com');
   });
 }

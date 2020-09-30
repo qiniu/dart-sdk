@@ -11,6 +11,10 @@ part 'init_parts_task.dart';
 part 'upload_parts_task.dart';
 part 'complete_parts_task.dart';
 part 'part.dart';
+part 'cache_mixin.dart';
+
+/// 缓存分片信息用到的缓存 key
+final putPartsTaskCachekey = 'dart_sdk_put_parts_task_cache_key';
 
 /// 分片上传任务
 class PutPartsTask extends AbstractRequestTask<CompleteParts> {
@@ -19,7 +23,6 @@ class PutPartsTask extends AbstractRequestTask<CompleteParts> {
   String token;
   String bucket;
   int partSize;
-  dynamic region;
   int maxPartsRequestNumber;
   Protocol putprotocol;
 
@@ -28,7 +31,6 @@ class PutPartsTask extends AbstractRequestTask<CompleteParts> {
     this.file,
     this.token,
     this.partSize,
-    this.region,
     this.maxPartsRequestNumber,
     this.putprotocol,
   });
@@ -55,16 +57,29 @@ class PutPartsTask extends AbstractRequestTask<CompleteParts> {
 
   @override
   Future<CompleteParts> createTask() async {
-    final host = region != null
-        ? config.hostProvider.getHostByRegion(region)
-        : await config.hostProvider.getHostByToken(token, putprotocol);
+    final host = await config.hostProvider.getHostByToken(token, putprotocol);
 
-    final initParts = await _createInitParts(host).future;
+    final initPartsTask = _createInitParts(host);
+    final initParts = await initPartsTask.future;
 
-    final parts = await _createUploadParts(host, initParts.uploadId).future;
+    final uploadParts = _createUploadParts(host, initParts.uploadId);
+    final parts = await uploadParts.future;
 
-    final completeParts =
-        await _createCompleteParts(host, initParts.uploadId, parts).future;
+    CompleteParts completeParts;
+    try {
+      completeParts =
+          await _createCompleteParts(host, initParts.uploadId, parts).future;
+    } catch (e) {
+      /// 如果服务端文件被删除了，清除本地缓存
+      if (e is DioError && e.response.statusCode == 612) {
+        initPartsTask.clearCache();
+        uploadParts.clearCache();
+      }
+      rethrow;
+    }
+
+    initPartsTask.clearCache();
+    uploadParts.clearCache();
 
     return completeParts;
   }
@@ -76,6 +91,7 @@ class PutPartsTask extends AbstractRequestTask<CompleteParts> {
       host: host,
       bucket: bucket,
       key: key,
+      file: file,
     );
 
     return _currentWorkingTask = manager.addRequestTask(task) as InitPartsTask;

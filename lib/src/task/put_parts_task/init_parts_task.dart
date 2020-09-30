@@ -9,39 +9,63 @@ class InitParts {
 
   factory InitParts.fromJson(Map json) {
     return InitParts(
-        uploadId: json['uploadId'] as String,
-        expireAt: json['expireAt'] as int);
+      uploadId: json['uploadId'] as String,
+      expireAt: json['expireAt'] as int,
+    );
+  }
+
+  Map toJson() {
+    return {'uploadId': uploadId, 'expireAt': expireAt};
   }
 }
 
 /// 初始化一个分片上传任务，为 [UploadPartsTask] 提供 uploadId
-class InitPartsTask extends AbstractRequestTask<InitParts> {
+class InitPartsTask extends AbstractRequestTask<InitParts> with CacheMixin {
   String token;
   String bucket;
   String host;
   String key;
+  File file;
+
+  @override
+  String _cacheKey;
 
   InitPartsTask({
     this.host,
     this.bucket,
     this.token,
     this.key,
+    this.file,
   });
 
   @override
+  void preStart() {
+    _cacheKey =
+        'qiniu_dart_sdk_init_parts_task_${file.path}_key_${key}_size_${file.lengthSync()}';
+    super.preStart();
+  }
+
+  @override
   Future<InitParts> createTask() async {
-    final initParts = config.cacheProvider.getItem('init_parts');
+    final initParts = getCache();
     if (initParts != null) {
       return InitParts.fromJson(json.decode(initParts) as Map);
     }
     final response = await client.post<Map>(
-        '$host/buckets/$bucket/objects/${base64Url.encode(utf8.encode(key))}/uploads',
+      '$host/buckets/$bucket/objects/${base64Url.encode(utf8.encode(key))}/uploads',
 
-        /// data 不传，取消的话会有问题
-        data: {},
-        options: Options(
-            headers: {'Content-Length': 0, 'Authorization': 'UpToken $token'}));
+      /// data 不传，取消的话会有问题
+      data: {},
+      options: Options(
+          headers: {'Content-Length': 0, 'Authorization': 'UpToken $token'}),
+    );
 
     return InitParts.fromJson(response.data);
+  }
+
+  @override
+  void postReceive(data) {
+    setCache(data.toJson().toString());
+    super.postReceive(data);
   }
 }

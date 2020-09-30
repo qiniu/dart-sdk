@@ -10,10 +10,14 @@ class UploadPart {
   factory UploadPart.fromJson(Map json) {
     return UploadPart(etag: json['etag'] as String, md5: json['md5'] as String);
   }
+
+  Map toJson() {
+    return {'etag': etag, 'md5': md5};
+  }
 }
 
 /// 批处理上传 parts 的任务，为 [CompletePartsTask] 提供 [Part]
-class UploadPartsTask extends AbstractRequestTask<List<Part>> {
+class UploadPartsTask extends AbstractRequestTask<List<Part>> with CacheMixin {
   String token;
   String host;
   String uploadId;
@@ -22,6 +26,9 @@ class UploadPartsTask extends AbstractRequestTask<List<Part>> {
   String key;
   int partSize;
   int maxPartsRequestNumber;
+
+  @override
+  String _cacheKey;
 
   /// 文件 bytes 长度
   int _fileByteLength;
@@ -52,15 +59,27 @@ class UploadPartsTask extends AbstractRequestTask<List<Part>> {
     this.bucket,
     this.key,
     this.maxPartsRequestNumber,
-  }) {
+  });
+
+  @override
+  void preStart() {
     _fileByteLength = file.lengthSync();
     _partByteLength = partSize * 1024 * 1024;
     _idleRequestNumber = maxPartsRequestNumber;
+    _cacheKey =
+        'qiniu_dart_sdk_upload_parts_task_${file.path}_key_${key}_size_$_fileByteLength';
+    super.preStart();
+  }
+
+  @override
+  void postReceive(data) {
+    setCache(data.map((_data) => _data.toJson()).toString());
+    super.postReceive(data);
   }
 
   @override
   Future<List<Part>> createTask() async {
-    final uploadParts = config.cacheProvider.getItem('upload_parts');
+    final uploadParts = getCache();
     if (uploadParts != null) {
       _parts.addAll(json.decode(uploadParts) as List<Part>);
     }
@@ -74,8 +93,6 @@ class UploadPartsTask extends AbstractRequestTask<List<Part>> {
     while (_idleRequestNumber > 0 && _byteStartOffset < _fileByteLength) {
       _partNumber++;
 
-      _idleRequestNumber--;
-
       final uploadedPart = _parts.isNotEmpty
           ? _parts.firstWhere((element) => element.partNumber == _partNumber)
           : null;
@@ -84,6 +101,8 @@ class UploadPartsTask extends AbstractRequestTask<List<Part>> {
       if (uploadedPart != null) {
         continue;
       }
+
+      _idleRequestNumber--;
 
       /// 读文件终点偏移量
       final byteEndOffset = _byteStartOffset + _partByteLength;

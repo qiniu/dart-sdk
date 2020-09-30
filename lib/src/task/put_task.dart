@@ -26,9 +26,6 @@ class PutTask extends AbstractRequestTask<Put> {
 
   Protocol putprotocol;
 
-  /// 上传区域
-  dynamic region;
-
   /// 上传文件
   File file;
 
@@ -36,22 +33,18 @@ class PutTask extends AbstractRequestTask<Put> {
     @required this.token,
     @required this.file,
     this.key,
-    this.region,
     this.putprotocol = Protocol.Http,
   })  : assert(token != null),
         assert(file != null);
 
   @override
   Future<Put> createTask() async {
-    final _token = token ?? config?.token;
     final formData = FormData.fromMap({
-      'token': _token,
+      'token': token,
       'key': key,
       'file': await MultipartFile.fromFile(file.path)
     });
-    final host = region != null
-        ? config.hostProvider.getHostByRegion(region)
-        : await config.hostProvider.getHostByToken(_token, putprotocol);
+    final host = await config.hostProvider.getHostByToken(token, putprotocol);
     final response = await client.post<Map>(host, data: formData);
 
     return Put.fromJson(response.data);
