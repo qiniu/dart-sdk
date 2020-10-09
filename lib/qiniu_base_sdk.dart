@@ -1,4 +1,4 @@
-library qiniu_sdk_base;
+library qiniu_base_sdk;
 
 export 'src/config/config.dart';
 export 'src/storage.dart';

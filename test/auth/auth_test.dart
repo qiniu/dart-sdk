@@ -1,8 +1,8 @@
 import 'dart:convert';
 
-import 'package:qiniu_sdk_base/src/auth/auth.dart';
+import 'package:qiniu_base_sdk/src/auth/auth.dart';
 import 'package:test/test.dart';
-import 'package:qiniu_sdk_base/src/auth/put_policy.dart';
+import 'package:qiniu_base_sdk/src/auth/put_policy.dart';
 
 class UploadTokenTestData {
   final PutPolicy putPolicy;

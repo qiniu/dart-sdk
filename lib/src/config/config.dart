@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:qiniu_sdk_base/src/auth/auth.dart';
+import 'package:qiniu_base_sdk/src/auth/auth.dart';
 
 part 'protocol.dart';
 part 'host.dart';
