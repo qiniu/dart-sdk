@@ -1,4 +1,4 @@
-name: qiniu_base_sdk
+name: qiniu_sdk_base
 version: 0.0.1
 homepage: https://github.com/qiniu/dart-sdk
 description: The sdk basic of Qiniu products

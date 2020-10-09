@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:qiniu_base_sdk/src/task/put_parts_task/put_parts_task.dart';
-import 'package:qiniu_base_sdk/src/storage.dart';
+import 'package:qiniu_sdk_base/src/task/put_parts_task/put_parts_task.dart';
+import 'package:qiniu_sdk_base/src/storage.dart';
 
 import 'package:test/test.dart';
 

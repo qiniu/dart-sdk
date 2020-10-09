@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
-import 'package:qiniu_base_sdk/src/config/config.dart';
+import 'package:qiniu_sdk_base/src/config/config.dart';
 
 import 'abstract_request_task.dart';
 

@@ -1,5 +1,5 @@
 import 'package:dotenv/dotenv.dart' show load, clean, isEveryDefined, env;
-import 'package:qiniu_base_sdk/src/auth/auth.dart';
+import 'package:qiniu_sdk_base/src/auth/auth.dart';
 import 'package:test/test.dart';
 
 String token;
