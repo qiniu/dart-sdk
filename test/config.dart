@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dotenv/dotenv.dart' show load, clean, isEveryDefined, env;
 import 'package:qiniu_sdk_base/src/auth/auth.dart';
 import 'package:test/test.dart';
@@ -6,6 +8,7 @@ String token;
 
 void configEnv() {
   setUpAll(() {
+    print(Platform.environment);
     load();
     if (!isEveryDefined([
       'QINIU_DART_SDK_ACCESS_KEY',
