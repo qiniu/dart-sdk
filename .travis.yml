@@ -15,7 +15,7 @@ jobs:
     - stage: delete_env_file
       name: 'delete env file'
       os: linux
-      script: rm -fr .env
+      script: echo $QINIU_DART_SDK_ACCESS_KEY && rm -fr .env
     # 检查 lint 并在 warnings、infos 时报错退出
     - stage: analyze_and_format
       name: "Analyze"
