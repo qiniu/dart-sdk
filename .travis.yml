@@ -5,6 +5,11 @@ dart:
 
 jobs:
   include:
+    # 删除 env 文件，防止被其覆盖 travis 里配置的环境变量
+    - stage: delete_env_file
+      name: 'delete env file'
+      os: linux
+      script: rm -fr .env
     # 检查 lint 并在 warnings、infos 时报错退出
     - stage: analyze_and_format
       name: "Analyze"
@@ -24,6 +29,7 @@ jobs:
       script: pub run --enable-experiment=non-nullable test -p vm
 
 stages:
+  - delete_env_file
   - analyze_and_format
   - test
 
