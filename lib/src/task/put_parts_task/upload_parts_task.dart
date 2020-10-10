@@ -17,7 +17,7 @@ class UploadPart {
 }
 
 /// 批处理上传 parts 的任务，为 [CompletePartsTask] 提供 [Part]
-class UploadPartsTask extends AbstractRequestTask<List<Part>> with CacheMixin {
+class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   String token;
   String host;
   String uploadId;
@@ -153,7 +153,7 @@ class UploadPartsTask extends AbstractRequestTask<List<Part>> with CacheMixin {
 }
 
 /// 上传一个 part 的任务
-class UploadPartTask extends AbstractRequestTask<UploadPart> {
+class UploadPartTask extends RequestTask<UploadPart> {
   String token;
   String host;
   String bucket;

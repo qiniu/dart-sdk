@@ -1,6 +1,6 @@
 part of 'config.dart';
 
-abstract class AbstractCacheProvider {
+abstract class CacheProvider {
   void setItem(String key, String item);
   String getItem(String key);
 
@@ -11,7 +11,7 @@ abstract class AbstractCacheProvider {
   void clear();
 }
 
-class CacheProvider extends AbstractCacheProvider {
+class DefaultCacheProvider extends CacheProvider {
   @override
   String getItem(String key) {
     return null;

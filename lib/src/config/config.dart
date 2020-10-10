@@ -6,14 +6,14 @@ part 'host.dart';
 part 'cache.dart';
 
 class Config {
-  AbstractHostProvider hostProvider;
-  AbstractCacheProvider cacheProvider;
+  HostProvider hostProvider;
+  CacheProvider cacheProvider;
 
   Config({
     this.hostProvider,
     this.cacheProvider,
   }) {
-    hostProvider = hostProvider ?? HostProvider();
-    cacheProvider = cacheProvider ?? CacheProvider();
+    hostProvider = hostProvider ?? DefaultHostProvider();
+    cacheProvider = cacheProvider ?? DefaultCacheProvider();
   }
 }

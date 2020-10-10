@@ -22,29 +22,26 @@ class Storage {
       token: token,
       key: key,
       file: file,
-      putprotocol: options?.putprotocol,
     );
 
     return _taskManager.addRequestTask(task) as PutTask;
   }
 
   // 分片上传
-  PutPartsTask putFileParts(File file, String token,
-      {PutPartsOptions options}) {
+  PutPartsTask putFileParts(
+    File file,
+    String token, {
+    PutPartsOptions options,
+  }) {
     final task = PutPartsTask(
       token: token,
       key: options.key,
       file: file,
       partSize: options.partSize,
       maxPartsRequestNumber: options.maxPartsRequestNumber,
-      putprotocol: options.putprotocol,
     );
 
     return _taskManager.addRequestTask(task) as PutPartsTask;
-  }
-
-  String get(String key) {
-    throw UnimplementedError();
   }
 }
 
@@ -52,13 +49,7 @@ class PutOptions {
   // 资源名。如果不传则后端自动生成
   String key;
 
-  /// 上传协议
-  Protocol putprotocol;
-
-  PutOptions({
-    this.key,
-    this.putprotocol,
-  });
+  PutOptions({this.key});
 }
 
 class PutPartsOptions {

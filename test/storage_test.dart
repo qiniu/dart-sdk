@@ -168,7 +168,7 @@ void main() {
   }, skip: !isSensitiveDataDefined);
 }
 
-class TestCacheProvider extends AbstractCacheProvider {
+class TestCacheProvider extends CacheProvider {
   Map<String, String> value;
   @override
   void clear() {

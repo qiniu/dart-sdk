@@ -65,7 +65,7 @@ mixin RequestStatusMixin {
   }
 }
 
-abstract class AbstractRequestTask<T> extends AbstractTask<T>
+abstract class RequestTask<T> extends Task<T>
     with ProgressListenersMixin, RequestStatusMixin {
   final Dio client = Dio();
   final CancelToken _cancelToken = CancelToken();

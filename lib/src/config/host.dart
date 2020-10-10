@@ -1,15 +1,18 @@
 part of 'config.dart';
 
-abstract class AbstractHostProvider {
-  Future<String> getHostByToken(String token, [Protocol protocol]);
+abstract class HostProvider {
+  Future<String> getHostByToken(String token);
 }
 
-class HostProvider extends AbstractHostProvider {
+class DefaultHostProvider extends HostProvider {
   final http = Dio();
 
+  Protocol protocol;
+
+  DefaultHostProvider({this.protocol = Protocol.Https});
+
   @override
-  Future<String> getHostByToken(String token,
-      [Protocol protocol = Protocol.Http]) async {
+  Future<String> getHostByToken(String token) async {
     final tokenInfo = Auth.parseToken(token);
     final url = protocol.value +
         '://api.qiniu.com/v2/query?ak=' +

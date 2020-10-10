@@ -4,11 +4,11 @@ import 'package:qiniu_sdk_base/src/config/config.dart';
 import 'abstract_request_task.dart';
 import 'abstract_task.dart';
 
-class TaskManager<T extends AbstractTask> {
+class TaskManager<T extends Task> {
   @protected
-  final List<AbstractTask> workingTasks = [];
+  final List<Task> workingTasks = [];
 
-  /// 添加一个 [AbstractTask]
+  /// 添加一个 [Task]
   ///
   /// 被添加的 [task] 会被立即执行 [createTask]
   @mustCallSuper
@@ -16,7 +16,7 @@ class TaskManager<T extends AbstractTask> {
     workingTasks.add(task);
     task.preStart();
 
-    /// 把同步的任务改成异步，防止 [AbstractRequestTask.addStatusListener] 没有被触发
+    /// 把同步的任务改成异步，防止 [RequestTask.addStatusListener] 没有被触发
     Future.delayed(Duration(milliseconds: 0), () {
       task.createTask().then(task.postReceive).catchError(task.postError);
       task.postStart();
@@ -40,7 +40,7 @@ class TaskManager<T extends AbstractTask> {
   }
 }
 
-class RequestTaskManager<T extends AbstractRequestTask> extends TaskManager<T> {
+class RequestTaskManager<T extends RequestTask> extends TaskManager<T> {
   Config config;
 
   RequestTaskManager({this.config});

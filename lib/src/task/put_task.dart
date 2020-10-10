@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
-import 'package:qiniu_sdk_base/src/config/config.dart';
 
 import 'abstract_request_task.dart';
 
@@ -17,14 +16,12 @@ class Put {
   }
 }
 
-class PutTask extends AbstractRequestTask<Put> {
+class PutTask extends RequestTask<Put> {
   /// 上传凭证
   String token;
 
   // 资源名。如果不传则后端自动生成
   String key;
-
-  Protocol putprotocol;
 
   /// 上传文件
   File file;
@@ -33,7 +30,6 @@ class PutTask extends AbstractRequestTask<Put> {
     @required this.token,
     @required this.file,
     this.key,
-    this.putprotocol = Protocol.Http,
   })  : assert(token != null),
         assert(file != null);
 
@@ -44,7 +40,7 @@ class PutTask extends AbstractRequestTask<Put> {
       'key': key,
       'file': await MultipartFile.fromFile(file.path)
     });
-    final host = await config.hostProvider.getHostByToken(token, putprotocol);
+    final host = await config.hostProvider.getHostByToken(token);
     final response = await client.post<Map>(host, data: formData);
 
     return Put.fromJson(response.data);

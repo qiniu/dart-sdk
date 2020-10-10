@@ -14,14 +14,13 @@ part 'part.dart';
 part 'cache_mixin.dart';
 
 /// 分片上传任务
-class PutPartsTask extends AbstractRequestTask<CompleteParts> {
+class PutPartsTask extends RequestTask<CompleteParts> {
   File file;
   String key;
   String token;
   String bucket;
   int partSize;
   int maxPartsRequestNumber;
-  Protocol putprotocol;
 
   PutPartsTask({
     this.key,
@@ -29,10 +28,9 @@ class PutPartsTask extends AbstractRequestTask<CompleteParts> {
     this.token,
     this.partSize,
     this.maxPartsRequestNumber,
-    this.putprotocol,
   });
 
-  AbstractRequestTask _currentWorkingTask;
+  RequestTask _currentWorkingTask;
 
   @override
   void preStart() {
@@ -54,7 +52,7 @@ class PutPartsTask extends AbstractRequestTask<CompleteParts> {
 
   @override
   Future<CompleteParts> createTask() async {
-    final host = await config.hostProvider.getHostByToken(token, putprotocol);
+    final host = await config.hostProvider.getHostByToken(token);
 
     final initPartsTask = _createInitParts(host);
     final initParts = await initPartsTask.future;

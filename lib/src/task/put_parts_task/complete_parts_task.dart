@@ -17,7 +17,7 @@ class CompleteParts {
 }
 
 /// 创建文件，把切片信息合成为一个文件
-class CompletePartsTask extends AbstractRequestTask<CompleteParts> {
+class CompletePartsTask extends RequestTask<CompleteParts> {
   String token;
   String host;
   String bucket;

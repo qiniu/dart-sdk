@@ -6,7 +6,7 @@ import 'config.dart';
 void main() {
   configEnv();
   test('RegionProvider should works well.', () async {
-    final hostProvider = HostProvider();
+    final hostProvider = DefaultHostProvider();
 
     final hostInToken = await hostProvider.getHostByToken(token);
 
