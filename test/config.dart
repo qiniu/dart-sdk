@@ -6,16 +6,21 @@ import 'package:test/test.dart';
 
 String token;
 
+bool get isSensitiveDataDefined => isEveryDefined([
+      'QINIU_DART_SDK_ACCESS_KEY',
+      'QINIU_DART_SDK_SECRET_KEY',
+      'QINIU_DART_SDK_TOKEN_SCOPE'
+    ]);
+
 void configEnv() {
   setUpAll(() {
     load();
-    print(Platform.environment);
     if (!isEveryDefined([
       'QINIU_DART_SDK_ACCESS_KEY',
       'QINIU_DART_SDK_SECRET_KEY',
       'QINIU_DART_SDK_TOKEN_SCOPE'
     ])) {
-      throw Exception('需要在 .env 文件里配置测试用的必要信息');
+      stderr.writeln('没有在 .env 文件里配置测试用的必要信息，一些测试用例会被跳过');
     }
     var auth = Auth(
       accessKey: env['QINIU_DART_SDK_ACCESS_KEY'],

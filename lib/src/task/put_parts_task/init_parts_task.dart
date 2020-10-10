@@ -38,10 +38,13 @@ class InitPartsTask extends AbstractRequestTask<InitParts> with CacheMixin {
     this.file,
   });
 
+  static String getCacheKey(String path, String key, int length) {
+    return 'qiniu_dart_sdk_init_parts_task_${path}_key_${key}_size_$length';
+  }
+
   @override
   void preStart() {
-    _cacheKey =
-        'qiniu_dart_sdk_init_parts_task_${file.path}_key_${key}_size_${file.lengthSync()}';
+    _cacheKey = InitPartsTask.getCacheKey(file.path, key, file.lengthSync());
     super.preStart();
   }
 

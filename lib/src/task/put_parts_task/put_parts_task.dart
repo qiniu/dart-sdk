@@ -13,9 +13,6 @@ part 'complete_parts_task.dart';
 part 'part.dart';
 part 'cache_mixin.dart';
 
-/// 缓存分片信息用到的缓存 key
-final putPartsTaskCachekey = 'dart_sdk_put_parts_task_cache_key';
-
 /// 分片上传任务
 class PutPartsTask extends AbstractRequestTask<CompleteParts> {
   File file;
@@ -78,6 +75,7 @@ class PutPartsTask extends AbstractRequestTask<CompleteParts> {
       rethrow;
     }
 
+    /// 上传完成，清除缓存
     initPartsTask.clearCache();
     uploadParts.clearCache();
 
