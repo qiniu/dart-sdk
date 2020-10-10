@@ -70,7 +70,7 @@ void main() {
     expect(response, isA<CompleteParts>());
   }, skip: !isSensitiveDataDefined);
 
-  test('putParts can be canceld.', () async {
+  test('putParts can be canceled.', () async {
     final putPartsTask = storage.putFileParts(
       File('test_resource/test_for_put_parts.mp4'),
       token,
