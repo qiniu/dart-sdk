@@ -59,8 +59,7 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin {
 
       /// 这里 data 不传，dio 不会触发 cancel 事件
       data: {},
-      options: Options(
-          headers: {'Content-Length': 0, 'Authorization': 'UpToken $token'}),
+      options: Options(headers: {'Authorization': 'UpToken $token'}),
     );
 
     return InitParts.fromJson(response.data);
