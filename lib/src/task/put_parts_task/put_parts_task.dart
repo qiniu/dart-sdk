@@ -32,6 +32,12 @@ class PutPartsTask extends RequestTask<CompleteParts> {
 
   RequestTask _currentWorkingTask;
 
+  /// 已发送字节长度
+  int _sent = 0;
+
+  /// 文件字节长度
+  int _total = 0;
+
   @override
   void preStart() {
     bucket = Auth.parseToken(token).putPolicy.getBucket();
@@ -52,21 +58,23 @@ class PutPartsTask extends RequestTask<CompleteParts> {
 
   @override
   Future<CompleteParts> createTask() async {
-    final host = await config.hostProvider.getHostByToken(token);
+    final host = await config.hostProvider.getUpHostByToken(token);
 
     final initPartsTask = _createInitParts(host);
     final initParts = await initPartsTask.future;
 
     final uploadParts = _createUploadParts(host, initParts.uploadId);
-    final parts = await uploadParts.future;
 
     CompleteParts completeParts;
     try {
+      final parts = await uploadParts.future;
       completeParts =
           await _createCompleteParts(host, initParts.uploadId, parts).future;
     } catch (e) {
       /// 如果服务端文件被删除了，清除本地缓存
-      if (e is DioError && e.response.statusCode == 612) {
+      /// 如果 uploadId 等参数不对原因会导致 400
+      if (e is DioError &&
+          (e.response.statusCode == 612 || e.response.statusCode == 400)) {
         initPartsTask.clearCache();
         uploadParts.clearCache();
       }
@@ -103,7 +111,10 @@ class PutPartsTask extends RequestTask<CompleteParts> {
       partSize: partSize,
       uploadId: uploadId,
       maxPartsRequestNumber: maxPartsRequestNumber,
-    )..addProgressListener(notifyProgress);
+    )..addProgressListener((sent, total) {
+        /// complete parts 没完成之前应该是 99%，所以 + 1
+        notifyProgress(sent, total + 1);
+      });
 
     return _currentWorkingTask =
         manager.addRequestTask(task) as UploadPartsTask;
@@ -123,19 +134,16 @@ class PutPartsTask extends RequestTask<CompleteParts> {
       uploadId: uploadId,
       parts: parts,
     )..addProgressListener((sent, total) {
-        notifyProgress();
+        notifyProgress(_sent + 1, _total);
       });
 
     return _currentWorkingTask =
         manager.addRequestTask(task) as CompletePartsTask;
   }
 
-  int _sent = 0;
-  int _total = 0;
-
-  void notifyProgress([int sent, int total]) {
-    _sent = sent ?? _sent;
-    _total = total ?? _total;
+  void notifyProgress(int sent, int total) {
+    _sent = sent;
+    _total = total;
     notifyProgressListeners(_sent, _total);
   }
 }

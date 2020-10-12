@@ -40,7 +40,7 @@ class PutTask extends RequestTask<Put> {
       'key': key,
       'file': await MultipartFile.fromFile(file.path)
     });
-    final host = await config.hostProvider.getHostByToken(token);
+    final host = await config.hostProvider.getUpHostByToken(token);
     final response = await client.post<Map>(host, data: formData);
 
     return Put.fromJson(response.data);

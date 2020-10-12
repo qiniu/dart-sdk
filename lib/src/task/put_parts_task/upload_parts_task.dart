@@ -125,7 +125,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
         uploadId: uploadId,
         partNumber: _partNumber,
       )..addProgressListener((sent, total) {
-          _sentMap[partNumber] = sent;
+          _sent += sent;
           notifyProgress();
         });
 
@@ -143,11 +143,10 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     }
   }
 
-  /// 已发送的数据记录，key 是 partNumber, value 是 已发送的长度
-  final Map<int, int> _sentMap = {};
+  /// 已发送的文件字节长度
+  int _sent = 0;
 
   void notifyProgress() {
-    final _sent = _sentMap.values.reduce((value, element) => value + element);
     notifyProgressListeners(_sent, _fileByteLength);
   }
 }

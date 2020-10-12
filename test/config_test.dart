@@ -8,7 +8,7 @@ void main() {
   test('RegionProvider should works well.', () async {
     final hostProvider = DefaultHostProvider();
 
-    final hostInToken = await hostProvider.getHostByToken(token);
+    final hostInToken = await hostProvider.getUpHostByToken(token);
 
     // 根据传入的 token 的 bucket 对应的区域，需要对应的修改这里
     expect(hostInToken, 'http://upload-z2.qiniup.com');
