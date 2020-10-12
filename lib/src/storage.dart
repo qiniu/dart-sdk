@@ -56,23 +56,19 @@ class PutPartsOptions {
   // 资源名。如果不传则后端自动生成
   String key;
 
-  /// 上传协议
-  Protocol putprotocol;
-
   // 最大并发请求数，默认 5
   int maxPartsRequestNumber;
 
-  /// 切片大小
+  /// 切片大小，单位 MB
   ///
   /// 超出 [partSize] 的文件大小会把每片按照 [partSize] 的大小切片并上传
-  /// 默认 4MB，最小不得小于 1MB
+  /// 默认 4MB，最小不得小于 1MB，最大不得大于 1024 MB
   int partSize;
 
   PutPartsOptions({
     this.key,
     this.partSize = 4,
     this.maxPartsRequestNumber = 5,
-    this.putprotocol,
   }) {
     if (partSize < 1 || partSize > 1024) {
       throw RangeError.range(partSize, 1, 1024, 'partSize',
