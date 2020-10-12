@@ -72,6 +72,7 @@ void main() {
   }, skip: !isSensitiveDataDefined);
 
   test('putParts can be canceled.', () async {
+    final storage = Storage(config: Config(hostProvider: TestHostProvider()));
     final putPartsTask = storage.putFileParts(
       File('test_resource/test_for_put_parts.mp4'),
       token,
@@ -83,9 +84,11 @@ void main() {
     } catch (err) {
       expect(err.type, DioErrorType.CANCEL);
     }
+    expect(putPartsTask.future, throwsA(TypeMatcher<DioError>()));
   }, skip: !isSensitiveDataDefined);
 
   test('putParts can be resumed.', () async {
+    final storage = Storage(config: Config(hostProvider: TestHostProvider()));
     final putPartsTask = storage.putFileParts(
       File('test_resource/test_for_put_parts.mp4'),
       token,
@@ -100,6 +103,9 @@ void main() {
       expect(err, isA<DioError>());
       expect(err.type, DioErrorType.CANCEL);
     }
+
+    expect(putPartsTask.future, throwsA(TypeMatcher<DioError>()));
+
     final response = await storage
         .putFileParts(
           File('test_resource/test_for_put_parts.mp4'),
@@ -121,7 +127,7 @@ void main() {
     /// 手动初始化一个初始化文件的任务，确定分片上传的第一步会被缓存
     final task = InitPartsTask(
       token: token,
-      host: await config.hostProvider.getUpHostByToken(token),
+      host: await config.hostProvider.getUpHost(token: token),
 
       /// TOKEN_SCOPE 暂时只保存了 bucket 信息
       bucket: env['QINIU_DART_SDK_TOKEN_SCOPE'],
@@ -186,4 +192,11 @@ void main() {
     expect(response, isA<CompleteParts>());
     expect(_sent / _total, equals(1));
   }, skip: !isSensitiveDataDefined);
+}
+
+class TestHostProvider extends HostProvider {
+  @override
+  Future<String> getUpHost({String token}) async {
+    return 'https://upload-z2.qiniup.com';
+  }
 }
