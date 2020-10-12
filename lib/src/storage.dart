@@ -65,7 +65,7 @@ class PutPartsOptions {
   /// 切片大小
   ///
   /// 超出 [partSize] 的文件大小会把每片按照 [partSize] 的大小切片并上传
-  /// 默认 4MB，最小不得小于 1
+  /// 默认 4MB，最小不得小于 1MB
   int partSize;
 
   PutPartsOptions({

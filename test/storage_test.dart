@@ -130,13 +130,6 @@ void main() {
       expect(err.type, DioErrorType.CANCEL);
     }
 
-    /// 这个时候应该只缓存了初始化的缓存信息
-    expect(cacheProvider.value.length, 1);
-
-    /// 初始化的缓存 key 生成逻辑
-    final cacheKey =
-        InitPartsTask.getCacheKey(file.path, key, file.lengthSync());
-    expect(cacheProvider.value[cacheKey], isA<String>());
     final response = await storage
         .putFileParts(
           file,
@@ -169,7 +162,7 @@ void main() {
 }
 
 class TestCacheProvider extends CacheProvider {
-  Map<String, String> value;
+  Map<String, String> value = {};
   @override
   void clear() {
     value.clear();

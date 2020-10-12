@@ -14,7 +14,7 @@ class Part {
     );
   }
 
-  Map toJson() {
+  Map<String, dynamic> toJson() {
     return {'etag': etag, 'partNumber': partNumber};
   }
 }

@@ -14,7 +14,7 @@ class InitParts {
     );
   }
 
-  Map toJson() {
+  Map<String, dynamic> toJson() {
     return {'uploadId': uploadId, 'expireAt': expireAt};
   }
 }

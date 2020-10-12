@@ -6,11 +6,14 @@ import 'package:test/test.dart';
 
 String token;
 
-bool get isSensitiveDataDefined => isEveryDefined([
-      'QINIU_DART_SDK_ACCESS_KEY',
-      'QINIU_DART_SDK_SECRET_KEY',
-      'QINIU_DART_SDK_TOKEN_SCOPE'
-    ]);
+bool get isSensitiveDataDefined {
+  load();
+  return isEveryDefined([
+    'QINIU_DART_SDK_ACCESS_KEY',
+    'QINIU_DART_SDK_SECRET_KEY',
+    'QINIU_DART_SDK_TOKEN_SCOPE'
+  ]);
+}
 
 void configEnv() {
   setUpAll(() {

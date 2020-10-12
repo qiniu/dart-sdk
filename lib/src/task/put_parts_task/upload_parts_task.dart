@@ -11,7 +11,7 @@ class UploadPart {
     return UploadPart(etag: json['etag'] as String, md5: json['md5'] as String);
   }
 
-  Map toJson() {
+  Map<String, dynamic> toJson() {
     return {'etag': etag, 'md5': md5};
   }
 }
@@ -78,6 +78,13 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   }
 
   @override
+  void postError(error) {
+    /// 取消，网络问题等可能导致上传中断，缓存已上传的分片信息
+    setCache(_parts.map((_data) => _data.toJson()).toString());
+    super.postError(error);
+  }
+
+  @override
   Future<List<Part>> createTask() async {
     final uploadParts = getCache();
     if (uploadParts != null) {
@@ -93,14 +100,9 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     while (_idleRequestNumber > 0 && _byteStartOffset < _fileByteLength) {
       _partNumber++;
 
-      final uploadedPart = _parts.isNotEmpty
+      final cachedPart = _parts.isNotEmpty
           ? _parts.firstWhere((element) => element.partNumber == _partNumber)
           : null;
-
-      /// 跳过已经上传完成的分片
-      if (uploadedPart != null) {
-        continue;
-      }
 
       _idleRequestNumber--;
 
@@ -116,6 +118,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
       final partNumber = _partNumber;
 
       final task = UploadPartTask(
+        cachedPart: cachedPart,
         token: token,
         host: host,
         bucket: bucket,
@@ -125,7 +128,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
         uploadId: uploadId,
         partNumber: _partNumber,
       )..addProgressListener((sent, total) {
-          _sent += sent;
+          _sentMap[partNumber] = sent;
           notifyProgress();
         });
 
@@ -143,10 +146,11 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     }
   }
 
-  /// 已发送的文件字节长度
-  int _sent = 0;
+  /// 已发送的数据记录，key 是 partNumber, value 是 已发送的长度
+  final Map<int, int> _sentMap = {};
 
   void notifyProgress() {
+    final _sent = _sentMap.values.reduce((value, element) => value + element);
     notifyProgressListeners(_sent, _fileByteLength);
   }
 }
@@ -158,6 +162,7 @@ class UploadPartTask extends RequestTask<UploadPart> {
   String bucket;
   String key;
   String uploadId;
+  Part cachedPart;
 
   /// 字节流的长度
   ///
@@ -168,6 +173,7 @@ class UploadPartTask extends RequestTask<UploadPart> {
   Stream<List<int>> byteStream;
 
   UploadPartTask({
+    this.cachedPart,
     this.token,
     this.host,
     this.bucket,
@@ -180,6 +186,9 @@ class UploadPartTask extends RequestTask<UploadPart> {
 
   @override
   Future<UploadPart> createTask() async {
+    if (cachedPart != null) {
+      return UploadPart(etag: cachedPart.etag, md5: null);
+    }
     final response = await client.put<Map>(
         '$host/buckets/$bucket/objects/${base64Url.encode(utf8.encode(key))}/uploads/$uploadId/$partNumber',
         data: byteStream,

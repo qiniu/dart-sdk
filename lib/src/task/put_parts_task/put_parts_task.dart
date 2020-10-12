@@ -134,6 +134,7 @@ class PutPartsTask extends RequestTask<CompleteParts> {
       uploadId: uploadId,
       parts: parts,
     )..addProgressListener((sent, total) {
+        /// UploadPartsTask 那边给 total 做了 +1 的操作，这里完成后补上 1 字节确保 100%
         notifyProgress(_sent + 1, _total);
       });
 
