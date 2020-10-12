@@ -58,7 +58,7 @@ class PutPartsTask extends RequestTask<CompleteParts> {
 
   @override
   Future<CompleteParts> createTask() async {
-    final host = await config.hostProvider.getUpHostByToken(token);
+    final host = await config.hostProvider.getUpHost(token: token);
 
     final initPartsTask = _createInitParts(host);
     final initParts = await initPartsTask.future;

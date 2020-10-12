@@ -1,20 +1,17 @@
 part of 'config.dart';
 
 abstract class HostProvider {
-  Future<String> getUpHostByToken(String token);
+  Future<String> getUpHost({String token});
 }
 
 class DefaultHostProvider extends HostProvider {
   final http = Dio();
 
-  Protocol protocol;
-
-  DefaultHostProvider({this.protocol = Protocol.Https});
-
   @override
-  Future<String> getUpHostByToken(String token) async {
+  Future<String> getUpHost({String token}) async {
     final tokenInfo = Auth.parseToken(token);
-    final url = protocol.value +
+    final protocol = Protocol.Https.value;
+    final url = protocol +
         '://api.qiniu.com/v2/query?ak=' +
         tokenInfo.accessKey +
         '&bucket=' +
@@ -23,6 +20,6 @@ class DefaultHostProvider extends HostProvider {
     final res = await http.get<Map>(url);
     final host = res.data['up']['acc']['main'][0] as String;
 
-    return protocol.value + '://' + host;
+    return protocol + '://' + host;
   }
 }
