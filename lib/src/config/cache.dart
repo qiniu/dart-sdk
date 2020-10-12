@@ -12,17 +12,24 @@ abstract class CacheProvider {
 }
 
 class DefaultCacheProvider extends CacheProvider {
+  Map<String, String> value = {};
   @override
-  String getItem(String key) {
-    return null;
+  void clear() {
+    value.clear();
   }
 
   @override
-  void setItem(String key, String item) {}
+  String getItem(String key) {
+    return value[key];
+  }
 
   @override
-  void removeItem(String key) {}
+  void removeItem(String key) {
+    value.remove(key);
+  }
 
   @override
-  void clear() {}
+  void setItem(String key, String item) {
+    value[key] = item;
+  }
 }

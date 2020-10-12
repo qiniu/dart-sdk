@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:dotenv/dotenv.dart' show env;
 import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
 import 'package:qiniu_sdk_base/src/task/put_parts_task/put_parts_task.dart';
 import 'package:qiniu_sdk_base/src/storage.dart';
@@ -111,10 +112,27 @@ void main() {
   }, skip: !isSensitiveDataDefined);
 
   test('putParts should works well with cacheProvider.', () async {
-    final cacheProvider = TestCacheProvider();
-    final storage = Storage(config: Config(cacheProvider: cacheProvider));
+    final cacheProvider = DefaultCacheProvider();
+    final config = Config(cacheProvider: cacheProvider);
+    final storage = Storage(config: config);
     final file = File('test_resource/test_for_put_parts.mp4');
     final key = 'test_for_put_parts.mp4';
+
+    /// 手动初始化一个初始化文件的任务，确定分片上传的第一步会被缓存
+    final task = InitPartsTask(
+      token: token,
+      host: await config.hostProvider.getUpHostByToken(token),
+
+      /// TOKEN_SCOPE 暂时只保存了 bucket 信息
+      bucket: env['QINIU_DART_SDK_TOKEN_SCOPE'],
+      key: key,
+      file: file,
+    );
+
+    storage.taskManager.addRequestTask(task);
+
+    await task.future;
+
     final putPartsTask = storage.putFileParts(
       file,
       token,
@@ -122,6 +140,15 @@ void main() {
     );
 
     Future.delayed(Duration(milliseconds: 1), putPartsTask.cancel);
+
+    /// 这个时候应该只缓存了初始化的缓存信息
+    expect(cacheProvider.value.length, 1);
+
+    /// 初始化的缓存 key 生成逻辑
+    final cacheKey =
+        InitPartsTask.getCacheKey(file.path, key, file.lengthSync());
+
+    expect(cacheProvider.getItem(cacheKey), isA<String>());
 
     try {
       await putPartsTask.future;
@@ -159,27 +186,4 @@ void main() {
     expect(response, isA<CompleteParts>());
     expect(_sent / _total, equals(1));
   }, skip: !isSensitiveDataDefined);
-}
-
-class TestCacheProvider extends CacheProvider {
-  Map<String, String> value = {};
-  @override
-  void clear() {
-    value.clear();
-  }
-
-  @override
-  String getItem(String key) {
-    return value[key];
-  }
-
-  @override
-  void removeItem(String key) {
-    value.remove(key);
-  }
-
-  @override
-  void setItem(String key, String item) {
-    value[key] = item;
-  }
 }

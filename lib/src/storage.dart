@@ -7,12 +7,12 @@ import 'task/put_task.dart';
 
 /// 客户端
 class Storage {
-  RequestTaskManager _taskManager;
+  RequestTaskManager taskManager;
   Config config;
 
   Storage({this.config}) {
     config = config ?? Config();
-    _taskManager = RequestTaskManager(config: config);
+    taskManager = RequestTaskManager(config: config);
   }
 
   PutTask putFile(File file, String token, {PutOptions options}) {
@@ -24,7 +24,7 @@ class Storage {
       file: file,
     );
 
-    return _taskManager.addRequestTask(task) as PutTask;
+    return taskManager.addRequestTask(task) as PutTask;
   }
 
   // 分片上传
@@ -41,7 +41,7 @@ class Storage {
       maxPartsRequestNumber: options.maxPartsRequestNumber,
     );
 
-    return _taskManager.addRequestTask(task) as PutPartsTask;
+    return taskManager.addRequestTask(task) as PutPartsTask;
   }
 }
 

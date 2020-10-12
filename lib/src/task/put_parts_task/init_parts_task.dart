@@ -68,7 +68,7 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin {
 
   @override
   void postReceive(data) {
-    setCache(data.toJson().toString());
+    setCache(json.encode(data.toJson()));
     super.postReceive(data);
   }
 }

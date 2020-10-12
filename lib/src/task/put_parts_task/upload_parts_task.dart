@@ -73,14 +73,14 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
 
   @override
   void postReceive(data) {
-    setCache(data.map((_data) => _data.toJson()).toString());
+    setCache(json.encode(data));
     super.postReceive(data);
   }
 
   @override
   void postError(error) {
     /// 取消，网络问题等可能导致上传中断，缓存已上传的分片信息
-    setCache(_parts.map((_data) => _data.toJson()).toString());
+    setCache(json.encode(_parts));
     super.postError(error);
   }
 
