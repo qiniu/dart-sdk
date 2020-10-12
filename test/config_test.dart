@@ -11,7 +11,7 @@ void main() {
     final hostInToken = await hostProvider.getUpHostByToken(token);
 
     // 根据传入的 token 的 bucket 对应的区域，需要对应的修改这里
-    expect(hostInToken, 'http://upload-z2.qiniup.com');
+    expect(hostInToken, 'https://upload-z2.qiniup.com');
   }, skip: !isSensitiveDataDefined);
 
   test('DefaultCacheProvider should works well.', () async {
