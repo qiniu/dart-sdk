@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
 import 'package:qiniu_sdk_base/src/config/config.dart';
 
-import 'abstract_task.dart';
+import 'task.dart';
 import 'task_manager.dart';
 
 typedef ProgressListener = void Function(int sent, int total);

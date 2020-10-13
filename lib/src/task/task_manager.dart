@@ -1,8 +1,8 @@
 import 'package:meta/meta.dart';
 import 'package:qiniu_sdk_base/src/config/config.dart';
 
-import 'abstract_request_task.dart';
-import 'abstract_task.dart';
+import 'request_task.dart';
+import 'task.dart';
 
 class TaskManager<T extends Task> {
   @protected

@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
 
-import 'abstract_request_task.dart';
+import 'request_task.dart';
 
 class Put {
   String key;

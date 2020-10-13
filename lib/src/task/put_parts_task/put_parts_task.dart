@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
 import 'package:qiniu_sdk_base/src/auth/auth.dart';
-import 'package:qiniu_sdk_base/src/task/abstract_request_task.dart';
+import 'package:qiniu_sdk_base/src/task/request_task.dart';
 
 part 'init_parts_task.dart';
 part 'upload_parts_task.dart';
