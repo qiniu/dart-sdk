@@ -83,6 +83,7 @@ void main() {
     );
 
     final response = await putPartsTask.future;
+
     /// httpAdapterTest 应该会触发一次 612 response
     expect(httpAdapterTest.completePartsTaskResponse612, true);
     expect(response, isA<CompleteParts>());
