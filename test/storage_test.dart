@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
 import 'package:dotenv/dotenv.dart' show env;
 import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
@@ -71,8 +72,24 @@ void main() {
     expect(response, isA<CompleteParts>());
   }, skip: !isSensitiveDataDefined);
 
+  test('putParts should works well while response 612.', () async {
+    final httpAdapterTest = HttpAdapterTest();
+    final storage = Storage(config: Config(httpClientAdapter: httpAdapterTest));
+
+    final putPartsTask = storage.putFileParts(
+      File('test_resource/test_for_put_parts.mp4'),
+      token,
+      options: PutPartsOptions(key: 'test_for_put_parts.mp4', partSize: 1),
+    );
+
+    final response = await putPartsTask.future;
+    /// httpAdapterTest 应该会触发一次 612 response
+    expect(httpAdapterTest.completePartsTaskResponse612, true);
+    expect(response, isA<CompleteParts>());
+  }, skip: !isSensitiveDataDefined);
+
   test('putParts can be canceled.', () async {
-    final storage = Storage(config: Config(hostProvider: TestHostProvider()));
+    final storage = Storage(config: Config(hostProvider: HostProviderTest()));
     final putPartsTask = storage.putFileParts(
       File('test_resource/test_for_put_parts.mp4'),
       token,
@@ -88,7 +105,7 @@ void main() {
   }, skip: !isSensitiveDataDefined);
 
   test('putParts can be resumed.', () async {
-    final storage = Storage(config: Config(hostProvider: TestHostProvider()));
+    final storage = Storage(config: Config(hostProvider: HostProviderTest()));
     final putPartsTask = storage.putFileParts(
       File('test_resource/test_for_put_parts.mp4'),
       token,
@@ -194,7 +211,31 @@ void main() {
   }, skip: !isSensitiveDataDefined);
 }
 
-class TestHostProvider extends HostProvider {
+class HttpAdapterTest extends HttpClientAdapter {
+  /// 记录 CompletePartsTask 被创建的次数
+  /// 第一次我们拦截并返回 612，第二次不拦截
+  bool completePartsTaskResponse612 = false;
+  final DefaultHttpClientAdapter _adapter = DefaultHttpClientAdapter();
+  @override
+  void close({bool force = false}) {
+    _adapter.close(force: force);
+  }
+
+  @override
+  Future<ResponseBody> fetch(RequestOptions options,
+      Stream<List<int>> requestStream, Future cancelFuture) async {
+    /// 如果是 CompletePartsTask 发出去的请求，则返回 612
+    if (options.path.contains('uploads/') &&
+        options.method == 'POST' &&
+        !completePartsTaskResponse612) {
+      completePartsTaskResponse612 = true;
+      return ResponseBody.fromString('', 612);
+    }
+    return _adapter.fetch(options, requestStream, cancelFuture);
+  }
+}
+
+class HostProviderTest extends HostProvider {
   @override
   Future<String> getUpHost({String token}) async {
     return 'https://upload-z2.qiniup.com';

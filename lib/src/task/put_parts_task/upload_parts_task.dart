@@ -114,7 +114,9 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
       final _byteLength = byteEndOffset > _fileByteLength
           ? _fileByteLength - _byteStartOffset
           : _partByteLength;
+
       _byteStartOffset += _byteLength;
+
       final partNumber = _partNumber;
 
       final task = UploadPartTask(

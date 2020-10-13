@@ -38,6 +38,9 @@ class PutPartsTask extends RequestTask<CompleteParts> {
   /// 文件字节长度
   int _total = 0;
 
+  /// 612 之后重试次数
+  int _retryCountWhile612 = 3;
+
   @override
   void preStart() {
     bucket = Auth.parseToken(token).putPolicy.getBucket();
@@ -71,12 +74,19 @@ class PutPartsTask extends RequestTask<CompleteParts> {
       completeParts =
           await _createCompleteParts(host, initParts.uploadId, parts).future;
     } catch (e) {
-      /// 如果服务端文件被删除了，清除本地缓存
-      /// 如果 uploadId 等参数不对原因会导致 400
-      if (e is DioError &&
-          (e.response.statusCode == 612 || e.response.statusCode == 400)) {
-        initPartsTask.clearCache();
-        uploadParts.clearCache();
+      if (e is DioError) {
+        /// 满足以下两种情况清理缓存：
+        /// 1、如果服务端文件被删除了，清除本地缓存
+        /// 2、如果 uploadId 等参数不对原因会导致 400
+        if (e.response.statusCode == 612 || e.response.statusCode == 400) {
+          initPartsTask.clearCache();
+          uploadParts.clearCache();
+        }
+
+        /// 如果服务端文件被删除了，重新上传
+        if (e.response.statusCode == 612) {
+          return await createTask();
+        }
       }
       rethrow;
     }
