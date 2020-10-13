@@ -82,7 +82,7 @@ class PutPartsTask extends RequestTask<CompleteParts> {
 
         /// 如果服务端文件被删除了，重新上传
         if (e.response.statusCode == 612) {
-          return await createTask();
+          return createTask();
         }
       }
       rethrow;
