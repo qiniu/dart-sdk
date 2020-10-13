@@ -38,9 +38,6 @@ class PutPartsTask extends RequestTask<CompleteParts> {
   /// 文件字节长度
   int _total = 0;
 
-  /// 612 之后重试次数
-  int _retryCountWhile612 = 3;
-
   @override
   void preStart() {
     bucket = Auth.parseToken(token).putPolicy.getBucket();
