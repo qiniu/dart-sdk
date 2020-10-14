@@ -1,9 +1,11 @@
 import 'dart:io';
-import 'package:qiniu_sdk_base/src/task/put_parts_task/put_parts_task.dart';
-import 'package:qiniu_sdk_base/src/task/task_manager.dart';
 
 import 'config/config.dart';
+import 'task/put_parts_task/put_parts_task.dart';
 import 'task/put_task.dart';
+import 'task/task_manager.dart';
+
+export 'config/config.dart';
 
 /// 客户端
 class Storage {

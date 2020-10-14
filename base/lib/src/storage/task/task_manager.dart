@@ -1,5 +1,6 @@
 import 'package:meta/meta.dart';
-import 'package:qiniu_sdk_base/src/config/config.dart';
+
+import '../config/config.dart';
 
 import 'request_task.dart';
 import 'task.dart';

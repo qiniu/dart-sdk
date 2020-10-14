@@ -1,4 +1,4 @@
-import 'package:qiniu_sdk_base/src/config/config.dart';
+import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
 import 'package:test/test.dart';
 
 import 'config.dart';
