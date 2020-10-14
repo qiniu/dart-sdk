@@ -2,9 +2,7 @@ import 'package:meta/meta.dart';
 
 /// 上传策略
 ///
-/// 关于具体信息查看
-///
-/// https://developer.qiniu.com/kodo/manual/1206/put-policy
+/// 更多信息请查看[官方文档-上传策略](https://developer.qiniu.com/kodo/manual/1206/put-policy)
 class PutPolicy {
   /// 指定上传的目标资源空间 Bucket 和资源键 Key（最大为 750 字节）。
   ///
@@ -52,13 +50,8 @@ class PutPolicy {
   /// [returnBody] 声明服务端的响应格式。
   ///
   /// 可以使用 <魔法变量> 和 <自定义变量>，必须是合法的 JSON 地址，
-  /// 关于 <魔法变量> 请参阅：
-  ///
-  /// https://developer.qiniu.com/kodo/manual/1235/vars#magicvar
-  ///
-  /// 关于 <自定义变量> 请参阅：
-  ///
-  ///  https://developer.qiniu.com/kodo/manual/1235/vars#xvar
+  /// 关于 <魔法变量> 请参阅：[官方文档-魔法变量](https://developer.qiniu.com/kodo/manual/1235/vars#magicvar)
+  /// 关于 <自定义变量> 请参阅：[官方文档-自定义变量](https://developer.qiniu.com/kodo/manual/1235/vars#xvar)
   final String returnBody;
 
   /// 上传成功后，七牛云向业务服务器发送 POST 请求的 URL。
@@ -86,13 +79,7 @@ class PutPolicy {
   /// [fileType] = 2（上传归档存储文件）时，不支持使用该参数，
   /// 每个指令是一个 API 规格字符串，多个指令用 ; 分隔，
   /// 可以使用 <魔法变量> 和 <自定义变量>，
-  /// 具体信息可以查看文档：
-  ///
-  /// https://developer.qiniu.com/kodo/manual/1206/put-policy#persistentOps
-  ///
-  /// 示例：
-  ///
-  /// https://developer.qiniu.com/kodo/manual/1206/put-policy#demo
+  /// 改字段的具体使用信息可以查看：[官方文档-#persistentOps](https://developer.qiniu.com/kodo/manual/1206/put-policy#persistentOps)
   final String persistentOps;
 
   /// 接收持久化处理结果通知的 URL。

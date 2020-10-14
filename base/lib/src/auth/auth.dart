@@ -13,19 +13,12 @@ class TokenInfo {
 
 /// 提供用于鉴权的相关功能。
 ///
-/// 安全机制文档请参阅
-///
-/// https://developer.qiniu.com/kodo/manual/1644/security
+/// 更多信息请查看[官方文档-安全机制](https://developer.qiniu.com/kodo/manual/1644/security)
 class Auth {
   /// 鉴权所需的 [accessKey]。
   ///
-  /// 如何生成以及查看请参阅：
-  ///
-  /// http://developer.qiniu.com/article/developer/security/index.html
-  ///
-  /// 使用须知请查看：
-  ///
-  /// https://developer.qiniu.com/kodo/kb/1334/the-access-key-secret-key-encryption-key-safe-use-instructions
+  /// 更多信息请查看[官方文档-密钥 AccessKey/SecretKey](https://developer.qiniu.com/kodo/manual/1644/security#aksk)
+  /// 使用须知请查看[官方文档-密钥安全使用须知](https://developer.qiniu.com/kodo/kb/1334/the-access-key-secret-key-encryption-key-safe-use-instructions)
   final String accessKey;
 
   /// 鉴权所需的 [secretKey]。
@@ -97,8 +90,7 @@ class Auth {
     var accessKey = segments.first;
 
     /// 具体的 token 信息可以参考这里。
-    ///
-    /// https://github.com/qbox/product/blob/master/kodo/auths/UpToken.md#admin-uptoken-authorization
+    /// [内部文档](https://github.com/qbox/product/blob/master/kodo/auths/UpToken.md#admin-uptoken-authorization)
     if (segments.length >= 3) {
       if (segments.last == '') {
         throw ArgumentError('invalid token');
