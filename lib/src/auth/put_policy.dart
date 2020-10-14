@@ -4,7 +4,7 @@ import 'package:meta/meta.dart';
 ///
 /// 关于具体信息查看
 ///
-///  https://developer.qiniu.com/kodo/manual/1206/put-policy
+/// https://developer.qiniu.com/kodo/manual/1206/put-policy
 class PutPolicy {
   /// 指定上传的目标资源空间 Bucket 和资源键 Key（最大为 750 字节）。
   ///
@@ -16,7 +16,7 @@ class PutPolicy {
   final String scope;
 
   /// 获取 Bucket。
-  /// 
+  ///
   /// 从 [scope] 中获取 Bucket。
   String getBucket() {
     return scope.split(':').first;
@@ -169,7 +169,7 @@ class PutPolicy {
         assert(deadline != null);
 
   Map<String, dynamic> toJson() {
-    return <String, dynamic>{
+    return {
       'scope': scope,
       'isPrefixalScope': isPrefixalScope,
       'deadline': deadline,
@@ -194,7 +194,7 @@ class PutPolicy {
     }..removeWhere((key, value) => value == null);
   }
 
-  static PutPolicy fromJson(Map<String, dynamic> json) {
+  factory PutPolicy.fromJson(Map<String, dynamic> json) {
     return PutPolicy(
       scope: json['scope'] as String,
       deadline: json['deadline'] as int,

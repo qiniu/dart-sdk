@@ -3,6 +3,8 @@ import 'package:meta/meta.dart';
 import 'package:crypto/crypto.dart';
 import './put_policy.dart';
 
+export 'put_policy.dart';
+
 class TokenInfo {
   final String accessKey;
   final PutPolicy putPolicy;
@@ -84,7 +86,7 @@ class Auth {
   /// 解析 token 信息。
   ///
   /// 从 Token 字符串中解析 [accessKey]、[PutPolicy] 信息
-  static TokenInfo parseToken({@required String token}) {
+  static TokenInfo parseToken(String token) {
     assert(token != null && token != '');
     var segments = token.split(':');
     if (segments.length < 2) {

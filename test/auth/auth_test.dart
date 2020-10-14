@@ -1,7 +1,7 @@
 import 'dart:convert';
 
+import 'package:qiniu_sdk_base/src/auth/auth.dart';
 import 'package:test/test.dart';
-import 'package:qiniu_sdk_base/sdk_base.dart';
 import 'package:qiniu_sdk_base/src/auth/put_policy.dart';
 
 class UploadTokenTestData {
@@ -71,11 +71,10 @@ void main() {
         ),
         UploadTokenTestData(
           PutPolicy(
-            scope: 'testBucket',
-            deadline: 1600000000,
-            returnBody: '{"key": \$(key)}',
-            callbackUrl: 'http://test.qiniu.com'
-          ),
+              scope: 'testBucket',
+              deadline: 1600000000,
+              returnBody: '{"key": \$(key)}',
+              callbackUrl: 'http://test.qiniu.com'),
           'iN7NgwM31j4-BZacMjPrOQBs34UG1maYCAQmhdCV:noK7jkMNZbw-padaaHy71buHpy8=:eyJzY29wZSI6InRlc3RCdWNrZXQiLCJkZWFkbGluZSI6MTYwMDAwMDAwMCwicmV0dXJuQm9keSI6IntcImtleVwiOiAkKGtleSl9IiwiY2FsbGJhY2tVcmwiOiJodHRwOi8vdGVzdC5xaW5pdS5jb20ifQ==',
         ),
         UploadTokenTestData(
@@ -87,18 +86,18 @@ void main() {
         )
       ];
 
-      testDataTable.forEach((testData) {
+      for (final testData in testDataTable) {
         var token = auth.generateUploadToken(putPolicy: testData.putPolicy);
         expect(token, equals(testData.expectedToken));
 
-        var tokenInfo = Auth.parseToken(token: token);
+        var tokenInfo = Auth.parseToken(token);
         expect(tokenInfo.accessKey, equals(auth.accessKey));
 
         expect(
           jsonEncode(tokenInfo.putPolicy),
           equals(jsonEncode(testData.putPolicy)),
         );
-      });
+      }
     });
 
     test('GenerateDownloadToken and parseToken should all well', () {
@@ -129,7 +128,7 @@ void main() {
         ),
       ];
 
-      testDataTable.forEach((testData) {
+      for (final testData in testDataTable) {
         var token = auth.generateDownloadToken(
           key: testData.key,
           deadline: testData.deadline,
@@ -137,10 +136,10 @@ void main() {
         );
 
         expect(token, equals(testData.expectedToken));
-        var tokenInfo = Auth.parseToken(token: token);
+        var tokenInfo = Auth.parseToken(token);
         expect(tokenInfo.accessKey, equals(auth.accessKey));
         expect(tokenInfo.putPolicy, equals(null));
-      });
+      }
     });
 
     test('GenerateAccessToken and parseToken should all well', () {
@@ -155,13 +154,13 @@ void main() {
         ),
       ];
 
-      testDataTable.forEach((testData) {
+      for (final testData in testDataTable) {
         var token = auth.generateAccessToken(bytes: testData.bytes);
         expect(token, equals(testData.expectedToken));
-        var tokenInfo = Auth.parseToken(token: token);
+        var tokenInfo = Auth.parseToken(token);
         expect(tokenInfo.accessKey, equals(auth.accessKey));
         expect(tokenInfo.putPolicy, equals(null));
-      });
+      }
     });
   });
 }
