@@ -3,6 +3,10 @@ language: dart
 dart:
   - beta
 
+before_script: 
+  # 清理 env 文件，防止配置在 travis 中的环境变量被文件里的覆盖
+  - rm -fr .env
+
 jobs:
   include:
     # 检查 lint 并在 warnings、infos 时报错退出
