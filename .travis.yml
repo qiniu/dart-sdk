@@ -1,0 +1,45 @@
+language: dart
+
+dart:
+  - beta
+
+env:
+  - BASE_ROOT=$TRAVIS_BUILD_DIR/base
+  - FLUTTER_ROOT=$TRAVIS_BUILD_DIR/flutter
+
+before_script:
+  - cd $BASE_ROOT && rm -rf .env
+
+jobs:
+  include:
+    # 检查 lint 并在 warnings、infos 时报错退出
+    - stage: base(analyze,format,test)
+      name: "Analyze"
+      os: linux
+      script: cd $BASE_ROOT && dartanalyzer --fatal-warnings --fatal-infos .
+
+    # 检查格式并在异常时退出
+    - stage: base(analyze,format,test)
+      name: "Format"
+      os: linux
+      script: cd $BASE_ROOT && dartfmt -n --set-exit-if-changed .
+
+    # 执行测试（已开启 null safe）
+    - stage: base(analyze,format,test)
+      name: "Vm Tests"
+      os: linux
+      script: cd $BASE_ROOT && pub run --enable-experiment=non-nullable test -p vm .
+
+    # 检查 lint 并在 warnings、infos 时报错退出
+    # - stage: flutter(analyze,format,test)
+    #   name: "Analyze"
+    #   os: linux
+    #   script: cd $BASE_ROOT && dartanalyzer --fatal-warnings --fatal-infos .
+
+stages:
+  - base(analyze,format,test)
+  # - flutter(analyze,format,test)
+
+cache:
+  directories:
+    - $HOME/.pub-cache
