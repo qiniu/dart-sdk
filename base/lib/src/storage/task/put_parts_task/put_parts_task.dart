@@ -3,8 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:dio/dio.dart';
 
-import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
-
+import '../../../auth/auth.dart';
 import '../request_task.dart';
 
 part 'init_parts_task.dart';

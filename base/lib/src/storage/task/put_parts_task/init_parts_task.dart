@@ -20,7 +20,7 @@ class InitParts {
 }
 
 /// 初始化一个分片上传任务，为 [UploadPartsTask] 提供 uploadId
-class InitPartsTask extends RequestTask<InitParts> with CacheMixin {
+class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
   String token;
   String bucket;
   String host;
