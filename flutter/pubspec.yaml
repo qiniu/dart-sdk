@@ -6,7 +6,7 @@ homepage: TODO
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
-  flutter: ">=2.10.0-0.0.dev <3.0.0"
+  flutter: ">=1.17.0 <2.0.0"
 
 dependencies:
   flutter:
