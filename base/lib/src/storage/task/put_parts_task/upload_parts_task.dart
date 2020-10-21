@@ -69,7 +69,6 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     required this.host,
     required this.partSize,
     required this.maxPartsRequestNumber,
-
     this.key,
   });
 

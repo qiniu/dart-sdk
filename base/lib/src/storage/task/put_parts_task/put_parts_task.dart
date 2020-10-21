@@ -19,7 +19,7 @@ class PutPartsTask extends RequestTask<CompleteParts> {
 
   final int partSize;
   final int maxPartsRequestNumber;
-  
+
   final String? key;
 
   // 在 preStart 中延迟初始化
@@ -30,7 +30,6 @@ class PutPartsTask extends RequestTask<CompleteParts> {
     required this.token,
     required this.partSize,
     required this.maxPartsRequestNumber,
-
     this.key,
   });
 
@@ -85,7 +84,8 @@ class PutPartsTask extends RequestTask<CompleteParts> {
         /// 满足以下两种情况清理缓存：
         /// 1、如果服务端文件被删除了，清除本地缓存
         /// 2、如果 uploadId 等参数不对原因会导致 400
-        if (error.response.statusCode == 612 || error.response.statusCode == 400) {
+        if (error.response.statusCode == 612 ||
+            error.response.statusCode == 400) {
           initPartsTask.clearCache();
           uploadParts.clearCache();
         }
@@ -124,11 +124,9 @@ class PutPartsTask extends RequestTask<CompleteParts> {
       token: token,
       bucket: bucket!,
       host: host,
-
       partSize: partSize,
       uploadId: uploadId,
       maxPartsRequestNumber: maxPartsRequestNumber,
-      
       key: key,
     )..addProgressListener((sent, total) {
         /// complete parts 没完成之前应该是 99%，所以 + 1
