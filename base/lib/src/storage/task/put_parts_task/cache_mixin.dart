@@ -14,7 +14,7 @@ mixin CacheMixin<T> on RequestTask<T> {
     config.cacheProvider.setItem(_cacheKey, data);
   }
 
-  String getCache() {
+  String? getCache() {
     return config.cacheProvider.getItem(_cacheKey);
   }
 }

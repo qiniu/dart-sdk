@@ -2,72 +2,85 @@ part of 'put_parts_task.dart';
 
 /// uploadPart 的返回体
 class UploadPart {
-  String etag;
-  String md5;
+  final String? md5;
+  final String etag;
 
-  UploadPart({this.etag, this.md5});
+  UploadPart({
+    required this.md5,
+    required this.etag,
+  });
 
   factory UploadPart.fromJson(Map json) {
-    return UploadPart(etag: json['etag'] as String, md5: json['md5'] as String);
+    return UploadPart(
+      md5: json['md5'] as String,
+      etag: json['etag'] as String,
+    );
   }
 
   Map<String, dynamic> toJson() {
-    return {'etag': etag, 'md5': md5};
+    return <String, dynamic>{
+      'etag': etag,
+      'md5': md5,
+    };
   }
 }
 
 /// 批处理上传 parts 的任务，为 [CompletePartsTask] 提供 [Part]
 class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
-  String token;
-  String host;
-  String uploadId;
-  File file;
-  String bucket;
-  String key;
-  int partSize;
-  int maxPartsRequestNumber;
+  final File file;
+  final String token;
+  final String bucket;
+  final String uploadId;
+  final String host;
+
+  final int partSize;
+  final int maxPartsRequestNumber;
+
+  final String? key;
 
   @override
-  String _cacheKey;
+  late final String _cacheKey;
 
   /// 文件 bytes 长度
-  int _fileByteLength;
+  late final int _fileByteLength;
 
   /// 每个上传分片的字节长度
   ///
   /// 文件会按照此长度切片
-  int _partByteLength;
+  late final int _partByteLength;
 
   /// 上传成功后把 part 信息存起来
-  final List<Part> _parts = [];
+  late final List<Part> _parts = [];
 
   /// 读文件起始点偏移量
-  int _byteStartOffset = 0;
+  late int _byteStartOffset;
 
   /// 当前上传到哪一块 chunk
-  int _partNumber = 0;
+  late int _partNumber;
 
   /// 剩余多少被允许的请求数
-  int _idleRequestNumber;
+  late int _idleRequestNumber;
 
   UploadPartsTask({
-    this.token,
-    this.host,
-    this.partSize,
-    this.uploadId,
-    this.file,
-    this.bucket,
+    required this.file,
+    required this.token,
+    required this.bucket,
+    required this.uploadId,
+    required this.host,
+    required this.partSize,
+    required this.maxPartsRequestNumber,
+
     this.key,
-    this.maxPartsRequestNumber,
   });
+
+  static String getCacheKey(String path, int length, String? key) {
+    return 'qiniu_dart_sdk_upload_parts_task_${path}_key_${key}_size_$length';
+  }
 
   @override
   void preStart() {
-    _fileByteLength = file.lengthSync();
     _partByteLength = partSize * 1024 * 1024;
     _idleRequestNumber = maxPartsRequestNumber;
-    _cacheKey =
-        'qiniu_dart_sdk_upload_parts_task_${file.path}_key_${key}_size_$_fileByteLength';
     super.preStart();
   }
 
@@ -78,7 +91,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   }
 
   @override
-  void postError(error) {
+  void postError(Object error) {
     /// 取消，网络问题等可能导致上传中断，缓存已上传的分片信息
     setCache(json.encode(_parts));
     super.postError(error);
@@ -86,17 +99,25 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
 
   @override
   Future<List<Part>> createTask() async {
-    final uploadParts = getCache();
-    if (uploadParts != null) {
-      _parts.addAll(json.decode(uploadParts) as List<Part>);
+    _fileByteLength = await file.length();
+    _cacheKey = getCacheKey(file.path, _fileByteLength, key);
+
+    /// 获取缓存
+    final uploadPartsCache = getCache();
+
+    /// 尝试从缓存恢复
+    if (uploadPartsCache != null) {
+      /// FIXME: 尽量不去 as List<Part>
+      _parts.addAll(json.decode(uploadPartsCache) as List<Part>);
     }
+
     final com = Completer<List<Part>>();
     _uploadParts(() => com.complete(_parts), com.completeError);
 
     return com.future;
   }
 
-  void _uploadParts(void Function() done, void Function(dynamic) error) {
+  void _uploadParts(void Function() done, void Function(Object) error) {
     while (_idleRequestNumber > 0 && _byteStartOffset < _fileByteLength) {
       _partNumber++;
 
@@ -159,45 +180,56 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
 
 /// 上传一个 part 的任务
 class UploadPartTask extends RequestTask<UploadPart> {
-  String token;
-  String host;
-  String bucket;
-  String key;
-  String uploadId;
-  Part cachedPart;
+  final String token;
+  final String bucket;
+  final String uploadId;
+  final String host;
 
   /// 字节流的长度
   ///
   /// 如果 data 是 Stream 的话，Dio 需要判断 content-length 才会调用 onSendProgress
   /// https://github.com/flutterchina/dio/blob/21136168ab39a7536835c7a59ce0465bb05feed4/dio/lib/src/dio.dart#L1000
-  int byteLength;
-  int partNumber;
-  Stream<List<int>> byteStream;
+  final int byteLength;
+  final int partNumber;
+  final Stream<List<int>> byteStream;
+
+  final Part? cachedPart;
+  final String? key;
 
   UploadPartTask({
+    required this.token,
+    required this.bucket,
+    required this.uploadId,
+    required this.host,
+    required this.byteLength,
+    required this.partNumber,
+    required this.byteStream,
     this.cachedPart,
-    this.token,
-    this.host,
-    this.bucket,
     this.key,
-    this.uploadId,
-    this.byteLength,
-    this.byteStream,
-    this.partNumber,
   });
 
   @override
   Future<UploadPart> createTask() async {
     if (cachedPart != null) {
-      return UploadPart(etag: cachedPart.etag, md5: null);
+      return UploadPart(etag: cachedPart!.etag, md5: null);
     }
-    final response = await client.put<Map>(
-        '$host/buckets/$bucket/objects/${base64Url.encode(utf8.encode(key))}/uploads/$uploadId/$partNumber',
-        data: byteStream,
-        options: Options(headers: {
-          Headers.contentLengthHeader: byteLength,
-          'Authorization': 'UpToken $token'
-        }));
+
+    final headers = <String, dynamic>{
+      'Authorization': 'UpToken $token',
+      Headers.contentLengthHeader: byteLength,
+    };
+
+    final paramMap = <String, String>{'buckets': bucket, 'uploads': uploadId};
+
+    if (key != null) {
+      paramMap.addAll({'objects': base64Url.encode(utf8.encode(key!))});
+    }
+
+    final response = await client.put<Map<String, dynamic>>(
+      '$host/${paramMap.entries.join('/')}/$partNumber',
+      data: byteStream,
+      options: Options(headers: headers),
+    );
 
     return UploadPart.fromJson(response.data);
   }

@@ -5,7 +5,8 @@ import '../config/config.dart';
 import 'request_task.dart';
 import 'task.dart';
 
-class TaskManager<T extends Task> {
+class TaskManager<R, T extends Task<R>> {
+  
   @protected
   final List<Task> workingTasks = [];
 
@@ -41,10 +42,13 @@ class TaskManager<T extends Task> {
   }
 }
 
-class RequestTaskManager<T extends RequestTask> extends TaskManager<T> {
-  Config config;
+class RequestTaskManager<T extends RequestTask<dynamic>> extends TaskManager<dynamic, T> {
+  
+  final Config config;
 
-  RequestTaskManager({this.config});
+  RequestTaskManager({
+    required this.config,
+  });
 
   T addRequestTask(T task) {
     task

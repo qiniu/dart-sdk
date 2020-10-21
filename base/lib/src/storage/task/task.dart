@@ -29,7 +29,7 @@ abstract class Task<T> {
 
   /// 在 [createTask] 的返回值出错之后调用
   @mustCallSuper
-  void postError(error) {
+  void postError(Object error) {
     completer.completeError(error);
   }
 

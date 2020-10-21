@@ -9,21 +9,24 @@ export 'config/config.dart';
 
 /// 客户端
 class Storage {
-  RequestTaskManager taskManager;
-  Config config;
+  late final Config config;
+  late final RequestTaskManager taskManager;
 
-  Storage({this.config}) {
-    config = config ?? Config();
-    taskManager = RequestTaskManager(config: config);
+  Storage({Config? config}) {
+    this.config = config ?? Config();
+    taskManager = RequestTaskManager(config: this.config);
   }
 
-  PutTask putFile(File file, String token, {PutOptions options}) {
-    final key = options.key;
-
+  // 单文件上传
+  PutTask putFile(
+    File file,
+    String token, {
+    PutOptions? options,
+  }) {
     final task = PutTask(
-      token: token,
-      key: key,
       file: file,
+      token: token,
+      key: options?.key,
     );
 
     return taskManager.addRequestTask(task) as PutTask;
@@ -33,14 +36,14 @@ class Storage {
   PutPartsTask putFileParts(
     File file,
     String token, {
-    PutPartsOptions options,
+    PutPartsOptions? options,
   }) {
     final task = PutPartsTask(
-      token: token,
-      key: options.key,
       file: file,
-      partSize: options.partSize,
-      maxPartsRequestNumber: options.maxPartsRequestNumber,
+      token: token,
+      key: options?.key,
+      partSize: options?.partSize ?? 4,
+      maxPartsRequestNumber: options?.maxPartsRequestNumber ?? 5,
     );
 
     return taskManager.addRequestTask(task) as PutPartsTask;
@@ -49,23 +52,23 @@ class Storage {
 
 class PutOptions {
   // 资源名。如果不传则后端自动生成
-  String key;
+  final String? key;
 
   PutOptions({this.key});
 }
 
 class PutPartsOptions {
   // 资源名。如果不传则后端自动生成
-  String key;
-
-  // 最大并发请求数，默认 5
-  int maxPartsRequestNumber;
+  final String? key;
 
   /// 切片大小，单位 MB
   ///
   /// 超出 [partSize] 的文件大小会把每片按照 [partSize] 的大小切片并上传
   /// 默认 4MB，最小不得小于 1MB，最大不得大于 1024 MB
-  int partSize;
+  final int partSize;
+
+  // 最大并发请求数，默认 5
+  final int maxPartsRequestNumber;
 
   PutPartsOptions({
     this.key,

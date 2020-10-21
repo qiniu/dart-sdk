@@ -4,7 +4,7 @@ import 'package:dotenv/dotenv.dart' show load, clean, isEveryDefined, env;
 import 'package:qiniu_sdk_base/src/auth/auth.dart';
 import 'package:test/test.dart';
 
-String token;
+late final String token;
 
 bool get isSensitiveDataDefined {
   load();
@@ -19,14 +19,14 @@ void configEnv() {
   setUpAll(() {
     if (isSensitiveDataDefined) {
       var auth = Auth(
-        accessKey: env['QINIU_DART_SDK_ACCESS_KEY'],
-        secretKey: env['QINIU_DART_SDK_SECRET_KEY'],
+        accessKey: env['QINIU_DART_SDK_ACCESS_KEY']!,
+        secretKey: env['QINIU_DART_SDK_SECRET_KEY']!,
       );
 
       token = auth.generateUploadToken(
         putPolicy: PutPolicy(
             insertOnly: 0,
-            scope: env['QINIU_DART_SDK_TOKEN_SCOPE'],
+            scope: env['QINIU_DART_SDK_TOKEN_SCOPE']!,
             deadline: DateTime.now().millisecondsSinceEpoch + 3600),
       );
     } else {

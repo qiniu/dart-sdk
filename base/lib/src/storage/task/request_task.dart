@@ -66,14 +66,13 @@ mixin RequestStatusMixin {
   }
 }
 
-abstract class RequestTask<T> extends Task<T>
-    with ProgressListenersMixin, RequestStatusMixin {
+abstract class RequestTask<T> extends Task<T> with ProgressListenersMixin, RequestStatusMixin {
   final Dio client = Dio();
   final CancelToken _cancelToken = CancelToken();
 
   /// [RequestTaskManager.addRequestTask] 会初始化这个
-  Config config;
-  RequestTaskManager manager;
+  late final Config config;
+  late final RequestTaskManager manager;
 
   @mustCallSuper
   void cancel() {
@@ -86,7 +85,7 @@ abstract class RequestTask<T> extends Task<T>
   @override
   @mustCallSuper
   void preStart() {
-    client.httpClientAdapter = config.httpClientAdapter;
+    client.httpClientAdapter = config?.httpClientAdapter;
     client.interceptors.add(InterceptorsWrapper(onRequest: (options) {
       status = RequestStatus.Request;
       notifyStatusListeners(status);
@@ -108,7 +107,7 @@ abstract class RequestTask<T> extends Task<T>
     super.postReceive(data);
   }
 
-  /// [creatTask] 被取消后触发
+  /// [createTask] 被取消后触发
   @mustCallSuper
   void postCancel(DioError error) {
     status = RequestStatus.Cancel;
@@ -117,13 +116,14 @@ abstract class RequestTask<T> extends Task<T>
 
   @override
   @mustCallSuper
-  void postError(error) {
+  void postError(Object error) {
     if (error is DioError && error.type == DioErrorType.CANCEL) {
       postCancel(error);
     } else {
       status = RequestStatus.Error;
       notifyStatusListeners(status);
     }
+    
     super.postError(error);
   }
 }

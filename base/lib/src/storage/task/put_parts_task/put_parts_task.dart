@@ -14,22 +14,27 @@ part 'cache_mixin.dart';
 
 /// 分片上传任务
 class PutPartsTask extends RequestTask<CompleteParts> {
-  File file;
-  String key;
-  String token;
-  String bucket;
-  int partSize;
-  int maxPartsRequestNumber;
+  final File file;
+  final String token;
+
+  final int partSize;
+  final int maxPartsRequestNumber;
+  
+  final String? key;
+
+  // 在 preStart 中延迟初始化
+  late final String? bucket;
 
   PutPartsTask({
+    required this.file,
+    required this.token,
+    required this.partSize,
+    required this.maxPartsRequestNumber,
+
     this.key,
-    this.file,
-    this.token,
-    this.partSize,
-    this.maxPartsRequestNumber,
   });
 
-  RequestTask _currentWorkingTask;
+  RequestTask? _currentWorkingTask;
 
   /// 已发送字节长度
   int _sent = 0;
@@ -39,7 +44,13 @@ class PutPartsTask extends RequestTask<CompleteParts> {
 
   @override
   void preStart() {
-    bucket = Auth.parseToken(token).putPolicy.getBucket();
+    final putPolicy = Auth.parseToken(token).putPolicy;
+    if (putPolicy == null) {
+      throw ArgumentError('invalid token');
+    }
+
+    bucket = putPolicy.getBucket();
+
     super.preStart();
   }
 
@@ -69,18 +80,18 @@ class PutPartsTask extends RequestTask<CompleteParts> {
       final parts = await uploadParts.future;
       completeParts =
           await _createCompleteParts(host, initParts.uploadId, parts).future;
-    } catch (e) {
-      if (e is DioError) {
+    } catch (error) {
+      if (error is DioError) {
         /// 满足以下两种情况清理缓存：
         /// 1、如果服务端文件被删除了，清除本地缓存
         /// 2、如果 uploadId 等参数不对原因会导致 400
-        if (e.response.statusCode == 612 || e.response.statusCode == 400) {
+        if (error.response.statusCode == 612 || error.response.statusCode == 400) {
           initPartsTask.clearCache();
           uploadParts.clearCache();
         }
 
         /// 如果服务端文件被删除了，重新上传
-        if (e.response.statusCode == 612) {
+        if (error.response.statusCode == 612) {
           return createTask();
         }
       }
@@ -97,11 +108,11 @@ class PutPartsTask extends RequestTask<CompleteParts> {
   /// 初始化上传信息，分片上传的第一步
   InitPartsTask _createInitParts(String host) {
     final task = InitPartsTask(
-      token: token,
-      host: host,
-      bucket: bucket,
-      key: key,
       file: file,
+      token: token,
+      bucket: bucket!,
+      host: host,
+      key: key,
     );
 
     return _currentWorkingTask = manager.addRequestTask(task) as InitPartsTask;
@@ -109,14 +120,16 @@ class PutPartsTask extends RequestTask<CompleteParts> {
 
   UploadPartsTask _createUploadParts(String host, String uploadId) {
     final task = UploadPartsTask(
-      token: token,
-      host: host,
-      bucket: bucket,
-      key: key,
       file: file,
+      token: token,
+      bucket: bucket!,
+      host: host,
+
       partSize: partSize,
       uploadId: uploadId,
       maxPartsRequestNumber: maxPartsRequestNumber,
+      
+      key: key,
     )..addProgressListener((sent, total) {
         /// complete parts 没完成之前应该是 99%，所以 + 1
         notifyProgress(sent, total + 1);
@@ -134,11 +147,11 @@ class PutPartsTask extends RequestTask<CompleteParts> {
   ) {
     final task = CompletePartsTask(
       token: token,
-      host: host,
-      bucket: bucket,
-      key: key,
+      bucket: bucket!,
       uploadId: uploadId,
       parts: parts,
+      host: host,
+      key: key,
     )..addProgressListener((sent, total) {
         /// UploadPartsTask 那边给 total 做了 +1 的操作，这里完成后补上 1 字节确保 100%
         notifyProgress(_sent + 1, _total);
