@@ -1,5 +1,3 @@
-import 'package:meta/meta.dart';
-
 /// 上传策略
 ///
 /// 更多信息请查看[官方文档-上传策略](https://developer.qiniu.com/kodo/manual/1206/put-policy)

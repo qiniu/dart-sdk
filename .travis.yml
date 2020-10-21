@@ -19,7 +19,7 @@ jobs:
     - stage: base(analyze,format,test)
       name: "Analyze"
       os: linux
-      script: cd $TRAVIS_BUILD_DIR/base && dartanalyzer --fatal-warnings --fatal-infos .
+      script: cd $TRAVIS_BUILD_DIR/base && dartanalyzer --enable-experiment=non-nullable --fatal-warnings --fatal-infos .
     # 检查格式并在异常时退出
     - stage: base(analyze,format,test)
       name: "Format"

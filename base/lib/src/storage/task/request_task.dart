@@ -86,7 +86,7 @@ abstract class RequestTask<T> extends Task<T>
   @override
   @mustCallSuper
   void preStart() {
-    client.httpClientAdapter = config?.httpClientAdapter;
+    client.httpClientAdapter = config.httpClientAdapter;
     client.interceptors.add(InterceptorsWrapper(onRequest: (options) {
       status = RequestStatus.Request;
       notifyStatusListeners(status);
