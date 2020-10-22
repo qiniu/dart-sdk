@@ -1,8 +1,17 @@
 part of 'put_parts_task.dart';
 
+class PartCache {
+  final int size;
+  final Part part;
+  PartCache({
+    required this.size,
+    required this.part,
+  });
+}
+
 /// uploadPart 的返回体
 class UploadPart {
-  final String? md5;
+  final String md5;
   final String etag;
 
   UploadPart({
@@ -49,8 +58,13 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   /// 文件会按照此长度切片
   late final int _partByteLength;
 
+  late final Map<int, PartCache> _cachedUploadPartMap;
+
   /// 上传成功后把 part 信息存起来
-  late final List<Part> _parts = [];
+  final Map<int, Part> _uploadedParts = {};
+
+  /// 已发送的数据记录，key 是 partNumber, value 是 已发送的长度
+  final Map<int, int> _sentMap = {};
 
   /// 读文件起始点偏移量
   late int _byteStartOffset;
@@ -72,58 +86,90 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     this.key,
   });
 
-  static String getCacheKey(String path, int length, String? key) {
-    return 'qiniu_dart_sdk_upload_parts_task_${path}_key_${key}_size_$length';
+  static String getCacheKey(
+    String path,
+    int length,
+    int partSize,
+    String? key,
+  ) {
+    final keyMap = {
+      'key': key,
+      'path': path,
+      'file_size': length,
+      'part_size': partSize,
+    };
+
+    return 'qiniu_dart_sdk_upload_parts_task@[${keyMap.values.toList().join('/')}]';
   }
 
   @override
   void preStart() {
+    _fileByteLength = file.lengthSync();
     _partByteLength = partSize * 1024 * 1024;
     _idleRequestNumber = maxPartsRequestNumber;
+    _cacheKey = getCacheKey(file.path, _fileByteLength, partSize, key);
+    _cachedUploadPartMap = getUploadedPartFromCache();
     super.preStart();
   }
 
   @override
   void postReceive(data) {
-    setCache(json.encode(data));
+    storeUploadedPartToCache();
     super.postReceive(data);
   }
 
   @override
   void postError(Object error) {
     /// 取消，网络问题等可能导致上传中断，缓存已上传的分片信息
-    setCache(json.encode(_parts));
+    storeUploadedPartToCache();
     super.postError(error);
+  }
+
+  void storeUploadedPartToCache() {
+    if (_uploadedParts.isEmpty) {
+      return;
+    }
+
+    final cachedPartMap = <int, PartCache>{};
+    for (var index = 0; index < _uploadedParts.length; index++) {
+      cachedPartMap[index] = PartCache(
+        size: _sentMap[index] ?? 0,
+        part: _uploadedParts[index]!,
+      );
+    }
+
+    setCache(json.encode(cachedPartMap));
+  }
+
+  // 从缓存恢复已经上传的 part
+  Map<int, PartCache> getUploadedPartFromCache() {
+    /// 获取缓存
+    final cachedData = getCache();
+    var cachedPartMap = <int, PartCache>{};
+
+    /// 尝试从缓存恢复
+    if (cachedData != null) {
+      try {
+        cachedPartMap = json.decode(cachedData) as Map<int, PartCache>;
+      } catch (error) {
+        /// TODO: 上报 error
+        cachedPartMap.clear();
+      }
+    }
+
+    return cachedPartMap;
   }
 
   @override
   Future<List<Part>> createTask() async {
-    _fileByteLength = await file.length();
-    _cacheKey = getCacheKey(file.path, _fileByteLength, key);
-
-    /// 获取缓存
-    final uploadPartsCache = getCache();
-
-    /// 尝试从缓存恢复
-    if (uploadPartsCache != null) {
-      /// FIXME: 尽量不去 as List<Part>
-      _parts.addAll(json.decode(uploadPartsCache) as List<Part>);
-    }
-
-    final com = Completer<List<Part>>();
-    _uploadParts(() => com.complete(_parts), com.completeError);
-
-    return com.future;
+    final com = Completer<Map<int, Part>>();
+    _uploadParts(() => com.complete(_uploadedParts), com.completeError);
+    return (await com.future).values.toList();
   }
 
-  void _uploadParts(void Function() done, void Function(Object) error) {
+  void _uploadParts(void Function() done, void Function(Object) errorHandler) {
     while (_idleRequestNumber > 0 && _byteStartOffset < _fileByteLength) {
       _partNumber++;
-
-      final cachedPart = _parts.isNotEmpty
-          ? _parts.firstWhere((element) => element.partNumber == _partNumber)
-          : null;
-
       _idleRequestNumber--;
 
       /// 读文件终点偏移量
@@ -139,37 +185,53 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
 
       final partNumber = _partNumber;
 
-      final task = UploadPartTask(
-        cachedPart: cachedPart,
-        token: token,
-        host: host,
-        bucket: bucket,
-        key: key,
-        byteLength: _byteLength,
-        byteStream: byteStream,
-        uploadId: uploadId,
-        partNumber: _partNumber,
-      )..addProgressListener((sent, total) {
-          _sentMap[partNumber] = sent;
-          notifyProgress();
-        });
+      late final Future<Part> part;
 
-      task.future.then((data) {
+      /// 尝试获取当前 part 的缓存并更新上传进度
+      final _cachedPart = _cachedUploadPartMap[partNumber];
+      if (_cachedPart != null && _cachedPart.size == _byteLength) {
+        part = Future.value(_cachedPart.part);
+        notifyProgress();
+      } else {
+        /// 否则通过上传创建 part
+        final task = UploadPartTask(
+          token: token,
+          host: host,
+          bucket: bucket,
+          key: key,
+          byteLength: _byteLength,
+          byteStream: byteStream,
+          uploadId: uploadId,
+          partNumber: _partNumber,
+        )..addProgressListener((sent, total) {
+            _sentMap[partNumber] = sent;
+            notifyProgress();
+          });
+
+        /// 添加到 manager
+        manager.addRequestTask(task);
+
+        /// 转换成 Part 等待处理
+        part = task.future.then(
+          (uploadedPart) => Part(
+            partNumber: partNumber,
+            etag: uploadedPart.etag,
+          ),
+        );
+      }
+
+      part.then((part) {
         _idleRequestNumber++;
-        _parts.add(Part(partNumber: partNumber, etag: data.etag));
-        if (_parts.length == (_fileByteLength / _partByteLength).ceil()) {
+        _uploadedParts[part.partNumber] = part;
+        if (_uploadedParts.length ==
+            (_fileByteLength / _partByteLength).ceil()) {
           done();
         } else {
-          _uploadParts(done, error);
+          _uploadParts(done, errorHandler);
         }
-      }).catchError(error);
-
-      manager.addRequestTask(task);
+      }).catchError(errorHandler);
     }
   }
-
-  /// 已发送的数据记录，key 是 partNumber, value 是 已发送的长度
-  final Map<int, int> _sentMap = {};
 
   void notifyProgress() {
     final _sent = _sentMap.values.reduce((value, element) => value + element);
@@ -192,7 +254,7 @@ class UploadPartTask extends RequestTask<UploadPart> {
   final int partNumber;
   final Stream<List<int>> byteStream;
 
-  final Part? cachedPart;
+  final UploadPart? cachedUploadPart;
   final String? key;
 
   UploadPartTask({
@@ -203,14 +265,14 @@ class UploadPartTask extends RequestTask<UploadPart> {
     required this.byteLength,
     required this.partNumber,
     required this.byteStream,
-    this.cachedPart,
+    this.cachedUploadPart,
     this.key,
   });
 
   @override
   Future<UploadPart> createTask() async {
-    if (cachedPart != null) {
-      return UploadPart(etag: cachedPart!.etag, md5: null);
+    if (cachedUploadPart != null) {
+      return cachedUploadPart!;
     }
 
     final headers = <String, dynamic>{
@@ -218,7 +280,10 @@ class UploadPartTask extends RequestTask<UploadPart> {
       Headers.contentLengthHeader: byteLength,
     };
 
-    final paramMap = <String, String>{'buckets': bucket, 'uploads': uploadId};
+    final paramMap = <String, String>{
+      'buckets': bucket,
+      'uploads': uploadId,
+    };
 
     if (key != null) {
       paramMap.addAll({'objects': base64Url.encode(utf8.encode(key!))});

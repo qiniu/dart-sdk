@@ -28,7 +28,8 @@ class PutTask extends RequestTask<Put> {
   /// 上传凭证
   final String token;
 
-  // 资源名, 如果不传则后端自动生成
+  /// 资源名 
+  /// 如果不传则后端自动生成
   final String? key;
 
   PutTask({

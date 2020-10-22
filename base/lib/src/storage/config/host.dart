@@ -14,8 +14,9 @@ class DefaultHostProvider extends HostProvider {
     final protocol = Protocol.Https.value;
 
     if (putPolicy == null) {
-      /// 非 upload token 没有 putPolicy 信息
-      throw ArgumentError('invalid token');
+      throw ArgumentError(
+        'The token type is incorrect, does not contain putPolicy',
+      );
     }
 
     final url = protocol +

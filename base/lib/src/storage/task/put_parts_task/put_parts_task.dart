@@ -22,8 +22,8 @@ class PutPartsTask extends RequestTask<CompleteParts> {
 
   final String? key;
 
-  // 在 preStart 中延迟初始化
-  late final String? bucket;
+  /// 在 preStart 中延迟初始化
+  late final String bucket;
 
   PutPartsTask({
     required this.file,
@@ -31,7 +31,10 @@ class PutPartsTask extends RequestTask<CompleteParts> {
     required this.partSize,
     required this.maxPartsRequestNumber,
     this.key,
-  });
+  }) : assert(
+          partSize < 1 || partSize > 1024,
+          'partSize must be greater than 1 and less than 1024',
+        );
 
   RequestTask? _currentWorkingTask;
 
@@ -110,7 +113,7 @@ class PutPartsTask extends RequestTask<CompleteParts> {
     final task = InitPartsTask(
       file: file,
       token: token,
-      bucket: bucket!,
+      bucket: bucket,
       host: host,
       key: key,
     );
@@ -122,7 +125,7 @@ class PutPartsTask extends RequestTask<CompleteParts> {
     final task = UploadPartsTask(
       file: file,
       token: token,
-      bucket: bucket!,
+      bucket: bucket,
       host: host,
       partSize: partSize,
       uploadId: uploadId,
@@ -145,7 +148,7 @@ class PutPartsTask extends RequestTask<CompleteParts> {
   ) {
     final task = CompletePartsTask(
       token: token,
-      bucket: bucket!,
+      bucket: bucket,
       uploadId: uploadId,
       parts: parts,
       host: host,

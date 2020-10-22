@@ -4,7 +4,7 @@ abstract class CacheProvider {
   /// 设置一对数据
   void setItem(String key, String item);
 
-  /// 获取指定的 value
+  /// 根据 key 获取缓存
   String? getItem(String key);
 
   /// 删除指定 key 的缓存

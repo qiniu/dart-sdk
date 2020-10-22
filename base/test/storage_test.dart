@@ -52,7 +52,7 @@ void main() {
       options: PutOptions(key: 'test_for_put.txt'),
     );
 
-    int? _sent, _total;
+    late int? _sent, _total;
     putTask.addProgressListener((sent, total) {
       _sent = sent;
       _total = total;
@@ -80,7 +80,7 @@ void main() {
     final putPartsTask = storage.putFileParts(
       File('test_resource/test_for_put_parts.mp4'),
       token,
-      options: PutPartsOptions(key: 'test_for_put_parts.mp4'),
+      options: PutPartsOptions(key: 'test_for_put_parts.mp4', partSize: 1),
     );
 
     final response = await putPartsTask.future;
@@ -205,7 +205,8 @@ void main() {
       token,
       options: PutPartsOptions(key: 'test_for_put_parts.mp4', partSize: 1),
     );
-    int? _sent, _total;
+    
+    late int? _sent, _total;
     putPartsTask.addProgressListener((sent, total) {
       _sent = sent;
       _total = total;
