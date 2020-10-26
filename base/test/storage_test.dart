@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:qiniu_sdk_base/src/storage/task/put_by_part_task/put_by_part_task.dart';
+import 'package:qiniu_sdk_base/src/storage/task/put_parts_task/put_parts_task.dart';
 import 'package:qiniu_sdk_base/src/storage/task/put_response.dart';
 import 'package:test/test.dart';
 import 'package:dio/adapter.dart';
