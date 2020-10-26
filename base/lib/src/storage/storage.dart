@@ -1,10 +1,12 @@
 import 'dart:io';
 
 import 'config/config.dart';
+import 'controller.dart';
+import 'task/put_by_single_task.dart';
 import 'task/put_parts_task/put_parts_task.dart';
+import 'task/put_response.dart';
 import 'task/put_task.dart';
 import 'task/task_manager.dart';
-
 export 'config/config.dart';
 
 /// 客户端
@@ -17,8 +19,7 @@ class Storage {
     taskManager = RequestTaskManager(config: this.config);
   }
 
-  /// 单文件上传
-  PutTask putFile(
+  PutController<PutResponse> putFile(
     File file,
     String token, {
     PutOptions? options,
@@ -29,16 +30,35 @@ class Storage {
       key: options?.key,
     );
 
-    return taskManager.addRequestTask(task) as PutTask;
+    taskManager.addTask(task);
+    return PutController(task);
+  }
+
+  /// 单文件上传
+  PutController<PutResponse> putFileBySingle(
+    File file,
+    String token, {
+    PutBySingleOptions? options,
+  }) {
+    final task = PutBySingleTask(
+      file: file,
+      token: token,
+      key: options?.key,
+    );
+
+    taskManager.addTask(task);
+    return PutController(task);
   }
 
   /// 分片上传
-  PutPartsTask putFileParts(
+  /// FIXME: 应该使用 [listParts](https://developer.qiniu.com/kodo/api/6858/listparts) 重写现有缓存机制
+  /// FIXME: 取消时应该实现 [abortMultipartUpload](https://developer.qiniu.com/kodo/api/6367/abort-multipart-upload) 接口
+  PutController<PutResponse> putFileByPart(
     File file,
     String token, {
-    PutPartsOptions? options,
+    PutByPartOptions? options,
   }) {
-    final task = PutPartsTask(
+    final task = PutByPartTask(
       file: file,
       token: token,
       key: options?.key,
@@ -46,7 +66,8 @@ class Storage {
       maxPartsRequestNumber: options?.maxPartsRequestNumber ?? 5,
     );
 
-    return taskManager.addRequestTask(task) as PutPartsTask;
+    taskManager.addTask(task);
+    return PutController(task);
   }
 }
 
@@ -55,10 +76,33 @@ class PutOptions {
   /// 如果不传则后端自动生成
   final String? key;
 
-  PutOptions({this.key});
+  /// 自动启用分片上传的大小
+  /// 当文件尺寸大于该设置时自动启用分片上传，否则使用但文件直传
+  final int? automaticSliceSize;
+
+  /// 使用分片上传时的分片大小，默认值 4，单位为 MB
+  final int? partSize;
+
+  /// 并发上传的队列长度，默认值为 5
+  final int? maxPartsRequestNumber;
+
+  PutOptions({
+    this.key,
+    this.automaticSliceSize,
+    this.partSize,
+    this.maxPartsRequestNumber,
+  });
 }
 
-class PutPartsOptions {
+class PutBySingleOptions {
+  /// 资源名
+  /// 如果不传则后端自动生成
+  final String? key;
+
+  PutBySingleOptions({this.key});
+}
+
+class PutByPartOptions {
   /// 资源名
   /// 如果不传则后端自动生成
   final String? key;
@@ -71,7 +115,7 @@ class PutPartsOptions {
 
   final int? maxPartsRequestNumber;
 
-  PutPartsOptions({
+  PutByPartOptions({
     this.key,
     this.partSize,
     this.maxPartsRequestNumber,

@@ -51,8 +51,9 @@ mixin RequestStatusMixin {
 
   final List<RequestStatusListener> _statusListeners = [];
 
-  void addStatusListener(RequestStatusListener listener) {
+  void Function() addStatusListener(RequestStatusListener listener) {
     _statusListeners.add(listener);
+    return () => removeStatusListener(listener);
   }
 
   void removeStatusListener(RequestStatusListener listener) {

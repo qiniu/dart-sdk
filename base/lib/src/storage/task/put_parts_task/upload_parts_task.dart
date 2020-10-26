@@ -85,7 +85,9 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
       'part_size': partSize,
     };
 
-    return 'qiniu_dart_sdk_upload_parts_task@[${keyMap.values.toList().join('/')}]';
+    final keyString =
+        keyMap.entries.map((e) => '${e.key}/${e.value}').join('/');
+    return 'qiniu_dart_sdk_upload_parts_task@[$keyString]';
   }
 
   @override
@@ -183,7 +185,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
             notifyProgress();
           });
 
-        manager.addRequestTask(task);
+        manager.addTask(task);
 
         try {
           final data = await task.future;
@@ -266,7 +268,7 @@ class UploadPartTask extends RequestTask<UploadPart> {
     }
 
     final response = await client.put<Map<String, dynamic>>(
-      '$host/${paramMap.entries.join('/')}/$partNumber',
+      '$host/${paramMap.entries.map((e) => "${e.key}/${e.value}").join("/")}/$partNumber',
       data: byteStream,
       options: Options(headers: headers),
     );

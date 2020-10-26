@@ -69,8 +69,11 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
       paramMap.addAll({'objects': base64Url.encode(utf8.encode(key!))});
     }
 
+    final paramString =
+        paramMap.entries.map((e) => '${e.key}/${e.value}').join('/');
+
     final response = await client.post<Map>(
-      '$host/${paramMap.entries.join('/')}/uploads',
+      '$host/$paramString/uploads',
 
       /// 这里 data 不传，dio 不会触发 cancel 事件
       data: <String, dynamic>{},

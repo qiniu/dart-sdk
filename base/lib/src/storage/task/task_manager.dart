@@ -6,7 +6,6 @@ import 'request_task.dart';
 import 'task.dart';
 
 class TaskManager<T extends Task<dynamic>> {
-
   @protected
   final List<Task> workingTasks = [];
 
@@ -42,17 +41,19 @@ class TaskManager<T extends Task<dynamic>> {
   }
 }
 
-class RequestTaskManager<T extends RequestTask<dynamic>> extends TaskManager<T> {
+class RequestTaskManager<T extends RequestTask<dynamic>>
+    extends TaskManager<T> {
   final Config config;
 
   RequestTaskManager({
     required this.config,
   });
 
-  T addRequestTask(T task) {
+  @override
+  T addTask(T task) {
     task
       ..manager = this
       ..config = config;
-    return addTask(task);
+    return super.addTask(task);
   }
 }

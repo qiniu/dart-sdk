@@ -1,11 +1,11 @@
 import 'dart:io';
-
+import 'package:qiniu_sdk_base/src/storage/task/put_by_part_task/put_by_part_task.dart';
+import 'package:qiniu_sdk_base/src/storage/task/put_response.dart';
 import 'package:test/test.dart';
 import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
 import 'package:dotenv/dotenv.dart' show env;
 import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
-import 'package:qiniu_sdk_base/src/storage/task/put_parts_task/put_parts_task.dart';
 
 import 'config.dart';
 
@@ -19,25 +19,25 @@ void main() {
   // });
 
   test('put should works well.', () async {
-    final putTask = storage.putFile(
+    final putTask = storage.putFileBySingle(
       File('test_resource/test_for_put.txt'),
       token,
-      options: PutOptions(key: 'test_for_put.txt'),
+      options: PutBySingleOptions(key: 'test_for_put.txt'),
     );
-    final response = await putTask.future;
+    final response = await putTask.task.future;
     expect(response.key, 'test_for_put.txt');
   }, skip: !isSensitiveDataDefined);
 
   test('put can be canceled.', () async {
-    final putTask = storage.putFile(
+    final putTask = storage.putFileBySingle(
       File('test_resource/test_for_put.txt'),
       token,
-      options: PutOptions(key: 'test_for_put.txt'),
+      options: PutBySingleOptions(key: 'test_for_put.txt'),
     );
 
     try {
       Future.delayed(Duration(milliseconds: 1), putTask.cancel);
-      final response = await putTask.future;
+      final response = await putTask.task.future;
       expect(response.key, 'test_for_put.txt');
     } catch (error) {
       expect(error, isA<DioError>());
@@ -46,10 +46,10 @@ void main() {
   }, skip: !isSensitiveDataDefined);
 
   test('listenProgress on put method should works well.', () async {
-    final putTask = storage.putFile(
+    final putTask = storage.putFileBySingle(
       File('test_resource/test_for_put.txt'),
       token,
-      options: PutOptions(key: 'test_for_put.txt'),
+      options: PutBySingleOptions(key: 'test_for_put.txt'),
     );
 
     late int? _sent, _total;
@@ -58,82 +58,83 @@ void main() {
       _total = total;
     });
 
-    final response = await putTask.future;
+    final response = await putTask.task.future;
     expect(response.key, 'test_for_put.txt');
     expect(_sent! / _total!, equals(1));
   }, skip: !isSensitiveDataDefined);
 
   test('putParts should works well.', () async {
-    final putPartsTask = storage.putFileParts(
+    final putPartsTask = storage.putFileByPart(
       File('test_resource/test_for_put_parts.mp4'),
       token,
-      options: PutPartsOptions(key: 'test_for_put_parts.mp4', partSize: 1),
+      options: PutByPartOptions(key: 'test_for_put_parts.mp4', partSize: 1),
     );
-    final response = await putPartsTask.future;
-    expect(response, isA<CompleteParts>());
+    final response = await putPartsTask.task.future;
+    expect(response, isA<PutResponse>());
   }, skip: !isSensitiveDataDefined);
 
   test('putParts should works well while response 612.', () async {
     final httpAdapterTest = HttpAdapterTest();
     final storage = Storage(config: Config(httpClientAdapter: httpAdapterTest));
 
-    final putPartsTask = storage.putFileParts(
+    final putPartsTask = storage.putFileByPart(
       File('test_resource/test_for_put_parts.mp4'),
       token,
-      options: PutPartsOptions(key: 'test_for_put_parts.mp4', partSize: 1),
+      options: PutByPartOptions(key: 'test_for_put_parts.mp4', partSize: 1),
     );
 
-    final response = await putPartsTask.future;
+    final response = await putPartsTask.task.future;
 
     /// httpAdapterTest 应该会触发一次 612 response
     expect(httpAdapterTest.completePartsTaskResponse612, true);
-    expect(response, isA<CompleteParts>());
+    expect(response, isA<PutResponse>());
   }, skip: !isSensitiveDataDefined);
 
   test('putParts can be canceled.', () async {
     final storage = Storage(config: Config(hostProvider: HostProviderTest()));
-    final putPartsTask = storage.putFileParts(
+    final putPartsTask = storage.putFileByPart(
       File('test_resource/test_for_put_parts.mp4'),
       token,
-      options: PutPartsOptions(key: 'test_for_put_parts.mp4', partSize: 1),
+      options: PutByPartOptions(key: 'test_for_put_parts.mp4', partSize: 1),
     );
     Future.delayed(Duration(milliseconds: 1), putPartsTask.cancel);
     try {
-      await putPartsTask.future;
+      await putPartsTask.task.future;
     } catch (error) {
       expect((error as DioError).type, DioErrorType.CANCEL);
     }
-    expect(putPartsTask.future, throwsA(TypeMatcher<DioError>()));
+    expect(putPartsTask.task.future, throwsA(TypeMatcher<DioError>()));
   }, skip: !isSensitiveDataDefined);
 
   test('putParts can be resumed.', () async {
     final storage = Storage(config: Config(hostProvider: HostProviderTest()));
-    final putPartsTask = storage.putFileParts(
+    final putPartsTask = storage.putFileByPart(
       File('test_resource/test_for_put_parts.mp4'),
       token,
-      options: PutPartsOptions(key: 'test_for_put_parts.mp4', partSize: 1),
+      options: PutByPartOptions(key: 'test_for_put_parts.mp4', partSize: 1),
     );
 
     Future.delayed(Duration(milliseconds: 1), putPartsTask.cancel);
 
     try {
-      await putPartsTask.future;
+      await putPartsTask.task.future;
     } catch (error) {
       expect(error, isA<DioError>());
       expect((error as DioError).type, DioErrorType.CANCEL);
     }
 
-    expect(putPartsTask.future, throwsA(TypeMatcher<DioError>()));
+    expect(putPartsTask.task.future, throwsA(TypeMatcher<DioError>()));
 
     final response = await storage
-        .putFileParts(
+        .putFileByPart(
           File('test_resource/test_for_put_parts.mp4'),
           token,
-          options: PutPartsOptions(key: 'test_for_put_parts.mp4', partSize: 1),
+          options: PutByPartOptions(key: 'test_for_put_parts.mp4', partSize: 1),
         )
+        .task
         .future;
 
-    expect(response, isA<CompleteParts>());
+    expect(response, isA<PutResponse>());
   }, skip: !isSensitiveDataDefined);
 
   test('putParts should works well with cacheProvider.', () async {
@@ -154,14 +155,14 @@ void main() {
       file: file,
     );
 
-    storage.taskManager.addRequestTask(task);
+    storage.taskManager.addTask(task);
 
     await task.future;
 
-    final putPartsTask = storage.putFileParts(
+    final putPartsTask = storage.putFileByPart(
       file,
       token,
-      options: PutPartsOptions(key: key, partSize: 1),
+      options: PutByPartOptions(key: key, partSize: 1),
     );
 
     Future.delayed(Duration(milliseconds: 1), putPartsTask.cancel);
@@ -179,40 +180,42 @@ void main() {
     expect(cacheProvider.getItem(cacheKey), isA<String>());
 
     try {
-      await putPartsTask.future;
+      await putPartsTask.task.future;
     } catch (error) {
       expect(error, isA<DioError>());
       expect((error as DioError).type, DioErrorType.CANCEL);
     }
 
     final response = await storage
-        .putFileParts(
+        .putFileByPart(
           file,
           token,
-          options: PutPartsOptions(key: key, partSize: 1),
+          options: PutByPartOptions(key: key, partSize: 1),
         )
+        .task
         .future;
 
-    expect(response, isA<CompleteParts>());
+    expect(response, isA<PutResponse>());
 
     /// 上传完成后缓存应该被清理
     expect(cacheProvider.value.length, 0);
   }, skip: !isSensitiveDataDefined);
 
   test('listenProgress on putParts method should works well.', () async {
-    final putPartsTask = storage.putFileParts(
+    final putPartsTask = storage.putFileByPart(
       File('test_resource/test_for_put_parts.mp4'),
       token,
-      options: PutPartsOptions(key: 'test_for_put_parts.mp4', partSize: 1),
+      options: PutByPartOptions(key: 'test_for_put_parts.mp4', partSize: 1),
     );
-    
+
     late int? _sent, _total;
     putPartsTask.addProgressListener((sent, total) {
       _sent = sent;
       _total = total;
     });
-    final response = await putPartsTask.future;
-    expect(response, isA<CompleteParts>());
+
+    final response = await putPartsTask.task.future;
+    expect(response, isA<PutResponse>());
     expect(_sent! / _total!, equals(1));
   }, skip: !isSensitiveDataDefined);
 }

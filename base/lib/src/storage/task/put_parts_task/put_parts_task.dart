@@ -1,19 +1,21 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:dio/dio.dart';
 
 import '../../../auth/auth.dart';
+import '../put_response.dart';
 import '../request_task.dart';
 
-part 'init_parts_task.dart';
-part 'upload_parts_task.dart';
-part 'complete_parts_task.dart';
-part 'part.dart';
 part 'cache_mixin.dart';
+part 'complete_parts_task.dart';
+part 'init_parts_task.dart';
+part 'part.dart';
+part 'upload_parts_task.dart';
 
 /// 分片上传任务
-class PutPartsTask extends RequestTask<CompleteParts> {
+class PutByPartTask extends RequestTask<PutResponse> {
   final File file;
   final String token;
 
@@ -25,7 +27,7 @@ class PutPartsTask extends RequestTask<CompleteParts> {
   /// 在 preStart 中延迟初始化
   late final String bucket;
 
-  PutPartsTask({
+  PutByPartTask({
     required this.file,
     required this.token,
     required this.partSize,
@@ -57,7 +59,7 @@ class PutPartsTask extends RequestTask<CompleteParts> {
   }
 
   @override
-  void postReceive(CompleteParts data) {
+  void postReceive(PutResponse data) {
     _currentWorkingTask = null;
     super.postReceive(data);
   }
@@ -69,7 +71,7 @@ class PutPartsTask extends RequestTask<CompleteParts> {
   }
 
   @override
-  Future<CompleteParts> createTask() async {
+  Future<PutResponse> createTask() async {
     final host = await config.hostProvider.getUpHost(token: token);
 
     final initPartsTask = _createInitParts(host);
@@ -77,7 +79,7 @@ class PutPartsTask extends RequestTask<CompleteParts> {
 
     final uploadParts = _createUploadParts(host, initParts.uploadId);
 
-    CompleteParts completeParts;
+    PutResponse completeParts;
     try {
       final parts = await uploadParts.future;
       completeParts =
@@ -118,7 +120,7 @@ class PutPartsTask extends RequestTask<CompleteParts> {
       key: key,
     );
 
-    return _currentWorkingTask = manager.addRequestTask(task) as InitPartsTask;
+    return _currentWorkingTask = manager.addTask(task) as InitPartsTask;
   }
 
   UploadPartsTask _createUploadParts(String host, String uploadId) {
@@ -136,8 +138,7 @@ class PutPartsTask extends RequestTask<CompleteParts> {
         notifyProgress(sent, total + 1);
       });
 
-    return _currentWorkingTask =
-        manager.addRequestTask(task) as UploadPartsTask;
+    return _currentWorkingTask = manager.addTask(task) as UploadPartsTask;
   }
 
   /// 创建文件，分片上传的最后一步
@@ -158,8 +159,7 @@ class PutPartsTask extends RequestTask<CompleteParts> {
         notifyProgress(_sent + 1, _total);
       });
 
-    return _currentWorkingTask =
-        manager.addRequestTask(task) as CompletePartsTask;
+    return _currentWorkingTask = manager.addTask(task) as CompletePartsTask;
   }
 
   void notifyProgress(int sent, int total) {

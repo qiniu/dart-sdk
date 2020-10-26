@@ -1,54 +1,52 @@
 import 'dart:io';
-import 'package:dio/dio.dart';
+
+import 'put_by_single_task.dart';
+import 'put_parts_task/put_parts_task.dart';
+import 'put_response.dart';
 import 'request_task.dart';
 
-// 直传请求响应
-class Put {
-  final String key;
-  final String hash;
-
-  Put({
-    required this.key,
-    required this.hash,
-  });
-
-  factory Put.fromJson(Map json) {
-    return Put(
-      key: json['key'] as String,
-      hash: json['hash'] as String,
-    );
-  }
-}
-
-// 直传任务
-class PutTask extends RequestTask<Put> {
-  /// 上传文件
+class PutTask extends RequestTask<PutResponse> {
   final File file;
-
-  /// 上传凭证
   final String token;
 
-  /// 资源名 
-  /// 如果不传则后端自动生成
+  final int automaticSliceSize;
+
+  final int partSize;
+  final int maxPartsRequestNumber;
+
   final String? key;
 
   PutTask({
     required this.file,
     required this.token,
+    this.automaticSliceSize = 4,
+    this.partSize = 4,
+    this.maxPartsRequestNumber = 5,
     this.key,
   });
 
   @override
-  Future<Put> createTask() async {
-    final formData = FormData.fromMap(<String, dynamic>{
-      'file': await MultipartFile.fromFile(file.path),
-      'token': token,
-      'key': key,
-    });
+  Future<PutResponse> createTask() {
+    final fileSize = file.lengthSync();
+    late final RequestTask<PutResponse> task;
 
-    final host = await config.hostProvider.getUpHost(token: token);
-    final response = await client.post<Map>(host, data: formData);
+    /// 文件尺寸大于设置的数值时使用分片上传
+    if (fileSize > (automaticSliceSize * 1024 * 1024)) {
+      task = PutByPartTask(
+        file: file,
+        token: token,
+        key: key,
+        maxPartsRequestNumber: maxPartsRequestNumber,
+        partSize: partSize,
+      );
+    } else {
+      task = PutBySingleTask(
+        file: file,
+        token: token,
+        key: key,
+      );
+    }
 
-    return Put.fromJson(response.data);
+    return (manager.addTask(task) as RequestTask<PutResponse>).future;
   }
 }
