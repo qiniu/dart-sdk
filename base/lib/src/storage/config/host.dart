@@ -1,14 +1,14 @@
 part of 'config.dart';
 
 abstract class HostProvider {
-  Future<String> getUpHost({required String token});
+  Future<String> getUpHost({@required String token});
 }
 
 class DefaultHostProvider extends HostProvider {
   final http = Dio();
 
   @override
-  Future<String> getUpHost({required String token}) async {
+  Future<String> getUpHost({@required String token}) async {
     final tokenInfo = Auth.parseToken(token);
     final putPolicy = tokenInfo.putPolicy;
     final protocol = Protocol.Https.value;

@@ -6,8 +6,8 @@ class UploadPart {
   final String etag;
 
   UploadPart({
-    required this.md5,
-    required this.etag,
+    @required this.md5,
+    @required this.etag,
   });
 
   factory UploadPart.fromJson(Map json) {
@@ -36,21 +36,21 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   final int partSize;
   final int maxPartsRequestNumber;
 
-  final String? key;
+  final String key;
 
   @override
-  late final String _cacheKey;
+  String _cacheKey;
 
   /// 文件 bytes 长度
-  late final int _fileByteLength;
+  int _fileByteLength;
 
   /// 每个上传分片的字节长度
   ///
   /// 文件会按照此长度切片
-  late final int _partByteLength;
+  int _partByteLength;
 
   /// 文件总共被拆分的分片数
-  late final int _totalPartCount;
+  int _totalPartCount;
 
   /// 上传成功后把 part 信息存起来
   final Map<int, Part> _uploadPartMap = {};
@@ -59,16 +59,16 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   final Map<int, int> _sentMap = {};
 
   /// 剩余多少被允许的请求数
-  late int _idleRequestNumber;
+  int _idleRequestNumber;
 
   UploadPartsTask({
-    required this.file,
-    required this.token,
-    required this.bucket,
-    required this.uploadId,
-    required this.host,
-    required this.partSize,
-    required this.maxPartsRequestNumber,
+    @required this.file,
+    @required this.token,
+    @required this.bucket,
+    @required this.uploadId,
+    @required this.host,
+    @required this.partSize,
+    @required this.maxPartsRequestNumber,
     this.key,
   });
 
@@ -76,7 +76,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     String path,
     int length,
     int partSize,
-    String? key,
+    String key,
   ) {
     final keyMap = {
       'key': key,
@@ -97,47 +97,50 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     _idleRequestNumber = maxPartsRequestNumber;
     _totalPartCount = (_fileByteLength / _partByteLength).ceil();
     _cacheKey = getCacheKey(file.path, _fileByteLength, partSize, key);
-    _uploadPartMap.addAll(getUploadedPartFromCache());
+    recoverUploadedPart();
     super.preStart();
   }
 
   @override
   void postReceive(data) {
-    storeUploadedPartToCache();
+    storeUploadPart();
     super.postReceive(data);
   }
 
   @override
   void postError(Object error) {
     /// 取消，网络问题等可能导致上传中断，缓存已上传的分片信息
-    storeUploadedPartToCache();
+    storeUploadPart();
     super.postError(error);
   }
 
-  void storeUploadedPartToCache() {
+  void storeUploadPart() {
     if (_uploadPartMap.isEmpty) {
       return;
     }
 
-    setCache(json.encode(_uploadPartMap));
+    setCache(jsonEncode(_uploadPartMap.values.toList()));
   }
 
   // 从缓存恢复已经上传的 part
-  Map<int, Part> getUploadedPartFromCache() {
+  void recoverUploadedPart() {
     /// 获取缓存
     final cachedData = getCache();
-    final cachedPartMap = <int, Part>{};
 
     /// 尝试从缓存恢复
     if (cachedData != null) {
+      var cachedList = <Part>[];
+
       try {
-        cachedPartMap.addAll(json.decode(cachedData) as Map<int, Part>);
+        cachedList = json.decode(cachedData) as List<Part>;
       } catch (error) {
         //
       }
-    }
 
-    return cachedPartMap;
+      for (final part in cachedList) {
+        _uploadPartMap[part.partNumber] = part;
+      }
+    }
   }
 
   @override
@@ -146,11 +149,10 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     return _uploadPartMap.values.toList();
   }
 
-  Future<void> _uploadParts({int partNumber = 0}) async {
-    var _partNumber = partNumber;
+  Future<void> _uploadParts({int startPartNumber = 1}) async {
+    var _partNumber = startPartNumber;
 
     while (_idleRequestNumber > 0 && _partNumber <= _totalPartCount) {
-      _partNumber++;
       _idleRequestNumber--;
 
       /// 根据 part 读取文件
@@ -161,8 +163,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
           ? _fileByteLength % _partByteLength
           : _partByteLength;
 
-      late final Part _part;
-
+      Part _part;
       final partNumber = _partNumber;
       final _uploadPart = _uploadPartMap[partNumber];
 
@@ -177,8 +178,8 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
           uploadId: uploadId,
           host: host,
           byteStream: byteStream,
-          partNumber: _partNumber,
           byteLength: _byteLength,
+          partNumber: partNumber,
           key: key,
         )..addProgressListener((sent, total) {
             _sentMap[partNumber] = sent;
@@ -195,23 +196,22 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
         }
       }
 
-      _idleRequestNumber++;
       _uploadPartMap[partNumber] = _part;
+      _idleRequestNumber++;
+      _partNumber++;
 
       /// 检查任务是否已经完成
-      if (_uploadPartMap.length >= _totalPartCount) {
+      if (_uploadPartMap.length == _totalPartCount) {
         return;
       } else {
-        return await _uploadParts(partNumber: _partNumber);
+        return await _uploadParts(startPartNumber: _partNumber);
       }
     }
   }
 
   // 根据 index 获取
   Stream<List<int>> _readFileByPartNumber(int partNumber) {
-    assert(0 <= partNumber && partNumber <= _totalPartCount);
-
-    final startOffset = partNumber * _partByteLength;
+    final startOffset = (partNumber - 1) * _partByteLength;
     final endOffset = startOffset + _partByteLength;
 
     return file.openRead(startOffset, endOffset);
@@ -235,19 +235,21 @@ class UploadPartTask extends RequestTask<UploadPart> {
   /// 如果 data 是 Stream 的话，Dio 需要判断 content-length 才会调用 onSendProgress
   /// https://github.com/flutterchina/dio/blob/21136168ab39a7536835c7a59ce0465bb05feed4/dio/lib/src/dio.dart#L1000
   final int byteLength;
+
+  /// 范围 1-10000
   final int partNumber;
   final Stream<List<int>> byteStream;
 
-  final String? key;
+  final String key;
 
   UploadPartTask({
-    required this.token,
-    required this.bucket,
-    required this.uploadId,
-    required this.host,
-    required this.byteLength,
-    required this.partNumber,
-    required this.byteStream,
+    @required this.token,
+    @required this.bucket,
+    @required this.uploadId,
+    @required this.host,
+    @required this.byteLength,
+    @required this.partNumber,
+    @required this.byteStream,
     this.key,
   });
 
@@ -258,17 +260,10 @@ class UploadPartTask extends RequestTask<UploadPart> {
       Headers.contentLengthHeader: byteLength,
     };
 
-    final paramMap = <String, String>{
-      'buckets': bucket,
-      'uploads': uploadId,
-    };
-
-    if (key != null) {
-      paramMap.addAll({'objects': base64Url.encode(utf8.encode(key!))});
-    }
-
+    final paramUrl =
+        'buckets/$bucket/objects/${base64Url.encode(utf8.encode(key ?? "~"))}';
     final response = await client.put<Map<String, dynamic>>(
-      '$host/${paramMap.entries.map((e) => "${e.key}/${e.value}").join("/")}/$partNumber',
+      '$host/$paramUrl/uploads/$uploadId/$partNumber',
       data: byteStream,
       options: Options(headers: headers),
     );

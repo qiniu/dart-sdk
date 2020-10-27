@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:meta/meta.dart';
 import 'package:qiniu_sdk_base/src/storage/task/put_response.dart';
 import 'request_task.dart';
 
@@ -13,11 +14,11 @@ class PutBySingleTask extends RequestTask<PutResponse> {
 
   /// 资源名
   /// 如果不传则后端自动生成
-  final String? key;
+  final String key;
 
   PutBySingleTask({
-    required this.file,
-    required this.token,
+    @required this.file,
+    @required this.token,
     this.key,
   });
 

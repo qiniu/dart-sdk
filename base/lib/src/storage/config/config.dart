@@ -1,5 +1,6 @@
 import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
+import 'package:meta/meta.dart';
 import 'package:qiniu_sdk_base/src/auth/auth.dart';
 
 part 'protocol.dart';
@@ -12,9 +13,9 @@ class Config {
   final HttpClientAdapter httpClientAdapter;
 
   Config({
-    HostProvider? hostProvider,
-    CacheProvider? cacheProvider,
-    HttpClientAdapter? httpClientAdapter,
+    HostProvider hostProvider,
+    CacheProvider cacheProvider,
+    HttpClientAdapter httpClientAdapter,
   })  : hostProvider = hostProvider ?? DefaultHostProvider(),
         cacheProvider = cacheProvider ?? DefaultCacheProvider(),
         httpClientAdapter = httpClientAdapter ?? DefaultHttpClientAdapter();

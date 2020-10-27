@@ -73,14 +73,15 @@ abstract class RequestTask<T> extends Task<T>
   final CancelToken _cancelToken = CancelToken();
 
   /// [RequestTaskManager.addRequestTask] 会初始化这个
-  late final Config config;
-  late final RequestTaskManager manager;
+  Config config;
+  RequestTaskManager manager;
 
   @mustCallSuper
   void cancel() {
     if (_cancelToken.isCancelled) {
       throw UnsupportedError('$this has been canceled.');
     }
+
     _cancelToken.cancel();
   }
 

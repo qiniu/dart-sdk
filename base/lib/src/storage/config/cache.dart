@@ -5,7 +5,7 @@ abstract class CacheProvider {
   void setItem(String key, String item);
 
   /// 根据 key 获取缓存
-  String? getItem(String key);
+  String getItem(String key);
 
   /// 删除指定 key 的缓存
   void removeItem(String key);
@@ -23,7 +23,7 @@ class DefaultCacheProvider extends CacheProvider {
   }
 
   @override
-  String? getItem(String key) {
+  String getItem(String key) {
     return value[key];
   }
 

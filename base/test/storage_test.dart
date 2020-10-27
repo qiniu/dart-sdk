@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:meta/meta.dart';
 import 'package:qiniu_sdk_base/src/storage/task/put_parts_task/put_parts_task.dart';
 import 'package:qiniu_sdk_base/src/storage/task/put_response.dart';
 import 'package:test/test.dart';
@@ -52,7 +53,7 @@ void main() {
       options: PutBySingleOptions(key: 'test_for_put.txt'),
     );
 
-    late int? _sent, _total;
+    int _sent, _total;
     putTask.addProgressListener((sent, total) {
       _sent = sent;
       _total = total;
@@ -60,7 +61,7 @@ void main() {
 
     final response = await putTask.task.future;
     expect(response.key, 'test_for_put.txt');
-    expect(_sent! / _total!, equals(1));
+    expect(_sent / _total, equals(1));
   }, skip: !isSensitiveDataDefined);
 
   test('putParts should works well.', () async {
@@ -150,9 +151,9 @@ void main() {
       host: await config.hostProvider.getUpHost(token: token),
 
       /// TOKEN_SCOPE 暂时只保存了 bucket 信息
-      bucket: env['QINIU_DART_SDK_TOKEN_SCOPE']!,
-      key: key,
+      bucket: env['QINIU_DART_SDK_TOKEN_SCOPE'],
       file: file,
+      key: key,
     );
 
     storage.taskManager.addTask(task);
@@ -208,7 +209,7 @@ void main() {
       options: PutByPartOptions(key: 'test_for_put_parts.mp4', partSize: 1),
     );
 
-    late int? _sent, _total;
+    int _sent, _total;
     putPartsTask.addProgressListener((sent, total) {
       _sent = sent;
       _total = total;
@@ -216,7 +217,7 @@ void main() {
 
     final response = await putPartsTask.task.future;
     expect(response, isA<PutResponse>());
-    expect(_sent! / _total!, equals(1));
+    expect(_sent / _total, equals(1));
   }, skip: !isSensitiveDataDefined);
 }
 
@@ -246,7 +247,7 @@ class HttpAdapterTest extends HttpClientAdapter {
 
 class HostProviderTest extends HostProvider {
   @override
-  Future<String> getUpHost({required String token}) async {
+  Future<String> getUpHost({@required String token}) async {
     return 'https://upload-z2.qiniup.com';
   }
 }

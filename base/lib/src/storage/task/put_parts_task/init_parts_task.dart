@@ -6,8 +6,8 @@ class InitParts {
   final String uploadId;
 
   InitParts({
-    required this.expireAt,
-    required this.uploadId,
+    @required this.expireAt,
+    @required this.uploadId,
   });
 
   factory InitParts.fromJson(Map json) {
@@ -31,49 +31,44 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
   final String token;
   final String bucket;
   final String host;
-  final String? key;
+  final String key;
 
   @override
-  late final String _cacheKey;
+  String _cacheKey;
 
   InitPartsTask({
-    required this.file,
-    required this.host,
-    required this.bucket,
-    required this.token,
+    @required this.file,
+    @required this.host,
+    @required this.bucket,
+    @required this.token,
     this.key,
   });
 
-  static String getCacheKey(String path, int length, String? key) {
+  static String getCacheKey(String path, int length, String key) {
     return 'qiniu_dart_sdk_init_parts_task_${path}_key_${key}_size_$length';
   }
 
   @override
   void preStart() {
+    _cacheKey = InitPartsTask.getCacheKey(file.path, file.lengthSync(), key);
     super.preStart();
   }
 
   @override
   Future<InitParts> createTask() async {
-    _cacheKey = InitPartsTask.getCacheKey(file.path, await file.length(), key);
-
     final headers = {'Authorization': 'UpToken $token'};
-    final paramMap = <String, String>{'buckets': bucket};
 
     final initPartsCache = getCache();
     if (initPartsCache != null) {
-      return InitParts.fromJson(json.decode(initPartsCache) as Map);
+      return InitParts.fromJson(
+          json.decode(initPartsCache) as Map<String, dynamic>);
     }
 
-    if (key != null) {
-      paramMap.addAll({'objects': base64Url.encode(utf8.encode(key!))});
-    }
+    final paramUrl =
+        '$host/buckets/$bucket/objects/${base64Url.encode(utf8.encode(key ?? "~"))}/uploads';
 
-    final paramString =
-        paramMap.entries.map((e) => '${e.key}/${e.value}').join('/');
-
-    final response = await client.post<Map>(
-      '$host/$paramString/uploads',
+    final response = await client.post<Map<String, dynamic>>(
+      paramUrl,
 
       /// 这里 data 不传，dio 不会触发 cancel 事件
       data: <String, dynamic>{},

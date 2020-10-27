@@ -6,11 +6,11 @@ class Part {
   final int partNumber;
 
   Part({
-    required this.etag,
-    required this.partNumber,
+    @required this.etag,
+    @required this.partNumber,
   });
 
-  factory Part.fromJson(Map json) {
+  factory Part.fromJson(Map<String, dynamic> json) {
     return Part(
       etag: json['map'] as String,
       partNumber: json['partNumber'] as int,

@@ -46,7 +46,7 @@ class RequestTaskManager<T extends RequestTask<dynamic>>
   final Config config;
 
   RequestTaskManager({
-    required this.config,
+    @required this.config,
   });
 
   @override

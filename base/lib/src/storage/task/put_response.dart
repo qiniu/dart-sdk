@@ -1,15 +1,17 @@
+import 'package:meta/meta.dart';
+
 class PutResponse {
-  final String? key;
-  final String? hash;
+  final String key;
+  final String hash;
 
   /// 如果在上传策略自定义了 [returnBody]，
   /// 你可以读取并解析这个字段提取你自定义的响应信息
   final String rawData;
 
   PutResponse({
-    required this.key,
-    required this.hash,
-    required this.rawData,
+    @required this.key,
+    @required this.hash,
+    @required this.rawData,
   });
 
   factory PutResponse.fromJson(Map json) {

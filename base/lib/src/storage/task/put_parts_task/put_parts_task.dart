@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:meta/meta.dart';
 
 import '../../../auth/auth.dart';
 import '../put_response.dart';
@@ -22,23 +23,26 @@ class PutByPartTask extends RequestTask<PutResponse> {
   final int partSize;
   final int maxPartsRequestNumber;
 
-  final String? key;
+  final String key;
 
   /// 在 preStart 中延迟初始化
-  late final String bucket;
+  String bucket;
 
   PutByPartTask({
-    required this.file,
-    required this.token,
-    required this.partSize,
-    required this.maxPartsRequestNumber,
+    @required this.file,
+    @required this.token,
+    @required this.partSize,
+    @required this.maxPartsRequestNumber,
     this.key,
   }) : assert(
-          partSize < 1 || partSize > 1024,
+          1 < partSize || partSize < 1024,
           'partSize must be greater than 1 and less than 1024',
         );
 
-  RequestTask? _currentWorkingTask;
+  RequestTask _currentWorkingTask;
+
+  /// 重试次数
+  int retryLimit = 5;
 
   /// 已发送字节长度
   int _sent = 0;
@@ -66,6 +70,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
 
   @override
   void cancel() {
+    /// FIXME: 可能 task 已经完成，这里的调用就会报错
     _currentWorkingTask?.cancel();
     super.cancel();
   }
@@ -85,7 +90,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
       completeParts =
           await _createCompleteParts(host, initParts.uploadId, parts).future;
     } catch (error) {
-      if (error is DioError) {
+      if (error is DioError && error.response != null) {
         /// 满足以下两种情况清理缓存：
         /// 1、如果服务端文件被删除了，清除本地缓存
         /// 2、如果 uploadId 等参数不对原因会导致 400
@@ -96,10 +101,12 @@ class PutByPartTask extends RequestTask<PutResponse> {
         }
 
         /// 如果服务端文件被删除了，重新上传
-        if (error.response.statusCode == 612) {
+        if (error.response.statusCode == 612 && retryLimit > 0) {
+          retryLimit--;
           return createTask();
         }
       }
+
       rethrow;
     }
 
