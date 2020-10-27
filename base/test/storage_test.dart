@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:meta/meta.dart';
 import 'package:qiniu_sdk_base/src/storage/task/put_parts_task/put_parts_task.dart';
 import 'package:qiniu_sdk_base/src/storage/task/put_response.dart';
+import 'package:qiniu_sdk_base/src/storage/task/put_task.dart';
 import 'package:test/test.dart';
 import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
@@ -20,6 +21,23 @@ void main() {
   // });
 
   test('put should works well.', () async {
+    final putTask = storage.putFile(
+      File('test_resource/test_for_put.txt'),
+      token,
+      options: PutOptions(key: 'test_for_put.txt'),
+    );
+
+    /// 检查默认值
+    expect((putTask.task as PutTask).automaticSliceSize, 4);
+    expect((putTask.task as PutTask).maxPartsRequestNumber, 5);
+    expect((putTask.task as PutTask).partSize, 4);
+
+    final response = await putTask.task.future;
+
+    expect(response.key, 'test_for_put.txt');
+  }, skip: !isSensitiveDataDefined);
+
+  test('put single should works well.', () async {
     final putTask = storage.putFileBySingle(
       File('test_resource/test_for_put.txt'),
       token,
@@ -29,7 +47,7 @@ void main() {
     expect(response.key, 'test_for_put.txt');
   }, skip: !isSensitiveDataDefined);
 
-  test('put can be canceled.', () async {
+  test('put single can be canceled.', () async {
     final putTask = storage.putFileBySingle(
       File('test_resource/test_for_put.txt'),
       token,

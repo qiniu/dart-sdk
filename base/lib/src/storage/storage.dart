@@ -7,6 +7,8 @@ import 'task/put_parts_task/put_parts_task.dart';
 import 'task/put_response.dart';
 import 'task/put_task.dart';
 import 'task/task_manager.dart';
+
+export './controller.dart';
 export 'config/config.dart';
 
 /// 客户端
@@ -27,7 +29,10 @@ class Storage {
     final task = PutTask(
       file: file,
       token: token,
-      key: options.key,
+      automaticSliceSize: options?.automaticSliceSize ?? 4,
+      partSize: options?.partSize ?? 4,
+      maxPartsRequestNumber: options?.maxPartsRequestNumber ?? 5,
+      key: options?.key,
     );
 
     taskManager.addTask(task);
@@ -43,7 +48,7 @@ class Storage {
     final task = PutBySingleTask(
       file: file,
       token: token,
-      key: options.key,
+      key: options?.key,
     );
 
     taskManager.addTask(task);
@@ -61,9 +66,9 @@ class Storage {
     final task = PutByPartTask(
       file: file,
       token: token,
-      key: options.key,
-      partSize: options.partSize ?? 4,
-      maxPartsRequestNumber: options.maxPartsRequestNumber ?? 5,
+      key: options?.key,
+      partSize: options?.partSize ?? 4,
+      maxPartsRequestNumber: options?.maxPartsRequestNumber ?? 5,
     );
 
     taskManager.addTask(task);

@@ -21,11 +21,15 @@ class PutTask extends RequestTask<PutResponse> {
   PutTask({
     @required this.file,
     @required this.token,
-    this.automaticSliceSize = 4,
-    this.partSize = 4,
-    this.maxPartsRequestNumber = 5,
+    this.automaticSliceSize,
+    this.partSize,
+    this.maxPartsRequestNumber,
     this.key,
   });
+
+  bool usePart(int fileSize) {
+    return fileSize > (automaticSliceSize * 1024 * 1024);
+  }
 
   @override
   Future<PutResponse> createTask() {
@@ -33,7 +37,7 @@ class PutTask extends RequestTask<PutResponse> {
     RequestTask<PutResponse> task;
 
     /// 文件尺寸大于设置的数值时使用分片上传
-    if (fileSize > (automaticSliceSize * 1024 * 1024)) {
+    if (usePart(fileSize)) {
       task = PutByPartTask(
         file: file,
         token: token,
