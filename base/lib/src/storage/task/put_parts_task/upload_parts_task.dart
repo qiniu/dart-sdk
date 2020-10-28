@@ -157,9 +157,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
       final byteStream = _readFileByPartNumber(_partNumber);
 
       /// 上传分片(part)的字节大小
-      final _byteLength = (_partNumber == _totalPartCount)
-          ? _fileByteLength % _partByteLength
-          : _partByteLength;
+      final _byteLength = _getPartSizeByPartNumber(_partNumber);
 
       Part _part;
       final partNumber = _partNumber;
@@ -192,9 +190,10 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
         } catch (error) {
           rethrow;
         }
+
+        _uploadedPartMap[partNumber] = _part;
       }
 
-      _uploadedPartMap[partNumber] = _part;
       _idleRequestNumber++;
       _partNumber++;
 
@@ -213,6 +212,16 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     final endOffset = startOffset + _partByteLength;
 
     return file.openRead(startOffset, endOffset);
+  }
+
+  int _getPartSizeByPartNumber(int partNumber) {
+    final startOffset = (partNumber - 1) * _partByteLength;
+
+    if (partNumber == _totalPartCount) {
+      return _fileByteLength - startOffset;
+    }
+
+    return _partByteLength;
   }
 
   void notifyProgress() {
