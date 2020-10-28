@@ -13,7 +13,7 @@ class TaskManager<T extends Task<dynamic>> {
   ///
   /// 被添加的 [task] 会被立即执行 [createTask]
   @mustCallSuper
-  T addTask(T task) {
+  void addTask(T task) {
     workingTasks.add(task);
     task.preStart();
 
@@ -22,8 +22,6 @@ class TaskManager<T extends Task<dynamic>> {
       task.createTask().then(task.postReceive).catchError(task.postError);
       task.postStart();
     });
-
-    return task;
   }
 
   @mustCallSuper
@@ -50,10 +48,10 @@ class RequestTaskManager<T extends RequestTask<dynamic>>
   });
 
   @override
-  T addTask(T task) {
+  void addTask(T task) {
     task
       ..manager = this
       ..config = config;
-    return super.addTask(task);
+    super.addTask(task);
   }
 }

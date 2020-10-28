@@ -31,7 +31,8 @@ class PutBySingleTask extends RequestTask<PutResponse> {
     });
 
     final host = await config.hostProvider.getUpHost(token: token);
-    final response = await client.post<Map>(host, data: formData);
+    final response =
+        await client.post<Map<String, dynamic>>(host, data: formData);
     return PutResponse.fromJson(response.data);
   }
 }

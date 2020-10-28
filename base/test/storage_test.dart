@@ -28,13 +28,39 @@ void main() {
     );
 
     /// 检查默认值
-    expect((putTask.task as PutTask).automaticSliceSize, 4);
+    expect((putTask.task as PutTask).forceBySingle, false);
     expect((putTask.task as PutTask).maxPartsRequestNumber, 5);
     expect((putTask.task as PutTask).partSize, 4);
 
     final response = await putTask.task.future;
 
     expect(response.key, 'test_for_put.txt');
+  }, skip: !isSensitiveDataDefined);
+
+  test('put with returnBody should works well.', () async {
+    final auth = Auth(
+      accessKey: env['QINIU_DART_SDK_ACCESS_KEY'],
+      secretKey: env['QINIU_DART_SDK_SECRET_KEY'],
+    );
+
+    final token = auth.generateUploadToken(
+      putPolicy: PutPolicy(
+        insertOnly: 0,
+        returnBody: '{"ext": \$(ext)}',
+        scope: env['QINIU_DART_SDK_TOKEN_SCOPE'],
+        deadline: DateTime.now().millisecondsSinceEpoch + 3600,
+      ),
+    );
+
+    final putTask = storage.putFile(
+      File('test_resource/test_for_put.txt'),
+      token,
+      options: PutOptions(key: 'test_for_put.txt'),
+    );
+
+    final response = await putTask.task.future;
+
+    expect(response.rawData, {'ext': '.txt'});
   }, skip: !isSensitiveDataDefined);
 
   test('put single should works well.', () async {

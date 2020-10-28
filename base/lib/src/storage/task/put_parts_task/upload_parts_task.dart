@@ -53,7 +53,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   int _totalPartCount;
 
   /// 上传成功后把 part 信息存起来
-  final Map<int, Part> _uploadPartMap = {};
+  final Map<int, Part> _uploadedPartMap = {};
 
   /// 已发送的数据记录，key 是 partNumber, value 是 已发送的长度
   final Map<int, int> _sentMap = {};
@@ -78,16 +78,14 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     int partSize,
     String key,
   ) {
-    final keyMap = {
-      'key': key,
-      'path': path,
-      'file_size': length,
-      'part_size': partSize,
-    };
+    final keyList = [
+      'key/$key',
+      'path/$path',
+      'file_size/$length',
+      'part_size/$partSize',
+    ];
 
-    final keyString =
-        keyMap.entries.map((e) => '${e.key}/${e.value}').join('/');
-    return 'qiniu_dart_sdk_upload_parts_task@[$keyString]';
+    return 'qiniu_dart_sdk_upload_parts_task@[${keyList..join("/")}]';
   }
 
   @override
@@ -103,23 +101,23 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
 
   @override
   void postReceive(data) {
-    storeUploadPart();
+    storeUploadedPart();
     super.postReceive(data);
   }
 
   @override
   void postError(Object error) {
     /// 取消，网络问题等可能导致上传中断，缓存已上传的分片信息
-    storeUploadPart();
+    storeUploadedPart();
     super.postError(error);
   }
 
-  void storeUploadPart() {
-    if (_uploadPartMap.isEmpty) {
+  void storeUploadedPart() {
+    if (_uploadedPartMap.isEmpty) {
       return;
     }
 
-    setCache(jsonEncode(_uploadPartMap.values.toList()));
+    setCache(jsonEncode(_uploadedPartMap.values.toList()));
   }
 
   // 从缓存恢复已经上传的 part
@@ -138,18 +136,18 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
       }
 
       for (final part in cachedList) {
-        _uploadPartMap[part.partNumber] = part;
+        _uploadedPartMap[part.partNumber] = part;
       }
     }
   }
 
   @override
   Future<List<Part>> createTask() async {
-    await _uploadParts();
-    return _uploadPartMap.values.toList();
+    await _uploadParts(startPartNumber: 1);
+    return _uploadedPartMap.values.toList();
   }
 
-  Future<void> _uploadParts({int startPartNumber = 1}) async {
+  Future<void> _uploadParts({int startPartNumber}) async {
     var _partNumber = startPartNumber;
 
     while (_idleRequestNumber > 0 && _partNumber <= _totalPartCount) {
@@ -165,7 +163,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
 
       Part _part;
       final partNumber = _partNumber;
-      final _uploadPart = _uploadPartMap[partNumber];
+      final _uploadPart = _uploadedPartMap[partNumber];
 
       if (_uploadPart != null) {
         _part = _uploadPart;
@@ -196,12 +194,12 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
         }
       }
 
-      _uploadPartMap[partNumber] = _part;
+      _uploadedPartMap[partNumber] = _part;
       _idleRequestNumber++;
       _partNumber++;
 
       /// 检查任务是否已经完成
-      if (_uploadPartMap.length == _totalPartCount) {
+      if (_uploadedPartMap.length == _totalPartCount) {
         return;
       } else {
         return await _uploadParts(startPartNumber: _partNumber);
@@ -236,7 +234,6 @@ class UploadPartTask extends RequestTask<UploadPart> {
   /// https://github.com/flutterchina/dio/blob/21136168ab39a7536835c7a59ce0465bb05feed4/dio/lib/src/dio.dart#L1000
   final int byteLength;
 
-  /// 范围 1-10000
   final int partNumber;
   final Stream<List<int>> byteStream;
 

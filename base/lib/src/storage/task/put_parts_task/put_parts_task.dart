@@ -34,15 +34,9 @@ class PutByPartTask extends RequestTask<PutResponse> {
     @required this.partSize,
     @required this.maxPartsRequestNumber,
     this.key,
-  }) : assert(
-          1 < partSize || partSize < 1024,
-          'partSize must be greater than 1 and less than 1024',
-        );
+  });
 
   RequestTask _currentWorkingTask;
-
-  /// 重试次数
-  int retryLimit = 5;
 
   /// 已发送字节长度
   int _sent = 0;
@@ -84,10 +78,10 @@ class PutByPartTask extends RequestTask<PutResponse> {
 
     final uploadParts = _createUploadParts(host, initParts.uploadId);
 
-    PutResponse completeParts;
+    PutResponse putResponse;
     try {
       final parts = await uploadParts.future;
-      completeParts =
+      putResponse =
           await _createCompleteParts(host, initParts.uploadId, parts).future;
     } catch (error) {
       if (error is DioError && error.response != null) {
@@ -101,8 +95,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
         }
 
         /// 如果服务端文件被删除了，重新上传
-        if (error.response.statusCode == 612 && retryLimit > 0) {
-          retryLimit--;
+        if (error.response.statusCode == 612) {
           return createTask();
         }
       }
@@ -114,7 +107,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
     initPartsTask.clearCache();
     uploadParts.clearCache();
 
-    return completeParts;
+    return putResponse;
   }
 
   /// 初始化上传信息，分片上传的第一步
@@ -127,7 +120,8 @@ class PutByPartTask extends RequestTask<PutResponse> {
       key: key,
     );
 
-    return _currentWorkingTask = manager.addTask(task) as InitPartsTask;
+    manager.addTask(task);
+    return _currentWorkingTask = task;
   }
 
   UploadPartsTask _createUploadParts(String host, String uploadId) {
@@ -145,7 +139,8 @@ class PutByPartTask extends RequestTask<PutResponse> {
         notifyProgress(sent, total + 1);
       });
 
-    return _currentWorkingTask = manager.addTask(task) as UploadPartsTask;
+    manager.addTask(task);
+    return _currentWorkingTask = task;
   }
 
   /// 创建文件，分片上传的最后一步
@@ -166,7 +161,8 @@ class PutByPartTask extends RequestTask<PutResponse> {
         notifyProgress(_sent + 1, _total);
       });
 
-    return _currentWorkingTask = manager.addTask(task) as CompletePartsTask;
+    manager.addTask(task);
+    return _currentWorkingTask = task;
   }
 
   void notifyProgress(int sent, int total) {

@@ -29,7 +29,7 @@ class Storage {
     final task = PutTask(
       file: file,
       token: token,
-      automaticSliceSize: options?.automaticSliceSize ?? 4,
+      forceBySingle: options?.forceBySingle ?? false,
       partSize: options?.partSize ?? 4,
       maxPartsRequestNumber: options?.maxPartsRequestNumber ?? 5,
       key: options?.key,
@@ -81,9 +81,8 @@ class PutOptions {
   /// 如果不传则后端自动生成
   final String key;
 
-  /// 自动启用分片上传的大小
-  /// 当文件尺寸大于该设置时自动启用分片上传，否则使用但文件直传
-  final int automaticSliceSize;
+  /// 强制使用直传，不使用分片
+  final bool forceBySingle;
 
   /// 使用分片上传时的分片大小，默认值 4，单位为 MB
   final int partSize;
@@ -93,7 +92,7 @@ class PutOptions {
 
   PutOptions({
     this.key,
-    this.automaticSliceSize,
+    this.forceBySingle,
     this.partSize,
     this.maxPartsRequestNumber,
   });
@@ -124,5 +123,10 @@ class PutByPartOptions {
     this.key,
     this.partSize,
     this.maxPartsRequestNumber,
-  });
+  }) {
+    if (partSize < 1 || partSize > 1024) {
+      throw RangeError.range(partSize, 1, 1024, 'partSize',
+          'partSize must be greater than 1 and less than 1024');
+    }
+  }
 }
