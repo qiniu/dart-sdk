@@ -49,7 +49,7 @@ class PutPolicy {
 
   /// [returnBody] 声明服务端的响应格式。
   ///
-  /// 可以使用 <魔法变量> 和 <自定义变量>，必须是合法的 JSON 地址，
+  /// 可以使用 <魔法变量> 和 <自定义变量>，必须是合法的 JSON 格式，
   /// 关于 <魔法变量> 请参阅：[官方文档-魔法变量](https://developer.qiniu.com/kodo/manual/1235/vars#magicvar)
   /// 关于 <自定义变量> 请参阅：[官方文档-自定义变量](https://developer.qiniu.com/kodo/manual/1235/vars#xvar)
   final String returnBody;
@@ -156,7 +156,7 @@ class PutPolicy {
         assert(deadline != null);
 
   Map<String, dynamic> toJson() {
-    return {
+    return <String, dynamic>{
       'scope': scope,
       'isPrefixalScope': isPrefixalScope,
       'deadline': deadline,
@@ -178,7 +178,7 @@ class PutPolicy {
       'detectMime': detectMime,
       'mimeLimit': mimeLimit,
       'fileType': fileType,
-    }..removeWhere((key, value) => value == null);
+    }..removeWhere((key, dynamic value) => value == null);
   }
 
   factory PutPolicy.fromJson(Map<String, dynamic> json) {

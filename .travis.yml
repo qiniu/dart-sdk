@@ -29,7 +29,7 @@ jobs:
     - stage: base(analyze,format,test)
       name: "Vm Tests"
       os: linux
-      script: cd $TRAVIS_BUILD_DIR/base && pub run --enable-experiment=non-nullable test -p vm .
+      script: cd $TRAVIS_BUILD_DIR/base && pub run test -p vm .
 
     #######################################
     ####### jobs for flutter_sdk ##########

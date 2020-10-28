@@ -1,6 +1,6 @@
 import 'dart:convert';
-import 'package:meta/meta.dart';
 import 'package:crypto/crypto.dart';
+import 'package:meta/meta.dart';
 import './put_policy.dart';
 
 export 'put_policy.dart';
@@ -69,6 +69,7 @@ class Auth {
   /// 访问七牛的接口需要对请求进行签名, 该方法提供 Token 签发服务
   String generateAccessToken({@required List<int> bytes}) {
     assert(bytes != null);
+
     var hmacEncoder = Hmac(sha1, utf8.encode(secretKey));
 
     var sign = hmacEncoder.convert(bytes);
@@ -81,6 +82,7 @@ class Auth {
   /// 从 Token 字符串中解析 [accessKey]、[PutPolicy] 信息
   static TokenInfo parseToken(String token) {
     assert(token != null && token != '');
+
     var segments = token.split(':');
     if (segments.length < 2) {
       throw ArgumentError('invalid token');

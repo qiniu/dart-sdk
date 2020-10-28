@@ -5,7 +5,7 @@ import '../config/config.dart';
 import 'request_task.dart';
 import 'task.dart';
 
-class TaskManager<T extends Task> {
+class TaskManager<T extends Task<dynamic>> {
   @protected
   final List<Task> workingTasks = [];
 
@@ -13,7 +13,7 @@ class TaskManager<T extends Task> {
   ///
   /// 被添加的 [task] 会被立即执行 [createTask]
   @mustCallSuper
-  T addTask(T task) {
+  void addTask(T task) {
     workingTasks.add(task);
     task.preStart();
 
@@ -22,8 +22,6 @@ class TaskManager<T extends Task> {
       task.createTask().then(task.postReceive).catchError(task.postError);
       task.postStart();
     });
-
-    return task;
   }
 
   @mustCallSuper
@@ -41,15 +39,19 @@ class TaskManager<T extends Task> {
   }
 }
 
-class RequestTaskManager<T extends RequestTask> extends TaskManager<T> {
-  Config config;
+class RequestTaskManager<T extends RequestTask<dynamic>>
+    extends TaskManager<T> {
+  final Config config;
 
-  RequestTaskManager({this.config});
+  RequestTaskManager({
+    @required this.config,
+  });
 
-  T addRequestTask(T task) {
+  @override
+  void addTask(T task) {
     task
       ..manager = this
       ..config = config;
-    return addTask(task);
+    super.addTask(task);
   }
 }

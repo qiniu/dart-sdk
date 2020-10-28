@@ -51,8 +51,9 @@ mixin RequestStatusMixin {
 
   final List<RequestStatusListener> _statusListeners = [];
 
-  void addStatusListener(RequestStatusListener listener) {
+  void Function() addStatusListener(RequestStatusListener listener) {
     _statusListeners.add(listener);
+    return () => removeStatusListener(listener);
   }
 
   void removeStatusListener(RequestStatusListener listener) {
@@ -80,6 +81,7 @@ abstract class RequestTask<T> extends Task<T>
     if (_cancelToken.isCancelled) {
       throw UnsupportedError('$this has been canceled.');
     }
+
     _cancelToken.cancel();
   }
 
@@ -108,7 +110,7 @@ abstract class RequestTask<T> extends Task<T>
     super.postReceive(data);
   }
 
-  /// [creatTask] 被取消后触发
+  /// [createTask] 被取消后触发
   @mustCallSuper
   void postCancel(DioError error) {
     status = RequestStatus.Cancel;
@@ -117,13 +119,14 @@ abstract class RequestTask<T> extends Task<T>
 
   @override
   @mustCallSuper
-  void postError(error) {
+  void postError(Object error) {
     if (error is DioError && error.type == DioErrorType.CANCEL) {
       postCancel(error);
     } else {
       status = RequestStatus.Error;
       notifyStatusListeners(status);
     }
+
     super.postError(error);
   }
 }

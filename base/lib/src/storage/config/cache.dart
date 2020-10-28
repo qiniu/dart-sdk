@@ -1,7 +1,10 @@
 part of 'config.dart';
 
 abstract class CacheProvider {
+  /// 设置一对数据
   void setItem(String key, String item);
+
+  /// 根据 key 获取缓存
   String getItem(String key);
 
   /// 删除指定 key 的缓存
@@ -13,6 +16,7 @@ abstract class CacheProvider {
 
 class DefaultCacheProvider extends CacheProvider {
   Map<String, String> value = {};
+
   @override
   void clear() {
     value.clear();
