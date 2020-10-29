@@ -1,15 +1,15 @@
 import 'dart:io';
 
 import 'config/config.dart';
-import 'controller.dart';
-import 'task/put_by_single_task.dart';
-import 'task/put_parts_task/put_parts_task.dart';
-import 'task/put_response.dart';
-import 'task/put_task.dart';
+import 'methods/put/by_part/put_parts_task.dart';
+import 'methods/put/by_single/put_by_single_task.dart';
+import 'methods/put/put.dart';
+import 'methods/put/put_task.dart';
 import 'task/task_manager.dart';
 
-export './controller.dart';
 export 'config/config.dart';
+export 'methods/put/put.dart';
+export 'task/task.dart';
 
 /// 客户端
 class Storage {
@@ -21,7 +21,7 @@ class Storage {
     taskManager = RequestTaskManager(config: this.config);
   }
 
-  PutController<PutResponse> putFile(
+  PutController putFile(
     File file,
     String token, {
     PutOptions options,
@@ -40,7 +40,7 @@ class Storage {
   }
 
   /// 单文件上传
-  PutController<PutResponse> putFileBySingle(
+  PutController putFileBySingle(
     File file,
     String token, {
     PutBySingleOptions options,
@@ -58,7 +58,7 @@ class Storage {
   /// 分片上传
   /// FIXME: 应该使用 [listParts](https://developer.qiniu.com/kodo/api/6858/listparts) 重写现有缓存机制
   /// FIXME: 取消时应该实现 [abortMultipartUpload](https://developer.qiniu.com/kodo/api/6367/abort-multipart-upload) 接口
-  PutController<PutResponse> putFileByPart(
+  PutController putFileByPart(
     File file,
     String token, {
     PutByPartOptions options,
@@ -73,60 +73,5 @@ class Storage {
 
     taskManager.addTask(task);
     return PutController(task);
-  }
-}
-
-class PutOptions {
-  /// 资源名
-  /// 如果不传则后端自动生成
-  final String key;
-
-  /// 强制使用直传，不使用分片
-  final bool forceBySingle;
-
-  /// 使用分片上传时的分片大小，默认值 4，单位为 MB
-  final int partSize;
-
-  /// 并发上传的队列长度，默认值为 5
-  final int maxPartsRequestNumber;
-
-  PutOptions({
-    this.key,
-    this.forceBySingle,
-    this.partSize,
-    this.maxPartsRequestNumber,
-  });
-}
-
-class PutBySingleOptions {
-  /// 资源名
-  /// 如果不传则后端自动生成
-  final String key;
-
-  PutBySingleOptions({this.key});
-}
-
-class PutByPartOptions {
-  /// 资源名
-  /// 如果不传则后端自动生成
-  final String key;
-
-  /// 切片大小，单位 MB
-  ///
-  /// 超出 [partSize] 的文件大小会把每片按照 [partSize] 的大小切片并上传
-  /// 默认 4MB，最小不得小于 1MB，最大不得大于 1024 MB
-  final int partSize;
-
-  final int maxPartsRequestNumber;
-
-  PutByPartOptions({
-    this.key,
-    this.partSize,
-    this.maxPartsRequestNumber,
-  }) {
-    if (partSize < 1 || partSize > 1024) {
-      throw RangeError.range(partSize, 1, 1024, 'partSize',
-          'partSize must be greater than 1 and less than 1024');
-    }
   }
 }

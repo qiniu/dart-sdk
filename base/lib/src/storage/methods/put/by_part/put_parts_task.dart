@@ -1,13 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
 
-import '../../../auth/auth.dart';
+import '../../../../auth/auth.dart';
+import '../../../task/request_task.dart';
 import '../put_response.dart';
-import '../request_task.dart';
 
 part 'cache_mixin.dart';
 part 'complete_parts_task.dart';
@@ -46,13 +47,8 @@ class PutByPartTask extends RequestTask<PutResponse> {
 
   @override
   void preStart() {
-    final putPolicy = Auth.parseToken(token).putPolicy;
-    if (putPolicy == null) {
-      throw ArgumentError('invalid token');
-    }
-
+    final putPolicy = Auth.parseUpToken(token).putPolicy;
     bucket = putPolicy.getBucket();
-
     super.preStart();
   }
 

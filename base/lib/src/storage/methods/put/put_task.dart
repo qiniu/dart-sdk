@@ -2,10 +2,10 @@ import 'dart:io';
 
 import 'package:meta/meta.dart';
 
-import 'put_by_single_task.dart';
-import 'put_parts_task/put_parts_task.dart';
+import '../../task/request_task.dart';
+import 'by_part/put_parts_task.dart';
+import 'by_single/put_by_single_task.dart';
 import 'put_response.dart';
-import 'request_task.dart';
 
 class PutTask extends RequestTask<PutResponse> {
   final File file;
@@ -52,6 +52,10 @@ class PutTask extends RequestTask<PutResponse> {
         key: key,
       );
     }
+
+    task
+      ..addProgressListener(notifyProgressListeners)
+      ..addStatusListener(notifyStatusListeners);
 
     manager.addTask(task);
     return task.future;

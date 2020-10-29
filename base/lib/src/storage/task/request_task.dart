@@ -6,17 +6,17 @@ import '../config/config.dart';
 import 'task.dart';
 import 'task_manager.dart';
 
-typedef ProgressListener = void Function(int sent, int total);
+typedef RequestTaskProgressListener = void Function(int sent, int total);
 
-mixin ProgressListenersMixin {
-  final List<ProgressListener> progressListeners = [];
+mixin RequestTaskProgressListenersMixin {
+  final List<RequestTaskProgressListener> progressListeners = [];
 
-  void Function() addProgressListener(ProgressListener listener) {
+  void Function() addProgressListener(RequestTaskProgressListener listener) {
     progressListeners.add(listener);
     return () => removeProgressListener(listener);
   }
 
-  void removeProgressListener(ProgressListener listener) {
+  void removeProgressListener(RequestTaskProgressListener listener) {
     progressListeners.remove(listener);
   }
 
@@ -27,7 +27,7 @@ mixin ProgressListenersMixin {
   }
 }
 
-enum RequestStatus {
+enum RequestTaskStatus {
   None,
 
   /// 请求准备发出的时候触发
@@ -43,24 +43,24 @@ enum RequestStatus {
   Error
 }
 
-typedef RequestStatusListener = void Function(RequestStatus status);
+typedef RequestTaskStatusListener = void Function(RequestTaskStatus status);
 
-mixin RequestStatusMixin {
+mixin RequestTaskStatusListenersMixin {
   @protected
-  RequestStatus status = RequestStatus.None;
+  RequestTaskStatus status = RequestTaskStatus.None;
 
-  final List<RequestStatusListener> _statusListeners = [];
+  final List<RequestTaskStatusListener> _statusListeners = [];
 
-  void Function() addStatusListener(RequestStatusListener listener) {
+  void Function() addStatusListener(RequestTaskStatusListener listener) {
     _statusListeners.add(listener);
     return () => removeStatusListener(listener);
   }
 
-  void removeStatusListener(RequestStatusListener listener) {
+  void removeStatusListener(RequestTaskStatusListener listener) {
     _statusListeners.remove(listener);
   }
 
-  void notifyStatusListeners(RequestStatus status) {
+  void notifyStatusListeners(RequestTaskStatus status) {
     for (final listener in _statusListeners) {
       listener(status);
     }
@@ -68,7 +68,7 @@ mixin RequestStatusMixin {
 }
 
 abstract class RequestTask<T> extends Task<T>
-    with ProgressListenersMixin, RequestStatusMixin {
+    with RequestTaskProgressListenersMixin, RequestTaskStatusListenersMixin {
   final Dio client = Dio();
   final CancelToken _cancelToken = CancelToken();
 
@@ -88,10 +88,10 @@ abstract class RequestTask<T> extends Task<T>
   @override
   @mustCallSuper
   void preStart() {
+    status = RequestTaskStatus.Request;
+    notifyStatusListeners(status);
     client.httpClientAdapter = config.httpClientAdapter;
     client.interceptors.add(InterceptorsWrapper(onRequest: (options) {
-      status = RequestStatus.Request;
-      notifyStatusListeners(status);
       options
         ..cancelToken = _cancelToken
         ..onSendProgress = notifyProgressListeners;
@@ -104,7 +104,7 @@ abstract class RequestTask<T> extends Task<T>
   @override
   @mustCallSuper
   void postReceive(T data) {
-    status = RequestStatus.Done;
+    status = RequestTaskStatus.Done;
     notifyStatusListeners(status);
     manager.removeTask(this);
     super.postReceive(data);
@@ -113,7 +113,7 @@ abstract class RequestTask<T> extends Task<T>
   /// [createTask] 被取消后触发
   @mustCallSuper
   void postCancel(DioError error) {
-    status = RequestStatus.Cancel;
+    status = RequestTaskStatus.Cancel;
     notifyStatusListeners(status);
   }
 
@@ -123,7 +123,7 @@ abstract class RequestTask<T> extends Task<T>
     if (error is DioError && error.type == DioErrorType.CANCEL) {
       postCancel(error);
     } else {
-      status = RequestStatus.Error;
+      status = RequestTaskStatus.Error;
       notifyStatusListeners(status);
     }
 
