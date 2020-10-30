@@ -53,9 +53,7 @@ class PutTask extends RequestTask<PutResponse> {
       );
     }
 
-    task
-      ..addProgressListener(notifyProgressListeners)
-      ..addStatusListener(notifyStatusListeners);
+    task.addProgressListener(notifyProgressListeners);
 
     manager.addTask(task);
     return task.future;

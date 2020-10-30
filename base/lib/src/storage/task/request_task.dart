@@ -8,6 +8,9 @@ import 'task_manager.dart';
 
 typedef RequestTaskProgressListener = void Function(int sent, int total);
 
+/// 请求进度。
+/// 
+/// 使用 client 发出去的请求才会触发，其他情况继承 RequestTask 的需要手动触发
 mixin RequestTaskProgressListenersMixin {
   final List<RequestTaskProgressListener> progressListeners = [];
 
@@ -45,6 +48,9 @@ enum RequestTaskStatus {
 
 typedef RequestTaskStatusListener = void Function(RequestTaskStatus status);
 
+/// 任务状态。
+/// 
+/// 自动触发(preStart, postReceive)
 mixin RequestTaskStatusListenersMixin {
   @protected
   RequestTaskStatus status = RequestTaskStatus.None;

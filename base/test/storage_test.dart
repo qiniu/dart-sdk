@@ -21,9 +21,17 @@ void main() {
       token,
       options: PutOptions(key: 'test_for_put.txt'),
     );
-
+    int _sent, _total;
+    putController.addProgressListener((sent, total) {
+      _sent = sent;
+      _total = total;
+    });
+    final statusList = <RequestTaskStatus>[];
+    putController.addStatusListener(statusList.add);
     final response = await putController.future;
-
+    expect(statusList[0], RequestTaskStatus.Request);
+    expect(statusList[1], RequestTaskStatus.Done);
+    expect(_sent / _total, 1);
     expect(response.key, 'test_for_put.txt');
   }, skip: !isSensitiveDataDefined);
 
