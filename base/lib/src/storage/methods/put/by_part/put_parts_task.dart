@@ -35,7 +35,12 @@ class PutByPartTask extends RequestTask<PutResponse> {
     @required this.partSize,
     @required this.maxPartsRequestNumber,
     this.key,
-  });
+  }) {
+    if (partSize < 1 || partSize > 1024) {
+      throw RangeError.range(partSize, 1, 1024, 'partSize',
+          'partSize must be greater than 1 and less than 1024');
+    }
+  }
 
   RequestTask _currentWorkingTask;
 

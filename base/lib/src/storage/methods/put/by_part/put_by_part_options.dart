@@ -15,10 +15,5 @@ class PutByPartOptions {
     this.key,
     this.partSize,
     this.maxPartsRequestNumber,
-  }) {
-    if (partSize < 1 || partSize > 1024) {
-      throw RangeError.range(partSize, 1, 1024, 'partSize',
-          'partSize must be greater than 1 and less than 1024');
-    }
-  }
+  });
 }
