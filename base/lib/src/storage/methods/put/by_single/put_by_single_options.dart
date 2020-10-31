@@ -1,7 +1,13 @@
+import '../put_controller.dart';
+
 class PutBySingleOptions {
   /// 资源名
+  ///
   /// 如果不传则后端自动生成
   final String key;
 
-  PutBySingleOptions({this.key});
+  /// 控制器
+  final PutController controller;
+
+  PutBySingleOptions({this.key, this.controller});
 }

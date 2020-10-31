@@ -35,21 +35,21 @@ class PutByPartTask extends RequestTask<PutResponse> {
     @required this.partSize,
     @required this.maxPartsRequestNumber,
     this.key,
-  }) {
-    assert(file != null);
-    assert(token != null);
-    assert(partSize != null);
-    assert(maxPartsRequestNumber != null);
-    assert(() {
-      if (partSize < 1 || partSize > 1024) {
-        throw RangeError.range(partSize, 1, 1024, 'partSize',
-            'partSize must be greater than 1 and less than 1024');
-      }
-      return true;
-    }());
-  }
+    RequestTaskController controller,
+  })  : assert(file != null),
+        assert(token != null),
+        assert(partSize != null),
+        assert(maxPartsRequestNumber != null),
+        assert(() {
+          if (partSize < 1 || partSize > 1024) {
+            throw RangeError.range(partSize, 1, 1024, 'partSize',
+                'partSize must be greater than 1 and less than 1024');
+          }
+          return true;
+        }()),
+        super(controller: controller);
 
-  RequestTask _currentWorkingTask;
+  RequestTaskController _currentWorkingTaskController;
 
   /// 已发送字节长度
   int _sent = 0;
@@ -61,23 +61,26 @@ class PutByPartTask extends RequestTask<PutResponse> {
   void preStart() {
     final putPolicy = Auth.parseUpToken(token).putPolicy;
     bucket = putPolicy.getBucket();
+    controller?.cancelToken?.whenCancel?.then((_) {
+      _currentWorkingTaskController?.cancel();
+    });
     super.preStart();
   }
 
   @override
   void postReceive(PutResponse data) {
-    _currentWorkingTask = null;
+    _currentWorkingTaskController = null;
     super.postReceive(data);
   }
 
   @override
-  void cancel() {
-    _currentWorkingTask?.cancel();
-    super.cancel();
-  }
-
-  @override
   Future<PutResponse> createTask() async {
+    /// 如果已经取消了，直接报错
+    // ignore: null_aware_in_condition
+    if (controller?.cancelToken?.isCancelled) {
+      throw DioError(type: DioErrorType.CANCEL);
+    }
+
     final host = await config.hostProvider.getUpHost(token: token);
 
     final initPartsTask = _createInitParts(host);
@@ -119,19 +122,25 @@ class PutByPartTask extends RequestTask<PutResponse> {
 
   /// 初始化上传信息，分片上传的第一步
   InitPartsTask _createInitParts(String host) {
+    final _controller = RequestTaskController();
+
     final task = InitPartsTask(
       file: file,
       token: token,
       bucket: bucket,
       host: host,
       key: key,
+      controller: _controller,
     );
 
-    manager.addTask(task);
-    return _currentWorkingTask = task;
+    manager.addRequestTask(task);
+    _currentWorkingTaskController = _controller;
+    return task;
   }
 
   UploadPartsTask _createUploadParts(String host, String uploadId) {
+    final _controller = RequestTaskController();
+
     final task = UploadPartsTask(
       file: file,
       token: token,
@@ -141,13 +150,17 @@ class PutByPartTask extends RequestTask<PutResponse> {
       uploadId: uploadId,
       maxPartsRequestNumber: maxPartsRequestNumber,
       key: key,
-    )..addProgressListener((sent, total) {
-        /// complete parts 没完成之前应该是 99%，所以 + 1
-        notifyProgress(sent, total + 1);
-      });
+      controller: _controller,
+    );
 
-    manager.addTask(task);
-    return _currentWorkingTask = task;
+    _controller.addProgressListener((sent, total) {
+      /// complete parts 没完成之前应该是 99%，所以 + 1
+      notifyProgress(sent, total + 1);
+    });
+
+    manager.addRequestTask(task);
+    _currentWorkingTaskController = _controller;
+    return task;
   }
 
   /// 创建文件，分片上传的最后一步
@@ -156,6 +169,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
     String uploadId,
     List<Part> parts,
   ) {
+    final _controller = RequestTaskController();
     final task = CompletePartsTask(
       token: token,
       bucket: bucket,
@@ -163,18 +177,22 @@ class PutByPartTask extends RequestTask<PutResponse> {
       parts: parts,
       host: host,
       key: key,
-    )..addProgressListener((sent, total) {
-        /// UploadPartsTask 那边给 total 做了 +1 的操作，这里完成后补上 1 字节确保 100%
-        notifyProgress(_sent + 1, _total);
-      });
+      controller: _controller,
+    );
 
-    manager.addTask(task);
-    return _currentWorkingTask = task;
+    _controller.addProgressListener((sent, total) {
+      /// UploadPartsTask 那边给 total 做了 +1 的操作，这里完成后补上 1 字节确保 100%
+      notifyProgress(_sent + 1, _total);
+    });
+
+    manager.addRequestTask(task);
+    _currentWorkingTaskController = _controller;
+    return task;
   }
 
   void notifyProgress(int sent, int total) {
     _sent = sent;
     _total = total;
-    notifyProgressListeners(_sent, _total);
+    controller?.notifyProgressListeners(_sent, _total);
   }
 }

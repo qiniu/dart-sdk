@@ -70,7 +70,8 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     @required this.partSize,
     @required this.maxPartsRequestNumber,
     this.key,
-  });
+    RequestTaskController controller,
+  }) : super(controller: controller);
 
   static String getCacheKey(
     String path,
@@ -182,7 +183,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
       notifyProgress();
     } else {
       _idleRequestNumber--;
-
+      final _controller = RequestTaskController();
       final task = UploadPartTask(
         token: token,
         bucket: bucket,
@@ -192,12 +193,15 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
         byteLength: _byteLength,
         partNumber: partNumber,
         key: key,
-      )..addProgressListener((sent, total) {
-          _sentMap[partNumber] = sent;
-          notifyProgress();
-        });
+        controller: _controller,
+      );
 
-      manager.addTask(task);
+      _controller.addProgressListener((sent, total) {
+        _sentMap[partNumber] = sent;
+        notifyProgress();
+      });
+
+      manager.addRequestTask(task);
 
       final data = await task.future;
 
@@ -228,7 +232,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
 
   void notifyProgress() {
     final _sent = _sentMap.values.reduce((value, element) => value + element);
-    notifyProgressListeners(_sent, _fileByteLength);
+    controller?.notifyProgressListeners(_sent, _fileByteLength);
   }
 }
 
@@ -259,7 +263,8 @@ class UploadPartTask extends RequestTask<UploadPart> {
     @required this.partNumber,
     @required this.byteStream,
     this.key,
-  });
+    RequestTaskController controller,
+  }) : super(controller: controller);
 
   @override
   Future<UploadPart> createTask() async {

@@ -3,11 +3,12 @@ import 'dart:io';
 import 'package:meta/meta.dart';
 
 import '../../task/request_task.dart';
+import '../../task/task.dart';
 import 'by_part/put_parts_task.dart';
 import 'by_single/put_by_single_task.dart';
 import 'put_response.dart';
 
-class PutTask extends RequestTask<PutResponse> {
+class PutTask extends Task<PutResponse> {
   final File file;
   final String token;
 
@@ -17,6 +18,7 @@ class PutTask extends RequestTask<PutResponse> {
   final int maxPartsRequestNumber;
 
   final String key;
+  final RequestTaskController controller;
 
   PutTask({
     @required this.file,
@@ -25,6 +27,7 @@ class PutTask extends RequestTask<PutResponse> {
     this.partSize,
     this.maxPartsRequestNumber,
     this.key,
+    this.controller,
   })  : assert(file != null),
         assert(token != null);
 
@@ -45,18 +48,18 @@ class PutTask extends RequestTask<PutResponse> {
         key: key,
         maxPartsRequestNumber: maxPartsRequestNumber,
         partSize: partSize,
+        controller: controller,
       );
     } else {
       task = PutBySingleTask(
         file: file,
         token: token,
         key: key,
+        controller: controller,
       );
     }
 
-    task.addProgressListener(notifyProgressListeners);
-
-    manager.addTask(task);
+    manager.addRequestTask(task);
     return task.future;
   }
 }

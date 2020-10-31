@@ -14,14 +14,14 @@ export 'task/task.dart';
 /// 客户端
 class Storage {
   Config config;
-  RequestTaskManager taskManager;
+  TaskManager taskManager;
 
   Storage({Config config}) {
     this.config = config ?? Config();
-    taskManager = RequestTaskManager(config: this.config);
+    taskManager = TaskManager(config: this.config);
   }
 
-  PutController putFile(
+  Future<PutResponse> putFile(
     File file,
     String token, {
     PutOptions options,
@@ -33,14 +33,15 @@ class Storage {
       partSize: options?.partSize ?? 4,
       maxPartsRequestNumber: options?.maxPartsRequestNumber ?? 5,
       key: options?.key,
+      controller: options?.controller,
     );
 
     taskManager.addTask(task);
-    return PutController(task);
+    return task.future;
   }
 
   /// 单文件上传
-  PutController putFileBySingle(
+  Future<PutResponse> putFileBySingle(
     File file,
     String token, {
     PutBySingleOptions options,
@@ -49,16 +50,18 @@ class Storage {
       file: file,
       token: token,
       key: options?.key,
+      controller: options?.controller,
     );
 
-    taskManager.addTask(task);
-    return PutController(task);
+    taskManager.addRequestTask(task);
+
+    return task.future;
   }
 
   /// 分片上传
   /// FIXME: 应该使用 [listParts](https://developer.qiniu.com/kodo/api/6858/listparts) 重写现有缓存机制
   /// FIXME: 取消时应该实现 [abortMultipartUpload](https://developer.qiniu.com/kodo/api/6367/abort-multipart-upload) 接口
-  PutController putFileByPart(
+  Future<PutResponse> putFileByPart(
     File file,
     String token, {
     PutByPartOptions options,
@@ -69,9 +72,11 @@ class Storage {
       key: options?.key,
       partSize: options?.partSize ?? 4,
       maxPartsRequestNumber: options?.maxPartsRequestNumber ?? 5,
+      controller: options?.controller,
     );
 
-    taskManager.addTask(task);
-    return PutController(task);
+    taskManager.addRequestTask(task);
+
+    return task.future;
   }
 }
