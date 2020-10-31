@@ -151,55 +151,59 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   /// 从指定的分片位置往后上传切片
   Future<void> _uploadPartsByIndex(int from) async {
     final tasksLength = min(_idleRequestNumber, _totalPartCount - from);
-    final taskFutures =
-        List<int>(tasksLength).asMap().entries.map((entry) async {
+    final taskFutures = <Future<Null>>[];
+
+    for (var i = 0; i < tasksLength; i++) {
       /// partNumber 按照后端要求必须从 1 开始
-      final partNumber = entry.key + 1;
+      final future = _createUploadPartTaskFutureByPartNumber(i + 1);
+      taskFutures.add(future);
+    }
 
-      /// 根据 part 读取文件
-      final byteStream = _readFileByPartNumber(partNumber);
-
-      /// 上传分片(part)的字节大小
-      final _byteLength = _getPartSizeByPartNumber(partNumber);
-
-      final _uploadedPart = _uploadedPartMap[partNumber];
-
-      if (_uploadedPart != null) {
-        _sentMap[partNumber] = _byteLength;
-        notifyProgress();
-      } else {
-        _idleRequestNumber--;
-
-        final task = UploadPartTask(
-          token: token,
-          bucket: bucket,
-          uploadId: uploadId,
-          host: host,
-          byteStream: byteStream,
-          byteLength: _byteLength,
-          partNumber: partNumber,
-          key: key,
-        )..addProgressListener((sent, total) {
-            _sentMap[partNumber] = sent;
-            notifyProgress();
-          });
-
-        manager.addTask(task);
-
-        final data = await task.future;
-
-        _idleRequestNumber++;
-        _uploadedPartMap[partNumber] =
-            Part(partNumber: partNumber, etag: data.etag);
-      }
-    });
-
-    await Future.wait<UploadPart>(taskFutures);
+    await Future.wait<Null>(taskFutures);
 
     /// 检查任务是否已经完成
     if (_uploadedPartMap.length != _totalPartCount) {
       /// 上传下一片
       await _uploadPartsByIndex(taskFutures.length);
+    }
+  }
+
+  Future<Null> _createUploadPartTaskFutureByPartNumber(int partNumber) async {
+    /// 根据 part 读取文件
+    final byteStream = _readFileByPartNumber(partNumber);
+
+    /// 上传分片(part)的字节大小
+    final _byteLength = _getPartSizeByPartNumber(partNumber);
+
+    final _uploadedPart = _uploadedPartMap[partNumber];
+
+    if (_uploadedPart != null) {
+      _sentMap[partNumber] = _byteLength;
+      notifyProgress();
+    } else {
+      _idleRequestNumber--;
+
+      final task = UploadPartTask(
+        token: token,
+        bucket: bucket,
+        uploadId: uploadId,
+        host: host,
+        byteStream: byteStream,
+        byteLength: _byteLength,
+        partNumber: partNumber,
+        key: key,
+      )..addProgressListener((sent, total) {
+          _sentMap[partNumber] = sent;
+          notifyProgress();
+        });
+
+      manager.addTask(task);
+
+      final data = await task.future;
+
+      _idleRequestNumber++;
+      _uploadedPartMap[partNumber] =
+          Part(partNumber: partNumber, etag: data.etag);
     }
   }
 
