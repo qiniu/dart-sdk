@@ -36,6 +36,10 @@ class PutByPartTask extends RequestTask<PutResponse> {
     @required this.maxPartsRequestNumber,
     this.key,
   }) {
+    assert(file != null);
+    assert(token != null);
+    assert(partSize != null);
+    assert(maxPartsRequestNumber != null);
     assert(() {
       if (partSize < 1 || partSize > 1024) {
         throw RangeError.range(partSize, 1, 1024, 'partSize',

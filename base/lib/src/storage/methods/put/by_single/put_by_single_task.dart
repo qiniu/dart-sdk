@@ -22,7 +22,8 @@ class PutBySingleTask extends RequestTask<PutResponse> {
     @required this.file,
     @required this.token,
     this.key,
-  });
+  })  : assert(file != null),
+        assert(token != null);
 
   @override
   Future<PutResponse> createTask() async {

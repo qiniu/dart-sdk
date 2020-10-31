@@ -25,7 +25,8 @@ class PutTask extends RequestTask<PutResponse> {
     this.partSize,
     this.maxPartsRequestNumber,
     this.key,
-  });
+  })  : assert(file != null),
+        assert(token != null);
 
   bool usePart(int fileSize) {
     return forceBySingle == false && fileSize > (partSize * 1024 * 1024);
