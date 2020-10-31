@@ -1,5 +1,9 @@
 import 'dart:async';
+
 import 'package:meta/meta.dart';
+
+export 'request_task.dart';
+export 'task_manager.dart';
 
 /// 定义一个 Task 的抽象类
 ///

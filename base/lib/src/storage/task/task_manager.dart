@@ -15,10 +15,10 @@ class TaskManager<T extends Task<dynamic>> {
   @mustCallSuper
   void addTask(T task) {
     workingTasks.add(task);
-    task.preStart();
 
     /// 把同步的任务改成异步，防止 [RequestTask.addStatusListener] 没有被触发
     Future.delayed(Duration(milliseconds: 0), () {
+      task.preStart();
       task.createTask().then(task.postReceive).catchError(task.postError);
       task.postStart();
     });

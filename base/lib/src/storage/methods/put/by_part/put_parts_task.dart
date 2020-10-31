@@ -1,13 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
 
-import '../../../auth/auth.dart';
+import '../../../../auth/auth.dart';
+import '../../../task/request_task.dart';
 import '../put_response.dart';
-import '../request_task.dart';
 
 part 'cache_mixin.dart';
 part 'complete_parts_task.dart';
@@ -34,7 +35,19 @@ class PutByPartTask extends RequestTask<PutResponse> {
     @required this.partSize,
     @required this.maxPartsRequestNumber,
     this.key,
-  });
+  }) {
+    assert(file != null);
+    assert(token != null);
+    assert(partSize != null);
+    assert(maxPartsRequestNumber != null);
+    assert(() {
+      if (partSize < 1 || partSize > 1024) {
+        throw RangeError.range(partSize, 1, 1024, 'partSize',
+            'partSize must be greater than 1 and less than 1024');
+      }
+      return true;
+    }());
+  }
 
   RequestTask _currentWorkingTask;
 
@@ -46,13 +59,8 @@ class PutByPartTask extends RequestTask<PutResponse> {
 
   @override
   void preStart() {
-    final putPolicy = Auth.parseToken(token).putPolicy;
-    if (putPolicy == null) {
-      throw ArgumentError('invalid token');
-    }
-
+    final putPolicy = Auth.parseUpToken(token).putPolicy;
     bucket = putPolicy.getBucket();
-
     super.preStart();
   }
 
@@ -64,7 +72,6 @@ class PutByPartTask extends RequestTask<PutResponse> {
 
   @override
   void cancel() {
-    /// FIXME: 可能 task 已经完成，这里的调用就会报错
     _currentWorkingTask?.cancel();
     super.cancel();
   }
