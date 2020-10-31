@@ -65,7 +65,6 @@ class PutByPartTask extends RequestTask<PutResponse> {
 
   @override
   void cancel() {
-    /// FIXME: 可能 task 已经完成，这里的调用就会报错
     _currentWorkingTask?.cancel();
     super.cancel();
   }
