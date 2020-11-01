@@ -139,7 +139,7 @@ void main() {
   }, skip: !isSensitiveDataDefined);
 
   test('putFileByPart should works well while response 612.', () async {
-    final httpAdapterTest = HttpAdapterTest();
+    final httpAdapterTest = HttpAdapterTestWith612();
     final storage = Storage(config: Config(httpClientAdapter: httpAdapterTest));
 
     final response = await storage.putFileByPart(
@@ -158,7 +158,7 @@ void main() {
     final putController = PutController();
     final statusList = <RequestTaskStatus>[];
     putController.addStatusListener(statusList.add);
-    Future.delayed(Duration(milliseconds: 10), putController.cancel);
+    Future.delayed(Duration(milliseconds: 1), putController.cancel);
     final future = storage.putFileByPart(
       File('test_resource/test_for_put_parts.mp4'),
       token,
@@ -205,11 +205,7 @@ void main() {
     final response = await storage.putFileByPart(
       File('test_resource/test_for_put_parts.mp4'),
       token,
-      options: PutByPartOptions(
-        key: 'test_for_put_parts.mp4',
-        partSize: 1,
-        controller: putController,
-      ),
+      options: PutByPartOptions(key: 'test_for_put_parts.mp4', partSize: 1),
     );
 
     expect(response, isA<PutResponse>());
@@ -290,14 +286,18 @@ void main() {
     final response = await storage.putFileByPart(
       File('test_resource/test_for_put_parts.mp4'),
       token,
-      options: PutByPartOptions(key: 'test_for_put_parts.mp4', partSize: 1),
+      options: PutByPartOptions(
+        key: 'test_for_put_parts.mp4',
+        partSize: 1,
+        controller: putController,
+      ),
     );
     expect(response, isA<PutResponse>());
     expect(_sent / _total, equals(1));
   }, skip: !isSensitiveDataDefined);
 }
 
-class HttpAdapterTest extends HttpClientAdapter {
+class HttpAdapterTestWith612 extends HttpClientAdapter {
   /// 记录 CompletePartsTask 被创建的次数
   /// 第一次我们拦截并返回 612，第二次不拦截
   bool completePartsTaskResponse612 = false;

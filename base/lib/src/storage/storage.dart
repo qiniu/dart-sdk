@@ -34,6 +34,7 @@ class Storage {
       maxPartsRequestNumber: options?.maxPartsRequestNumber ?? 5,
       key: options?.key,
       controller: options?.controller,
+      hostProvider: config.hostProvider,
     );
 
     taskManager.addTask(task);
@@ -73,9 +74,10 @@ class Storage {
       partSize: options?.partSize ?? 4,
       maxPartsRequestNumber: options?.maxPartsRequestNumber ?? 5,
       controller: options?.controller,
+      hostProvider: config.hostProvider,
     );
 
-    taskManager.addRequestTask(task);
+    taskManager.addTask(task);
 
     return task.future;
   }

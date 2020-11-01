@@ -7,7 +7,9 @@ import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
 
 import '../../../../auth/auth.dart';
+import '../../../config/config.dart';
 import '../../../task/request_task.dart';
+import '../../../task/task.dart';
 import '../put_response.dart';
 
 part 'cache_mixin.dart';
@@ -17,7 +19,7 @@ part 'part.dart';
 part 'upload_parts_task.dart';
 
 /// 分片上传任务
-class PutByPartTask extends RequestTask<PutResponse> {
+class PutByPartTask extends Task<PutResponse> {
   final File file;
   final String token;
 
@@ -29,13 +31,18 @@ class PutByPartTask extends RequestTask<PutResponse> {
   /// 在 preStart 中延迟初始化
   String bucket;
 
+  RequestTaskController controller;
+
+  HostProvider hostProvider;
+
   PutByPartTask({
     @required this.file,
     @required this.token,
     @required this.partSize,
+    @required this.hostProvider,
     @required this.maxPartsRequestNumber,
     this.key,
-    RequestTaskController controller,
+    this.controller,
   })  : assert(file != null),
         assert(token != null),
         assert(partSize != null),
@@ -46,8 +53,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
                 'partSize must be greater than 1 and less than 1024');
           }
           return true;
-        }()),
-        super(controller: controller);
+        }());
 
   RequestTaskController _currentWorkingTaskController;
 
@@ -64,24 +70,34 @@ class PutByPartTask extends RequestTask<PutResponse> {
     controller?.cancelToken?.whenCancel?.then((_) {
       _currentWorkingTaskController?.cancel();
     });
+    controller?.notifyStatusListeners(RequestTaskStatus.Request);
     super.preStart();
   }
 
   @override
   void postReceive(PutResponse data) {
     _currentWorkingTaskController = null;
+    controller?.notifyStatusListeners(RequestTaskStatus.Done);
     super.postReceive(data);
+  }
+
+  @override
+  void postError(Object error) {
+    if (error is DioError && error.type == DioErrorType.CANCEL) {
+      controller.notifyStatusListeners(RequestTaskStatus.Cancel);
+    }
+    super.postError(error);
   }
 
   @override
   Future<PutResponse> createTask() async {
     /// 如果已经取消了，直接报错
     // ignore: null_aware_in_condition
-    if (controller?.cancelToken?.isCancelled) {
+    if (controller != null && controller.cancelToken.isCancelled) {
       throw DioError(type: DioErrorType.CANCEL);
     }
 
-    final host = await config.hostProvider.getUpHost(token: token);
+    final host = await hostProvider.getUpHost(token: token);
 
     final initPartsTask = _createInitParts(host);
     final initParts = await initPartsTask.future;

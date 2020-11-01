@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:meta/meta.dart';
 
+import '../../config/config.dart';
 import '../../task/request_task.dart';
 import '../../task/task.dart';
 import 'by_part/put_parts_task.dart';
@@ -19,10 +20,12 @@ class PutTask extends Task<PutResponse> {
 
   final String key;
   final RequestTaskController controller;
+  final HostProvider hostProvider;
 
   PutTask({
     @required this.file,
     @required this.token,
+    @required this.hostProvider,
     this.forceBySingle,
     this.partSize,
     this.maxPartsRequestNumber,
@@ -38,18 +41,20 @@ class PutTask extends Task<PutResponse> {
   @override
   Future<PutResponse> createTask() async {
     final fileSize = await file.length();
-    RequestTask<PutResponse> task;
+    Task<PutResponse> task;
 
     /// 文件尺寸大于设置的数值时使用分片上传
     if (usePart(fileSize)) {
-      task = PutByPartTask(
+      final task = PutByPartTask(
         file: file,
         token: token,
         key: key,
         maxPartsRequestNumber: maxPartsRequestNumber,
         partSize: partSize,
         controller: controller,
+        hostProvider: null,
       );
+      manager.addTask(task);
     } else {
       task = PutBySingleTask(
         file: file,
@@ -57,9 +62,9 @@ class PutTask extends Task<PutResponse> {
         key: key,
         controller: controller,
       );
+      manager.addRequestTask(task as RequestTask<PutResponse>);
     }
 
-    manager.addRequestTask(task);
     return task.future;
   }
 }
