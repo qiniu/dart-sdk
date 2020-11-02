@@ -1,3 +1,5 @@
+import '../put_controller.dart';
+
 class PutByPartOptions {
   /// 资源名
   /// 如果不传则后端自动生成
@@ -11,9 +13,13 @@ class PutByPartOptions {
 
   final int maxPartsRequestNumber;
 
+  /// 控制器
+  final PutController controller;
+
   PutByPartOptions({
     this.key,
     this.partSize,
     this.maxPartsRequestNumber,
+    this.controller,
   });
 }

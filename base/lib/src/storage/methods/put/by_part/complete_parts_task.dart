@@ -16,7 +16,8 @@ class CompletePartsTask extends RequestTask<PutResponse> {
     @required this.parts,
     @required this.host,
     this.key,
-  });
+    RequestTaskController controller,
+  }) : super(controller: controller);
 
   @override
   Future<PutResponse> createTask() async {

@@ -4,103 +4,27 @@ import 'package:meta/meta.dart';
 import '../config/config.dart';
 
 import 'task.dart';
-import 'task_manager.dart';
 
-typedef RequestTaskProgressListener = void Function(int sent, int total);
+part 'request_task_controller.dart';
 
-/// 请求进度。
-///
-/// 使用 client 发出去的请求才会触发，其他情况继承 RequestTask 的需要手动触发
-mixin RequestTaskProgressListenersMixin {
-  final List<RequestTaskProgressListener> progressListeners = [];
-
-  void Function() addProgressListener(RequestTaskProgressListener listener) {
-    progressListeners.add(listener);
-    return () => removeProgressListener(listener);
-  }
-
-  void removeProgressListener(RequestTaskProgressListener listener) {
-    progressListeners.remove(listener);
-  }
-
-  void notifyProgressListeners(int sent, int total) {
-    for (final listener in progressListeners) {
-      listener(sent, total);
-    }
-  }
-}
-
-enum RequestTaskStatus {
-  None,
-
-  /// 请求准备发出的时候触发
-  Request,
-
-  /// 请求完成后触发
-  Done,
-
-  /// 请求被取消后触发
-  Cancel,
-
-  /// 请求出错后触发
-  Error
-}
-
-typedef RequestTaskStatusListener = void Function(RequestTaskStatus status);
-
-/// 任务状态。
-///
-/// 自动触发(preStart, postReceive)
-mixin RequestTaskStatusListenersMixin {
-  @protected
-  RequestTaskStatus status = RequestTaskStatus.None;
-
-  final List<RequestTaskStatusListener> _statusListeners = [];
-
-  void Function() addStatusListener(RequestTaskStatusListener listener) {
-    _statusListeners.add(listener);
-    return () => removeStatusListener(listener);
-  }
-
-  void removeStatusListener(RequestTaskStatusListener listener) {
-    _statusListeners.remove(listener);
-  }
-
-  void notifyStatusListeners(RequestTaskStatus status) {
-    for (final listener in _statusListeners) {
-      listener(status);
-    }
-  }
-}
-
-abstract class RequestTask<T> extends Task<T>
-    with RequestTaskProgressListenersMixin, RequestTaskStatusListenersMixin {
+abstract class RequestTask<T> extends Task<T> {
   final Dio client = Dio();
-  final CancelToken _cancelToken = CancelToken();
 
   /// [RequestTaskManager.addRequestTask] 会初始化这个
   Config config;
-  RequestTaskManager manager;
+  RequestTaskController controller;
 
-  @mustCallSuper
-  void cancel() {
-    if (_cancelToken.isCancelled) {
-      throw UnsupportedError('$this has been canceled.');
-    }
-
-    _cancelToken.cancel();
-  }
+  RequestTask({this.controller});
 
   @override
   @mustCallSuper
   void preStart() {
-    status = RequestTaskStatus.Request;
-    notifyStatusListeners(status);
+    controller?.notifyStatusListeners(RequestTaskStatus.Request);
     client.httpClientAdapter = config.httpClientAdapter;
     client.interceptors.add(InterceptorsWrapper(onRequest: (options) {
       options
-        ..cancelToken = _cancelToken
-        ..onSendProgress = notifyProgressListeners;
+        ..cancelToken = controller?.cancelToken
+        ..onSendProgress = controller?.notifyProgressListeners;
 
       return options;
     }));
@@ -110,8 +34,7 @@ abstract class RequestTask<T> extends Task<T>
   @override
   @mustCallSuper
   void postReceive(T data) {
-    status = RequestTaskStatus.Done;
-    notifyStatusListeners(status);
+    controller?.notifyStatusListeners(RequestTaskStatus.Done);
     manager.removeTask(this);
     super.postReceive(data);
   }
@@ -119,8 +42,7 @@ abstract class RequestTask<T> extends Task<T>
   /// [createTask] 被取消后触发
   @mustCallSuper
   void postCancel(DioError error) {
-    status = RequestTaskStatus.Cancel;
-    notifyStatusListeners(status);
+    controller?.notifyStatusListeners(RequestTaskStatus.Cancel);
   }
 
   @override
@@ -129,8 +51,7 @@ abstract class RequestTask<T> extends Task<T>
     if (error is DioError && error.type == DioErrorType.CANCEL) {
       postCancel(error);
     } else {
-      status = RequestTaskStatus.Error;
-      notifyStatusListeners(status);
+      controller?.notifyStatusListeners(RequestTaskStatus.Error);
     }
 
     super.postError(error);
