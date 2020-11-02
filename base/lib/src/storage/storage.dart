@@ -9,6 +9,8 @@ import 'task/put_task.dart';
 import 'task/task_manager.dart';
 
 export './controller.dart';
+export './task/put_response.dart';
+export './task/request_task.dart';
 export 'config/config.dart';
 
 /// 客户端

@@ -43,6 +43,20 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.15.0-nullsafety.3"
+  convert:
+    dependency: transitive
+    description:
+      name: convert
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "2.1.1"
+  crypto:
+    dependency: transitive
+    description:
+      name: crypto
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "2.1.5"
   cupertino_icons:
     dependency: "direct main"
     description:
@@ -50,6 +64,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.0.0"
+  dio:
+    dependency: transitive
+    description:
+      name: dio
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "3.0.10"
   fake_async:
     dependency: transitive
     description:
@@ -57,16 +78,56 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.2.0-nullsafety.1"
+  file_picker:
+    dependency: "direct main"
+    description:
+      name: file_picker
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "2.0.11"
   flutter:
     dependency: "direct main"
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_plugin_android_lifecycle:
+    dependency: transitive
+    description:
+      name: flutter_plugin_android_lifecycle
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.0.11"
   flutter_test:
     dependency: "direct dev"
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_web_plugins:
+    dependency: transitive
+    description: flutter
+    source: sdk
+    version: "0.0.0"
+  fluttertoast:
+    dependency: "direct main"
+    description:
+      name: fluttertoast
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "7.1.1"
+  http_parser:
+    dependency: transitive
+    description:
+      name: http_parser
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "3.1.4"
+  js:
+    dependency: transitive
+    description:
+      name: js
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.6.3-nullsafety.1"
   matcher:
     dependency: transitive
     description:
@@ -82,12 +143,33 @@ packages:
     source: hosted
     version: "1.3.0-nullsafety.4"
   path:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: path
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.8.0-nullsafety.1"
+  plugin_platform_interface:
+    dependency: transitive
+    description:
+      name: plugin_platform_interface
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.0.3"
+  qiniu_flutter_sdk:
+    dependency: "direct main"
+    description:
+      path: ".."
+      relative: true
+    source: path
+    version: "0.0.1"
+  qiniu_sdk_base:
+    dependency: transitive
+    description:
+      path: "../../base"
+      relative: true
+    source: path
+    version: "0.0.1"
   sky_engine:
     dependency: transitive
     description: flutter
@@ -106,7 +188,7 @@ packages:
       name: stack_trace
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.10.0-nullsafety.2"
+    version: "1.10.0-nullsafety.4"
   stream_channel:
     dependency: transitive
     description:
@@ -150,4 +232,5 @@ packages:
     source: hosted
     version: "2.1.0-nullsafety.3"
 sdks:
-  dart: ">=2.10.0-110 <=2.11.0-213.0.dev"
+  dart: ">=2.10.0-110 <=2.11.0-242.0.dev"
+  flutter: ">=1.17.0 <2.0.0"
