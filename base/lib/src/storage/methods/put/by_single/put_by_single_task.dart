@@ -1,8 +1,10 @@
 import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
-import 'package:qiniu_sdk_base/src/storage/task/put_response.dart';
-import 'request_task.dart';
+
+import '../../../task/request_task.dart';
+import '../put_response.dart';
 
 // 直传任务
 class PutBySingleTask extends RequestTask<PutResponse> {
@@ -20,7 +22,10 @@ class PutBySingleTask extends RequestTask<PutResponse> {
     @required this.file,
     @required this.token,
     this.key,
-  });
+    RequestTaskController controller,
+  })  : assert(file != null),
+        assert(token != null),
+        super(controller: controller);
 
   @override
   Future<PutResponse> createTask() async {

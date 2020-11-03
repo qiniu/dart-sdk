@@ -13,3 +13,4 @@ build/
 doc/api/
 
 .DS_Store
+.env

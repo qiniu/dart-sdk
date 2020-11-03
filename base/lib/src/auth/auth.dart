@@ -109,4 +109,17 @@ class Auth {
 
     return TokenInfo(accessKey, putPolicy);
   }
+
+  /// 解析 up token 信息。
+  ///
+  /// 从 Token 字符串中解析 [accessKey]、[PutPolicy] 信息
+  static TokenInfo parseUpToken(String token) {
+    assert(token != null && token != '');
+    final tokenInfo = parseToken(token);
+    if (tokenInfo.putPolicy == null) {
+      throw ArgumentError('invalid up token');
+    }
+
+    return tokenInfo;
+  }
 }

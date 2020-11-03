@@ -9,15 +9,9 @@ class DefaultHostProvider extends HostProvider {
 
   @override
   Future<String> getUpHost({@required String token}) async {
-    final tokenInfo = Auth.parseToken(token);
+    final tokenInfo = Auth.parseUpToken(token);
     final putPolicy = tokenInfo.putPolicy;
     final protocol = Protocol.Https.value;
-
-    if (putPolicy == null) {
-      throw ArgumentError(
-        'The token type is incorrect, does not contain putPolicy',
-      );
-    }
 
     final url = protocol +
         '://api.qiniu.com/v2/query?ak=' +

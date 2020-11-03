@@ -42,7 +42,8 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
     @required this.bucket,
     @required this.token,
     this.key,
-  });
+    RequestTaskController controller,
+  }) : super(controller: controller);
 
   static String getCacheKey(String path, int length, String key) {
     return 'qiniu_dart_sdk_init_parts_task_${path}_key_${key}_size_$length';

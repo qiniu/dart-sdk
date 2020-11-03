@@ -4,9 +4,16 @@
 
 ## 如何测试
 
-先在 `.env` 填好敏感数据，即 ak、sk、scope
+创建 `.env` 文件，并输入如下内容
 
-> 如果你担心 `.env` 被提交上来，可以试试 `git update-index --assume-unchanged .env`
+```
+export QINIU_DART_SDK_ACCESS_KEY=
+export QINIU_DART_SDK_SECRET_KEY=
+export QINIU_DART_SDK_TOKEN_SCOPE=
+```
+
+
+在 `.env` 文件中填好敏感数据，即 ak、sk、scope
 
 接着运行如下指令
 

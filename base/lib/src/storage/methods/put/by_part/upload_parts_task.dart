@@ -70,7 +70,8 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     @required this.partSize,
     @required this.maxPartsRequestNumber,
     this.key,
-  });
+    RequestTaskController controller,
+  }) : super(controller: controller);
 
   static String getCacheKey(
     String path,
@@ -143,70 +144,74 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
 
   @override
   Future<List<Part>> createTask() async {
-    await _uploadParts(startPartNumber: 1);
+    // 上传分片
+    await _uploadPartsByIndex(0);
     return _uploadedPartMap.values.toList();
   }
 
-  Future<void> _uploadParts({int startPartNumber}) async {
-    var _partNumber = startPartNumber;
+  /// 从指定的分片位置往后上传切片
+  Future<void> _uploadPartsByIndex(int from) async {
+    final tasksLength = min(_idleRequestNumber, _totalPartCount - from);
+    final taskFutures = <Future<Null>>[];
 
-    while (_idleRequestNumber > 0 && _partNumber <= _totalPartCount) {
-      _idleRequestNumber--;
+    for (var i = 0; i < tasksLength; i++) {
+      /// partNumber 按照后端要求必须从 1 开始
+      final future = _createUploadPartTaskFutureByPartNumber(i + 1);
+      taskFutures.add(future);
+    }
 
-      /// 根据 part 读取文件
-      final byteStream = _readFileByPartNumber(_partNumber);
+    await Future.wait<Null>(taskFutures);
 
-      /// 上传分片(part)的字节大小
-      final _byteLength = _getPartSizeByPartNumber(_partNumber);
-
-      Part _part;
-      final partNumber = _partNumber;
-      final _uploadPart = _uploadedPartMap[partNumber];
-
-      if (_uploadPart != null) {
-        _part = _uploadPart;
-        _sentMap[partNumber] = _byteLength;
-        notifyProgress();
-      } else {
-        final task = UploadPartTask(
-          token: token,
-          bucket: bucket,
-          uploadId: uploadId,
-          host: host,
-          byteStream: byteStream,
-          byteLength: _byteLength,
-          partNumber: partNumber,
-          key: key,
-        )..addProgressListener((sent, total) {
-            _sentMap[partNumber] = sent;
-            notifyProgress();
-          });
-
-        manager.addTask(task);
-
-        try {
-          final data = await task.future;
-          _part = Part(partNumber: partNumber, etag: data.etag);
-        } catch (error) {
-          rethrow;
-        }
-
-        _uploadedPartMap[partNumber] = _part;
-      }
-
-      _idleRequestNumber++;
-      _partNumber++;
-
-      /// 检查任务是否已经完成
-      if (_uploadedPartMap.length == _totalPartCount) {
-        return;
-      } else {
-        return await _uploadParts(startPartNumber: _partNumber);
-      }
+    /// 检查任务是否已经完成
+    if (_uploadedPartMap.length != _totalPartCount) {
+      /// 上传下一片
+      await _uploadPartsByIndex(taskFutures.length);
     }
   }
 
-  // 根据 index 获取
+  Future<Null> _createUploadPartTaskFutureByPartNumber(int partNumber) async {
+    /// 根据 part 读取文件
+    final byteStream = _readFileByPartNumber(partNumber);
+
+    /// 上传分片(part)的字节大小
+    final _byteLength = _getPartSizeByPartNumber(partNumber);
+
+    final _uploadedPart = _uploadedPartMap[partNumber];
+
+    if (_uploadedPart != null) {
+      _sentMap[partNumber] = _byteLength;
+      notifyProgress();
+    } else {
+      _idleRequestNumber--;
+      final _controller = RequestTaskController();
+      final task = UploadPartTask(
+        token: token,
+        bucket: bucket,
+        uploadId: uploadId,
+        host: host,
+        byteStream: byteStream,
+        byteLength: _byteLength,
+        partNumber: partNumber,
+        key: key,
+        controller: _controller,
+      );
+
+      _controller.addProgressListener((sent, total) {
+        _sentMap[partNumber] = sent;
+        notifyProgress();
+      });
+
+      manager.addRequestTask(task);
+
+      final data = await task.future;
+
+      _idleRequestNumber++;
+      _uploadedPartMap[partNumber] =
+          Part(partNumber: partNumber, etag: data.etag);
+    }
+  }
+
+  // 根据 partNumber 获取要上传的文件片段
   Stream<List<int>> _readFileByPartNumber(int partNumber) {
     final startOffset = (partNumber - 1) * _partByteLength;
     final endOffset = startOffset + _partByteLength;
@@ -214,6 +219,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     return file.openRead(startOffset, endOffset);
   }
 
+  /// 根据 partNumber 算出当前切片的 byte 大小
   int _getPartSizeByPartNumber(int partNumber) {
     final startOffset = (partNumber - 1) * _partByteLength;
 
@@ -226,7 +232,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
 
   void notifyProgress() {
     final _sent = _sentMap.values.reduce((value, element) => value + element);
-    notifyProgressListeners(_sent, _fileByteLength);
+    controller?.notifyProgressListeners(_sent, _fileByteLength);
   }
 }
 
@@ -257,7 +263,8 @@ class UploadPartTask extends RequestTask<UploadPart> {
     @required this.partNumber,
     @required this.byteStream,
     this.key,
-  });
+    RequestTaskController controller,
+  }) : super(controller: controller);
 
   @override
   Future<UploadPart> createTask() async {
