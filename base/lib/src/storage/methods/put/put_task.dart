@@ -45,14 +45,14 @@ class PutTask extends Task<PutResponse> {
 
     /// 文件尺寸大于设置的数值时使用分片上传
     if (usePart(fileSize)) {
-      final task = PutByPartTask(
+      task = PutByPartTask(
         file: file,
         token: token,
         key: key,
         maxPartsRequestNumber: maxPartsRequestNumber,
         partSize: partSize,
         controller: controller,
-        hostProvider: null,
+        hostProvider: hostProvider,
       );
       manager.addTask(task);
     } else {

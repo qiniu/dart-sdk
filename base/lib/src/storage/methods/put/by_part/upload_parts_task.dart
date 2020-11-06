@@ -55,6 +55,9 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   /// 上传成功后把 part 信息存起来
   final Map<int, Part> _uploadedPartMap = {};
 
+  // 处理分片上传任务的 UploadPartTask 的控制器
+  final List<RequestTaskController> _workingUploadPartTaskControllers = [];
+
   /// 已发送的数据记录，key 是 partNumber, value 是 已发送的长度
   final Map<int, int> _sentMap = {};
 
@@ -91,6 +94,12 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
 
   @override
   void preStart() {
+    // 当前 controller 被取消后，所有运行中的子任务都需要被取消
+    controller?.cancelToken?.whenCancel?.then((_) {
+      for (final controller in _workingUploadPartTaskControllers) {
+        controller.cancel();
+      }
+    });
     _fileByteLength = file.lengthSync();
     _partByteLength = partSize * 1024 * 1024;
     _idleRequestNumber = maxPartsRequestNumber;
@@ -145,13 +154,16 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   @override
   Future<List<Part>> createTask() async {
     // 上传分片
-    await _uploadPartsByIndex(0);
+    await _uploadParts();
     return _uploadedPartMap.values.toList();
   }
 
+  int _uploadingPartIndex = 0;
+
   /// 从指定的分片位置往后上传切片
-  Future<void> _uploadPartsByIndex(int from) async {
-    final tasksLength = min(_idleRequestNumber, _totalPartCount - from);
+  Future<void> _uploadParts() async {
+    final tasksLength =
+        min(_idleRequestNumber, _totalPartCount - _uploadingPartIndex);
     final taskFutures = <Future<Null>>[];
 
     for (var i = 0; i < tasksLength; i++) {
@@ -161,12 +173,6 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     }
 
     await Future.wait<Null>(taskFutures);
-
-    /// 检查任务是否已经完成
-    if (_uploadedPartMap.length != _totalPartCount) {
-      /// 上传下一片
-      await _uploadPartsByIndex(taskFutures.length);
-    }
   }
 
   Future<Null> _createUploadPartTaskFutureByPartNumber(int partNumber) async {
@@ -178,12 +184,16 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
 
     final _uploadedPart = _uploadedPartMap[partNumber];
 
+    _uploadingPartIndex++;
+
     if (_uploadedPart != null) {
       _sentMap[partNumber] = _byteLength;
       notifyProgress();
     } else {
       _idleRequestNumber--;
       final _controller = RequestTaskController();
+      _workingUploadPartTaskControllers.add(_controller);
+
       final task = UploadPartTask(
         token: token,
         bucket: bucket,
@@ -208,6 +218,13 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
       _idleRequestNumber++;
       _uploadedPartMap[partNumber] =
           Part(partNumber: partNumber, etag: data.etag);
+      _workingUploadPartTaskControllers.remove(_controller);
+
+      /// 检查任务是否已经完成
+      if (_uploadedPartMap.length != _totalPartCount) {
+        /// 上传下一片
+        await _uploadParts();
+      }
     }
   }
 
@@ -278,6 +295,9 @@ class UploadPartTask extends RequestTask<UploadPart> {
     final response = await client.put<Map<String, dynamic>>(
       '$host/$paramUrl/uploads/$uploadId/$partNumber',
       data: byteStream,
+      // 在 data 是 stream 的场景下， interceptor 传入 cancelToken 这里不传会有 bug，TODO 等 dio 回复
+      // https://github.com/flutterchina/dio/issues/986
+      cancelToken: controller.cancelToken,
       options: Options(headers: headers),
     );
 
