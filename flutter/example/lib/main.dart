@@ -86,22 +86,28 @@ class BodyState extends State<Body> {
   void onSelectedFile(File file) {
     setState(() {
       selectedFile = file;
-      putController = storage.putFileBySingle(file, token)
-        ..addProgressListener(onProgress)
-        ..addStatusListener(onStatus);
-
-      putController.task.future
-        ..then((dynamic value) {
-          showMessage('上传成功');
-        })
-        ..catchError((dynamic error) {
-          showMessage(error.response.data.error as String);
-        });
+      putController = PutController();
     });
+    
+    putController
+      ..addProgressListener(onProgress)
+      ..addStatusListener(onStatus);
+
+    storage.putFile(
+      file,
+      token,
+      options: PutOptions(controller: putController),
+    )
+      .then((dynamic value) {
+        showMessage('上传成功');
+      })
+      .catchError((dynamic error) {
+        showMessage(error?.message as String ?? error?.response?.data?.error as String);
+      });
   }
 
   Widget get cancelButton {
-    if (statusValue == RequestStatus.Request) {
+    if (statusValue == RequestTaskStatus.Request) {
       return RaisedButton(
         child: Text('取消上传'),
         onPressed: () => putController?.cancel(),

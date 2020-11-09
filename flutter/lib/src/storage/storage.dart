@@ -2,9 +2,8 @@ import 'dart:io';
 
 import 'package:qiniu_sdk_base/qiniu_sdk_base.dart' as base;
 
-import './controller.dart';
-
-export 'package:qiniu_sdk_base/qiniu_sdk_base.dart' show RequestStatus;
+export 'package:qiniu_sdk_base/qiniu_sdk_base.dart'
+    show PutOptions, PutBySingleOptions, PutByPartOptions, RequestTaskStatus;
 
 export './controller.dart';
 
@@ -12,33 +11,29 @@ class Storage {
   base.Storage baseStore;
   Storage({base.Config config}) : baseStore = base.Storage(config: config);
 
-  PutController<base.PutResponse> putFile(
+  Future<base.PutResponse> putFile(
     File file,
     String token, {
     base.PutOptions options,
   }) {
-
-    final ctrl = baseStore.putFile(file, token, options: options);
-    return PutController(ctrl.task);
+    return baseStore.putFile(file, token, options: options);
   }
 
   /// 单文件上传
-  PutController<base.PutResponse> putFileBySingle(
+  Future<base.PutResponse> putFileBySingle(
     File file,
     String token, {
     base.PutBySingleOptions options,
   }) {
-    final ctrl = baseStore.putFileBySingle(file, token, options: options);
-    return PutController(ctrl.task);
+    return baseStore.putFileBySingle(file, token, options: options);
   }
 
   /// 分片上传
-  PutController<base.PutResponse> putFileByPart(
+  Future<base.PutResponse> putFileByPart(
     File file,
     String token, {
     base.PutByPartOptions options,
   }) {
-    final ctrl = baseStore.putFileByPart(file, token, options: options);
-    return PutController(ctrl.task);
+    return baseStore.putFileByPart(file, token, options: options);
   }
 }

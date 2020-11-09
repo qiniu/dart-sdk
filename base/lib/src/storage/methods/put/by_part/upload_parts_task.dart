@@ -55,6 +55,8 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   /// 上传成功后把 part 信息存起来
   final Map<int, Part> _uploadedPartMap = {};
 
+  final List<RequestTaskController> _workingUploadPartTaskControllers = [];
+
   /// 已发送的数据记录，key 是 partNumber, value 是 已发送的长度
   final Map<int, int> _sentMap = {};
 
@@ -91,6 +93,11 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
 
   @override
   void preStart() {
+    controller?.cancelToken?.whenCancel?.then((_) {
+      for (final controller in _workingUploadPartTaskControllers) {
+        controller.cancel();
+      }
+    });
     _fileByteLength = file.lengthSync();
     _partByteLength = partSize * 1024 * 1024;
     _idleRequestNumber = maxPartsRequestNumber;
@@ -184,6 +191,8 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     } else {
       _idleRequestNumber--;
       final _controller = RequestTaskController();
+      _workingUploadPartTaskControllers.add(_controller);
+
       final task = UploadPartTask(
         token: token,
         bucket: bucket,
@@ -208,6 +217,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
       _idleRequestNumber++;
       _uploadedPartMap[partNumber] =
           Part(partNumber: partNumber, etag: data.etag);
+      _workingUploadPartTaskControllers.remove(_controller);
     }
   }
 

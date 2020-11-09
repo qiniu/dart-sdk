@@ -20,12 +20,13 @@ abstract class RequestTask<T> extends Task<T> {
   @mustCallSuper
   void preStart() {
     controller?.notifyStatusListeners(RequestTaskStatus.Request);
+
     client.httpClientAdapter = config.httpClientAdapter;
     client.interceptors.add(InterceptorsWrapper(onRequest: (options) {
       options
         ..cancelToken = controller?.cancelToken
         ..onSendProgress = controller?.notifyProgressListeners;
-
+        
       return options;
     }));
     super.preStart();
