@@ -218,10 +218,16 @@ void main() {
     final file = File('test_resource/test_for_put_parts.mp4');
     final key = 'test_for_put_parts.mp4';
 
+    final tokenInfo = Auth.parseUpToken(token);
+    final putPolicy = tokenInfo.putPolicy;
+
     /// 手动初始化一个初始化文件的任务，确定分片上传的第一步会被缓存
     final task = InitPartsTask(
       token: token,
-      host: await config.hostProvider.getUpHost(token: token),
+      host: await config.hostProvider.getUpHost(
+        accessKey: tokenInfo.accessKey,
+        bucket: putPolicy.getBucket(),
+      ),
 
       /// TOKEN_SCOPE 暂时只保存了 bucket 信息
       bucket: env['QINIU_DART_SDK_TOKEN_SCOPE'],
@@ -323,7 +329,10 @@ class HttpAdapterTestWith612 extends HttpClientAdapter {
 
 class HostProviderTest extends HostProvider {
   @override
-  Future<String> getUpHost({@required String token}) async {
+  Future<String> getUpHost({
+    @required String accessKey,
+    @required String bucket,
+  }) async {
     return 'https://upload-z2.qiniup.com';
   }
 }
