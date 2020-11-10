@@ -97,7 +97,13 @@ class PutByPartTask extends Task<PutResponse> {
       throw DioError(type: DioErrorType.CANCEL);
     }
 
-    final host = await hostProvider.getUpHost(token: token);
+    final tokenInfo = Auth.parseUpToken(token);
+    final putPolicy = tokenInfo.putPolicy;
+
+    final host = await hostProvider.getUpHost(
+      accessKey: tokenInfo.accessKey,
+      bucket: putPolicy.getBucket(),
+    );
 
     final initPartsTask = _createInitParts(host);
     final initParts = await initPartsTask.future;
