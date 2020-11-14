@@ -154,11 +154,17 @@ void main() {
   }, skip: !isSensitiveDataDefined);
 
   test('putFileByPart can be canceled.', () async {
-    final storage = Storage(config: Config(hostProvider: HostProviderTest()));
     final putController = PutController();
+    final storage = Storage(config: Config(hostProvider: HostProviderTest()));
     final statusList = <RequestTaskStatus>[];
-    putController.addStatusListener(statusList.add);
-    Future.delayed(Duration(milliseconds: 1), putController.cancel);
+    putController
+      ..addStatusListener(statusList.add)
+      ..addProgressListener((sent, total) {
+        // 开始上传了取消
+        if (sent > 0) {
+          putController.cancel();
+        }
+      });
     final future = storage.putFileByPart(
       File('test_resource/test_for_put_parts.mp4'),
       token,

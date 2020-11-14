@@ -4,6 +4,9 @@ class RequestTaskController
     with RequestTaskProgressListenersMixin, RequestTaskStatusListenersMixin {
   final CancelToken cancelToken = CancelToken();
 
+  /// 是否被取消过
+  bool get isCancelled => cancelToken.isCancelled;
+
   void cancel() {
     if (cancelToken.isCancelled) {
       throw UnsupportedError('$this has been canceled.');
