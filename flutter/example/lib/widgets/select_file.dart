@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:path/path.dart';
 
 typedef OnSelected = void Function(File file);
 
@@ -28,36 +27,26 @@ class SelectFileState extends State<SelectFile> {
   }
 
   Widget get selectButton {
-    return RaisedButton(
-      child: Text('选择文件'),
-      onPressed: openSelectFileWindow,
-      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 40),
-      textColor: Colors.white,
-      color: Colors.blue,
-    );
-  }
-
-  Widget get selectedFileName {
-    if (selectedFilePath == null) {
-      return null;
-    }
     return Container(
-      color: Colors.grey[200],
-      padding: EdgeInsets.all(10),
-      child: Text( basename(selectedFilePath)),
+      width: double.maxFinite,
+      child: RaisedButton.icon(
+        label: Text('点击选择文件'),
+        icon: Icon(Icons.folder),
+        onPressed: openSelectFileWindow,
+        padding: EdgeInsets.symmetric(vertical: 10, horizontal: 40),
+        textColor: Colors.white,
+        color: Colors.blue,
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          selectedFileName,
-          selectButton,
-        ]..removeWhere((widget) => widget == null),
-      ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        selectButton,
+      ]..removeWhere((widget) => widget == null),
     );
   }
 }
