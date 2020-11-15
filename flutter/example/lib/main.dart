@@ -161,7 +161,7 @@ class BaseState extends DisposeState<Base> {
     return ListView(
       children: [
         Padding(
-          padding: EdgeInsets.all(40),
+          padding: EdgeInsets.all(20),
           child: Progress(progressValue),
         ),
         Padding(

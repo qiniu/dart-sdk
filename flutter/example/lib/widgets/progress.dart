@@ -19,7 +19,7 @@ class Progress extends StatelessWidget {
 
   Widget get progressText {
     final integer = (value * 100).toInt();
-    final decimal = ((value % 1) * 100).toInt();
+    final decimal = (((value * 100) - integer) * 100).toInt();
     final unit = '%';
 
     return DefaultTextStyle(

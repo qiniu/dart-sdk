@@ -58,7 +58,6 @@ class ConsoleState extends DisposeState<Console> {
     controller?.addListener(onMessageChange);
 
     addDisposer(() {
-      debugPrint('disposer');
       controller?.removeListener(onMessageChange);
     });
 
