@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 
-abstract class DisposeState<T extends StatefulWidget> extends State<T> {
+abstract class DisposableState<T extends StatefulWidget> extends State<T> {
   List<Function> disposerList = [];
 
   void addDisposer(Function disposer) {

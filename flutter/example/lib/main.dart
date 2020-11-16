@@ -29,7 +29,7 @@ class Base extends StatefulWidget implements Example {
   }
 }
 
-class BaseState extends DisposeState<Base> {
+class BaseState extends DisposableState<Base> {
   String token;
 
   /// storage 实例
@@ -79,11 +79,6 @@ class BaseState extends DisposeState<Base> {
   }
 
   void startUpload() {
-    if (token == null) {
-      printToConsole('token 不能为空');
-      return;
-    }
-
     printToConsole('创建 PutController');
     putController = PutController();
 
@@ -102,6 +97,11 @@ class BaseState extends DisposeState<Base> {
       }
     }
 
+    if (usedToken == null || usedToken == '') {
+      printToConsole('token 不能为空');
+      return;
+    }
+
     try {
       printToConsole('开始上传文件');
       storage.putFile(
@@ -112,8 +112,9 @@ class BaseState extends DisposeState<Base> {
         ..then((dynamic value) {
           printToConsole('上传已完成');
         })
-
         ..catchError((dynamic error) {
+          // 期待添加 isCancel 接口
+          // final isCancel = error?.isCancel as bool;
           final localError = error?.message as String;
           final serviceError = error?.response?.data?.error as String;
 

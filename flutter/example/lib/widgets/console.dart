@@ -26,6 +26,7 @@ class ConsoleControllerProvider extends InheritedWidget {
 
   @override
   bool updateShouldNotify(covariant ConsoleControllerProvider oldWidget) {
+    // 固定不变的，永不通知
     return false;
   }
 }
@@ -43,9 +44,9 @@ class Console extends StatefulWidget {
   }
 }
 
-class ConsoleState extends DisposeState<Console> {
-  List<String> messageList = [];
+class ConsoleState extends DisposableState<Console> {
   ConsoleController controller;
+  List<String> messageList = [];
 
   @override
   void initState() {
