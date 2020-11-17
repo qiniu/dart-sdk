@@ -35,7 +35,7 @@ abstract class RequestTask<T> extends Task<T> {
   @override
   @mustCallSuper
   void postReceive(T data) {
-    controller?.notifyStatusListeners(RequestTaskStatus.Done);
+    controller?.notifyStatusListeners(RequestTaskStatus.Success);
     manager.removeTask(this);
     super.postReceive(data);
   }

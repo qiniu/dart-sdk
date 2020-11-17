@@ -49,7 +49,7 @@ enum RequestTaskStatus {
   Request,
 
   /// 请求完成后触发
-  Done,
+  Success,
 
   /// 请求被取消后触发
   Cancel,

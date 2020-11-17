@@ -31,7 +31,7 @@ void main() {
     );
     expect(statusList[0], RequestTaskStatus.Init);
     expect(statusList[1], RequestTaskStatus.Request);
-    expect(statusList[2], RequestTaskStatus.Done);
+    expect(statusList[2], RequestTaskStatus.Success);
     expect(_sent / _total, 1);
     expect(response.key, 'test_for_put.txt');
   }, skip: !isSensitiveDataDefined);
@@ -74,7 +74,7 @@ void main() {
     );
     expect(statusList[0], RequestTaskStatus.Init);
     expect(statusList[1], RequestTaskStatus.Request);
-    expect(statusList[2], RequestTaskStatus.Done);
+    expect(statusList[2], RequestTaskStatus.Success);
     expect(response.key, 'test_for_put.txt');
   }, skip: !isSensitiveDataDefined);
 
@@ -155,7 +155,7 @@ void main() {
     expect(_sent / _total, 1);
     expect(statusList[0], RequestTaskStatus.Init);
     expect(statusList[1], RequestTaskStatus.Request);
-    expect(statusList[2], RequestTaskStatus.Done);
+    expect(statusList[2], RequestTaskStatus.Success);
   }, skip: !isSensitiveDataDefined);
 
   test('putFileByPart should works well while response 612.', () async {

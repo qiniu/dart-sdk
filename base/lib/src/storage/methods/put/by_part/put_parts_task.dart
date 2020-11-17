@@ -74,7 +74,7 @@ class PutByPartTask extends Task<PutResponse> {
   @override
   void postReceive(PutResponse data) {
     _currentWorkingTaskController = null;
-    controller?.notifyStatusListeners(RequestTaskStatus.Done);
+    controller?.notifyStatusListeners(RequestTaskStatus.Success);
     super.postReceive(data);
   }
 
