@@ -90,6 +90,7 @@ class ConsoleState extends DisposableState<Console> {
   Widget build(BuildContext context) {
     return DefaultTextStyle(
       style: TextStyle(
+        fontSize: 12,
         color: Colors.green[800],
       ),
       child: Container(

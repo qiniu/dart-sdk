@@ -3,20 +3,28 @@ import 'dart:io';
 import 'package:qiniu_sdk_base/qiniu_sdk_base.dart' as base;
 
 export 'package:qiniu_sdk_base/qiniu_sdk_base.dart'
-    show PutOptions, PutBySingleOptions, PutByPartOptions, RequestTaskStatus;
+    show
+        Config,
+        PutOptions,
+        PutResponse,
+        HostProvider,
+        CacheProvider,
+        PutByPartOptions,
+        RequestTaskStatus,
+        PutBySingleOptions;
 
 export './controller.dart';
 
 class Storage {
-  base.Storage baseStore;
-  Storage({base.Config config}) : baseStore = base.Storage(config: config);
+  base.Storage baseStorage;
+  Storage({base.Config config}) : baseStorage = base.Storage(config: config);
 
   Future<base.PutResponse> putFile(
     File file,
     String token, {
     base.PutOptions options,
   }) {
-    return baseStore.putFile(file, token, options: options);
+    return baseStorage.putFile(file, token, options: options);
   }
 
   /// 单文件上传
@@ -25,7 +33,7 @@ class Storage {
     String token, {
     base.PutBySingleOptions options,
   }) {
-    return baseStore.putFileBySingle(file, token, options: options);
+    return baseStorage.putFileBySingle(file, token, options: options);
   }
 
   /// 分片上传
@@ -34,6 +42,6 @@ class Storage {
     String token, {
     base.PutByPartOptions options,
   }) {
-    return baseStore.putFileByPart(file, token, options: options);
+    return baseStorage.putFileByPart(file, token, options: options);
   }
 }

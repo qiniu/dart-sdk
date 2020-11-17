@@ -14,7 +14,7 @@ abstract class DisposableState<T extends StatefulWidget> extends State<T> {
       try {
         disposer?.call();
       } catch (error) {
-        // 吞掉错误
+        rethrow;
       }
     }
     super.dispose();

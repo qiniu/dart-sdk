@@ -37,31 +37,3 @@ class App extends StatelessWidget {
     );
   }
 }
-
-// class AppBar extends StatelessWidget implements PreferredSizeWidget {
-//   final String title;
-
-//   const AppBar({Key key, this.title}) : super(key: key);
-
-//   @override
-//   Widget build(BuildContext context) {
-//     // MediaQuery.of(context).padding.top
-
-//     return Padding(
-//       padding: EdgeInsets.symmetric(
-//         horizontal: 20,
-//         vertical: 30,
-//       ),
-//       child: Text(
-//         title,
-//         style: TextStyle(
-//           fontSize: 20,
-//           fontWeight: FontWeight.bold,
-//         ),
-//       ),
-//     );
-//   }
-
-//   @override
-//   Size get preferredSize => Size.fromHeight(80);
-// }

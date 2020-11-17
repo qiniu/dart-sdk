@@ -21,8 +21,9 @@ class SelectFileState extends State<SelectFile> {
   void openSelectFileWindow() async {
     final fileResult = await FilePicker.platform.pickFiles();
     if (fileResult != null && fileResult.paths?.first != null) {
-      setState(() => selectedFilePath = fileResult.paths?.first);
-      widget.onSelected(File(fileResult.paths?.first));
+      final path = fileResult.paths?.first;
+      setState(() => selectedFilePath = path);
+      widget.onSelected(File(path));
     }
   }
 

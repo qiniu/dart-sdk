@@ -1,9 +1,12 @@
+import 'dart:convert';
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:qiniu_flutter_sdk/qiniu_flutter_sdk.dart';
 import 'package:qiniu_flutter_sdk_example/widgets/console.dart';
 
 import 'token.dart';
+import 'utils/uint.dart';
 import 'widgets/app.dart';
 import 'widgets/dispose.dart';
 import 'widgets/progress.dart';
@@ -64,9 +67,11 @@ class BaseState extends DisposableState<Base> {
   }
 
   void onProgress(int sent, int total) {
-    final progress = progressValue.toStringAsFixed(2);
-    printToConsole('进度变化: 已发送：$sent, 总尺寸：$total, 比例：$progress');
-    setState(() => progressValue = sent.toDouble() / total.toDouble());
+    final progress = sent.toDouble() / total.toDouble();
+    final sentStr = humanizeFileSize(sent.toDouble());
+    setState(() => progressValue = progress);
+
+    printToConsole('进度变化：进度：${progress.toStringAsFixed(2)}, 已发送：$sentStr');
   }
 
   void printToConsole(String message) {
@@ -82,10 +87,10 @@ class BaseState extends DisposableState<Base> {
     printToConsole('创建 PutController');
     putController = PutController();
 
-    printToConsole('添加状态订阅');
+    printToConsole('添加进度订阅');
     addDisposer(putController.addProgressListener(onProgress));
 
-    printToConsole('添加进度订阅');
+    printToConsole('添加状态订阅');
     addDisposer(putController.addStatusListener(onStatus));
 
     var usedToken = token;
@@ -109,16 +114,16 @@ class BaseState extends DisposableState<Base> {
         usedToken,
         options: PutOptions(controller: putController),
       )
-        ..then((dynamic value) {
-          printToConsole('上传已完成');
+        ..then((PutResponse response) {
+          printToConsole('上传已完成: 原始响应数据: ${jsonEncode(response.rawData)}');
         })
         ..catchError((dynamic error) {
           // 期待添加 isCancel 接口
           // final isCancel = error?.isCancel as bool;
           final localError = error?.message as String;
-          final serviceError = error?.response?.data?.error as String;
+          final serviceError = error?.response?.data['error'] as String;
 
-          printToConsole('发生错误: ${localError ?? serviceError ?? '未知错误'} ');
+          printToConsole('发生错误: ${serviceError ?? localError ?? '未知错误'} ');
         });
     } catch (error) {
       printToConsole('发生 SDK 级别未知错误，请联系开发者: ${error.toString()}');
@@ -126,7 +131,9 @@ class BaseState extends DisposableState<Base> {
   }
 
   void onSelectedFile(File file) {
+
     printToConsole('选中文件: ${file.path}');
+    printToConsole('文件尺寸：${humanizeFileSize(file.lengthSync().toDouble())}');
 
     setState(() {
       printToConsole('设置 selectedFile');
