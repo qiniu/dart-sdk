@@ -165,10 +165,10 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     final tasksLength =
         min(_idleRequestNumber, _totalPartCount - _uploadingPartIndex);
     final taskFutures = <Future<Null>>[];
-
     for (var i = 0; i < tasksLength; i++) {
       /// partNumber 按照后端要求必须从 1 开始
-      final future = _createUploadPartTaskFutureByPartNumber(i + 1);
+      final future =
+          _createUploadPartTaskFutureByPartNumber(++_uploadingPartIndex);
       taskFutures.add(future);
     }
 
@@ -183,8 +183,6 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     final _byteLength = _getPartSizeByPartNumber(partNumber);
 
     final _uploadedPart = _uploadedPartMap[partNumber];
-
-    _uploadingPartIndex++;
 
     if (_uploadedPart != null) {
       _sentMap[partNumber] = _byteLength;
@@ -219,12 +217,12 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
       _uploadedPartMap[partNumber] =
           Part(partNumber: partNumber, etag: data.etag);
       _workingUploadPartTaskControllers.remove(_controller);
+    }
 
-      /// 检查任务是否已经完成
-      if (_uploadedPartMap.length != _totalPartCount) {
-        /// 上传下一片
-        await _uploadParts();
-      }
+    /// 检查任务是否已经完成
+    if (_uploadedPartMap.length != _totalPartCount) {
+      /// 上传下一片
+      await _uploadParts();
     }
   }
 
