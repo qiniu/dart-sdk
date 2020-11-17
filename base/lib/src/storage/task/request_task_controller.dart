@@ -42,6 +42,8 @@ mixin RequestTaskProgressListenersMixin {
 
 enum RequestTaskStatus {
   None,
+  /// 初始化任务
+  Init,
 
   /// 请求准备发出的时候触发
   Request,

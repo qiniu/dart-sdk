@@ -28,7 +28,6 @@ class PutByPartTask extends Task<PutResponse> {
 
   final String key;
 
-  /// 在 preStart 中延迟初始化
   String bucket;
 
   RequestTaskController controller;
@@ -65,12 +64,10 @@ class PutByPartTask extends Task<PutResponse> {
 
   @override
   void preStart() {
-    final putPolicy = Auth.parseUpToken(token).putPolicy;
-    bucket = putPolicy.getBucket();
     controller?.cancelToken?.whenCancel?.then((_) {
       _currentWorkingTaskController?.cancel();
     });
-    controller?.notifyStatusListeners(RequestTaskStatus.Request);
+    controller?.notifyStatusListeners(RequestTaskStatus.Init);
     super.preStart();
   }
 
@@ -84,18 +81,25 @@ class PutByPartTask extends Task<PutResponse> {
   @override
   void postError(Object error) {
     if (error is DioError && error.type == DioErrorType.CANCEL) {
-      controller.notifyStatusListeners(RequestTaskStatus.Cancel);
+      controller?.notifyStatusListeners(RequestTaskStatus.Cancel);
+    } else {
+      controller?.notifyStatusListeners(RequestTaskStatus.Error);
     }
     super.postError(error);
   }
 
   @override
   Future<PutResponse> createTask() async {
+    final putPolicy = Auth.parseUpToken(token).putPolicy;
+    bucket = putPolicy.getBucket();
+
     /// 如果已经取消了，直接报错
     // ignore: null_aware_in_condition
     if (controller != null && controller.cancelToken.isCancelled) {
       throw DioError(type: DioErrorType.CANCEL);
     }
+
+    controller?.notifyStatusListeners(RequestTaskStatus.Request);
 
     final host = await hostProvider.getUpHost(token: token);
 
@@ -109,6 +113,9 @@ class PutByPartTask extends Task<PutResponse> {
       final parts = await uploadParts.future;
       putResponse =
           await _createCompleteParts(host, initParts.uploadId, parts).future;
+
+      /// UploadPartsTask 那边给 total 做了 +1 的操作，这里完成后补上 1 字节确保 100%
+      notifyProgress(_sent + 1, _total);
     } catch (error) {
       if (error is DioError && error.response != null) {
         /// 满足以下两种情况清理缓存：
@@ -148,6 +155,9 @@ class PutByPartTask extends Task<PutResponse> {
       key: key,
       controller: _controller,
     );
+
+    /// 假的 1 byte，说明任务已经开始且不是 0%
+    notifyProgress(1, file.lengthSync() + 1);
 
     manager.addRequestTask(task);
     _currentWorkingTaskController = _controller;
@@ -195,11 +205,6 @@ class PutByPartTask extends Task<PutResponse> {
       key: key,
       controller: _controller,
     );
-
-    _controller.addProgressListener((sent, total) {
-      /// UploadPartsTask 那边给 total 做了 +1 的操作，这里完成后补上 1 字节确保 100%
-      notifyProgress(_sent + 1, _total);
-    });
 
     manager.addRequestTask(task);
     _currentWorkingTaskController = _controller;
