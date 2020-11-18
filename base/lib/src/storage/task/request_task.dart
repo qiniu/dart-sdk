@@ -19,10 +19,10 @@ abstract class RequestTask<T> extends Task<T> {
   @override
   @mustCallSuper
   void preStart() {
-    controller?.notifyStatusListeners(RequestTaskStatus.Request);
-
+    controller?.notifyStatusListeners(RequestTaskStatus.Init);
     client.httpClientAdapter = config.httpClientAdapter;
     client.interceptors.add(InterceptorsWrapper(onRequest: (options) {
+      controller?.notifyStatusListeners(RequestTaskStatus.Request);
       options
         ..cancelToken = controller?.cancelToken
         ..onSendProgress = controller?.notifyProgressListeners;
@@ -35,7 +35,7 @@ abstract class RequestTask<T> extends Task<T> {
   @override
   @mustCallSuper
   void postReceive(T data) {
-    controller?.notifyStatusListeners(RequestTaskStatus.Done);
+    controller?.notifyStatusListeners(RequestTaskStatus.Success);
     manager.removeTask(this);
     super.postReceive(data);
   }

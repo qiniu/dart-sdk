@@ -43,9 +43,12 @@ class PutBySingleTask extends RequestTask<PutResponse> {
       accessKey: tokenInfo.accessKey,
       bucket: putPolicy.getBucket(),
     );
-    
-    final response =
-        await client.post<Map<String, dynamic>>(host, data: formData);
+
+    final response = await client.post<Map<String, dynamic>>(
+      host,
+      data: formData,
+      cancelToken: controller?.cancelToken,
+    );
     return PutResponse.fromJson(response.data);
   }
 }

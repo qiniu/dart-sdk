@@ -29,8 +29,9 @@ void main() {
       token,
       options: PutOptions(key: 'test_for_put.txt', controller: putController),
     );
-    expect(statusList[0], RequestTaskStatus.Request);
-    expect(statusList[1], RequestTaskStatus.Done);
+    expect(statusList[0], RequestTaskStatus.Init);
+    expect(statusList[1], RequestTaskStatus.Request);
+    expect(statusList[2], RequestTaskStatus.Success);
     expect(_sent / _total, 1);
     expect(response.key, 'test_for_put.txt');
   }, skip: !isSensitiveDataDefined);
@@ -71,8 +72,9 @@ void main() {
         controller: putController,
       ),
     );
-    expect(statusList[0], RequestTaskStatus.Request);
-    expect(statusList[1], RequestTaskStatus.Done);
+    expect(statusList[0], RequestTaskStatus.Init);
+    expect(statusList[1], RequestTaskStatus.Request);
+    expect(statusList[2], RequestTaskStatus.Success);
     expect(response.key, 'test_for_put.txt');
   }, skip: !isSensitiveDataDefined);
 
@@ -80,7 +82,12 @@ void main() {
     final putController = PutController();
 
     final statusList = <RequestTaskStatus>[];
-    putController.addStatusListener(statusList.add);
+    putController.addStatusListener((status) {
+      statusList.add(status);
+      if (status == RequestTaskStatus.Request) {
+        putController.cancel();
+      }
+    });
     final future = storage.putFileBySingle(
       File('test_resource/test_for_put.txt'),
       token,
@@ -88,15 +95,15 @@ void main() {
           key: 'test_for_put.txt', controller: putController),
     );
     try {
-      Future.delayed(Duration(milliseconds: 1), putController.cancel);
       await future;
     } catch (error) {
       expect(error, isA<DioError>());
       expect((error as DioError).type, DioErrorType.CANCEL);
     }
     expect(future, throwsA(TypeMatcher<DioError>()));
-    expect(statusList[0], RequestTaskStatus.Request);
-    expect(statusList[1], RequestTaskStatus.Cancel);
+    expect(statusList[0], RequestTaskStatus.Init);
+    expect(statusList[1], RequestTaskStatus.Request);
+    expect(statusList[2], RequestTaskStatus.Cancel);
   }, skip: !isSensitiveDataDefined);
 
   test('listenProgress on putFileBySingle method should works well.', () async {
@@ -123,9 +130,16 @@ void main() {
   test('putFileByPart should works well.', () async {
     final putController = PutController();
     final statusList = <RequestTaskStatus>[];
-    putController.addStatusListener(statusList.add);
+    int _sent, _total;
+    putController
+      ..addStatusListener(statusList.add)
+      ..addProgressListener((sent, total) {
+        _sent = sent;
+        _total = total;
+      });
+    final file = File('test_resource/test_for_put_parts.mp4');
     final response = await storage.putFileByPart(
-      File('test_resource/test_for_put_parts.mp4'),
+      file,
       token,
       options: PutByPartOptions(
         key: 'test_for_put_parts.mp4',
@@ -134,14 +148,19 @@ void main() {
       ),
     );
     expect(response, isA<PutResponse>());
-    expect(statusList[0], RequestTaskStatus.Request);
-    expect(statusList[1], RequestTaskStatus.Done);
+
+    /// 分片上传会给 _sent _total + 1
+    expect(_sent - 1, file.lengthSync());
+    expect(_total - 1, file.lengthSync());
+    expect(_sent / _total, 1);
+    expect(statusList[0], RequestTaskStatus.Init);
+    expect(statusList[1], RequestTaskStatus.Request);
+    expect(statusList[2], RequestTaskStatus.Success);
   }, skip: !isSensitiveDataDefined);
 
   test('putFileByPart should works well while response 612.', () async {
     final httpAdapterTest = HttpAdapterTestWith612();
     final storage = Storage(config: Config(httpClientAdapter: httpAdapterTest));
-
     final response = await storage.putFileByPart(
       File('test_resource/test_for_put_parts.mp4'),
       token,
@@ -180,8 +199,9 @@ void main() {
       expect((error as DioError).type, DioErrorType.CANCEL);
     }
     expect(future, throwsA(TypeMatcher<DioError>()));
-    expect(statusList[0], RequestTaskStatus.Request);
-    expect(statusList[1], RequestTaskStatus.Cancel);
+    expect(statusList[0], RequestTaskStatus.Init);
+    expect(statusList[1], RequestTaskStatus.Request);
+    expect(statusList[2], RequestTaskStatus.Cancel);
   }, skip: !isSensitiveDataDefined);
 
   test('putFileByPart can be resumed.', () async {
