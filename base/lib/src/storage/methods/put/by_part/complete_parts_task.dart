@@ -22,8 +22,9 @@ class CompletePartsTask extends RequestTask<PutResponse> {
   @override
   Future<PutResponse> createTask() async {
     final headers = <String, dynamic>{'Authorization': 'UpToken $token'};
+    final encodedKey = key != null? base64Url.encode(utf8.encode(key)) : '~';
     final paramUrl =
-        '$host/buckets/$bucket/objects/${base64Url.encode(utf8.encode(key ?? "~"))}/uploads/$uploadId';
+        '$host/buckets/$bucket/objects/$encodedKey/uploads/$uploadId';
 
     final response = await client.post<Map<String, dynamic>>(
       paramUrl,

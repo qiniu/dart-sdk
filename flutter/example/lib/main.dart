@@ -119,12 +119,22 @@ class BaseState extends DisposableState<Base> {
           printToConsole('------------------------');
         })
         ..catchError((dynamic error) {
-          // 期待添加 isCancel 接口
-          // final isCancel = error?.isCancel as bool;
-          final localError = error?.message as String;
-          final serviceError = error?.response?.data['error'] as String;
+          var message = '未知错误';
 
-          printToConsole('发生错误: ${serviceError ?? localError ?? '未知错误'}');
+          if (error.error != null) {
+            message = error.error as String;
+          }
+          if (error.message != null) {
+            message = error.message as String;
+          }
+
+          if (error.response != null &&
+              error.response.data != null &&
+              error.response.data['error'] != null) {
+            message = error.response.data['error'] as String;
+          }
+
+          printToConsole('发生错误: $message');
           printToConsole('------------------------');
         });
     } catch (error) {

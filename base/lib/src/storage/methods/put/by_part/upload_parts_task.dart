@@ -288,8 +288,9 @@ class UploadPartTask extends RequestTask<UploadPart> {
       Headers.contentLengthHeader: byteLength,
     };
 
-    final paramUrl =
-        'buckets/$bucket/objects/${base64Url.encode(utf8.encode(key ?? "~"))}';
+    final encodedKey = key != null? base64Url.encode(utf8.encode(key)) : '~';
+    final paramUrl = 'buckets/$bucket/objects/$encodedKey';
+    
     final response = await client.put<Map<String, dynamic>>(
       '$host/$paramUrl/uploads/$uploadId/$partNumber',
       data: byteStream,
