@@ -112,7 +112,10 @@ class BaseState extends DisposableState<Base> {
       storage.putFile(
         selectedFile,
         usedToken,
-        options: PutOptions(controller: putController),
+        options: PutOptions(
+          controller: putController,
+          partSize: 1,
+        ),
       )
         ..then((PutResponse response) {
           printToConsole('上传已完成: 原始响应数据: ${jsonEncode(response.rawData)}');
