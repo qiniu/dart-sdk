@@ -127,6 +127,7 @@ class BaseState extends DisposableState<Base> {
           if (error.error != null) {
             message = error.error as String;
           }
+
           if (error.message != null) {
             message = error.message as String;
           }
