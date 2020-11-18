@@ -62,7 +62,7 @@ class BaseState extends DisposableState<Base> {
   }
 
   void onStatus(RequestTaskStatus status) {
-    printToConsole('状态变化: 当前任务状态：${statusValue.toString()}');
+    printToConsole('状态变化: 当前任务状态：${status.toString()}');
     setState(() => statusValue = status);
   }
 
@@ -116,6 +116,7 @@ class BaseState extends DisposableState<Base> {
       )
         ..then((PutResponse response) {
           printToConsole('上传已完成: 原始响应数据: ${jsonEncode(response.rawData)}');
+          printToConsole('------------------------');
         })
         ..catchError((dynamic error) {
           // 期待添加 isCancel 接口
@@ -123,7 +124,8 @@ class BaseState extends DisposableState<Base> {
           final localError = error?.message as String;
           final serviceError = error?.response?.data['error'] as String;
 
-          printToConsole('发生错误: ${serviceError ?? localError ?? '未知错误'} ');
+          printToConsole('发生错误: ${serviceError ?? localError ?? '未知错误'}');
+          printToConsole('------------------------');
         });
     } catch (error) {
       printToConsole('发生 SDK 级别未知错误，请联系开发者: ${error.toString()}');
@@ -131,7 +133,6 @@ class BaseState extends DisposableState<Base> {
   }
 
   void onSelectedFile(File file) {
-
     printToConsole('选中文件: ${file.path}');
     printToConsole('文件尺寸：${humanizeFileSize(file.lengthSync().toDouble())}');
 
