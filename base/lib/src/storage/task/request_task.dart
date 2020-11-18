@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
+import 'package:qiniu_sdk_base/src/exception/exception.dart';
+import 'package:qiniu_sdk_base/src/storage/exception/exception.dart';
 
 import '../config/config.dart';
 
@@ -49,12 +51,23 @@ abstract class RequestTask<T> extends Task<T> {
   @override
   @mustCallSuper
   void postError(Object error) {
+    // 通知状态
     if (error is DioError && error.type == DioErrorType.CANCEL) {
       postCancel(error);
     } else {
       controller?.notifyStatusListeners(RequestTaskStatus.Error);
     }
 
-    super.postError(error);
+    // 处理错误
+    if (error is DioError && error.type != DioErrorType.DEFAULT) {
+      final _error = StorageRequestException(
+        type: mapDioErrorType(error.type),
+        code: error.response?.statusCode,
+        message: error.response?.data.toString(),
+      );
+      super.postError(_error);
+    } else {
+      super.postError(BaseException(error.toString()));
+    }
   }
 }
