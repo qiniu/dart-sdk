@@ -65,8 +65,8 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
           json.decode(initPartsCache) as Map<String, dynamic>);
     }
 
-    final paramUrl =
-        '$host/buckets/$bucket/objects/${base64Url.encode(utf8.encode(key ?? "~"))}/uploads';
+    final encodedKey = key != null ? base64Url.encode(utf8.encode(key)) : '~';
+    final paramUrl = '$host/buckets/$bucket/objects/$encodedKey/uploads';
 
     final response = await client.post<Map<String, dynamic>>(
       paramUrl,

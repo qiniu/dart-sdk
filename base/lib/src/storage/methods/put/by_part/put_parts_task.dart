@@ -101,7 +101,11 @@ class PutByPartTask extends Task<PutResponse> {
 
     controller?.notifyStatusListeners(RequestTaskStatus.Request);
 
-    final host = await hostProvider.getUpHost(token: token);
+    final tokenInfo = Auth.parseUpToken(token);
+    final host = await hostProvider.getUpHost(
+      bucket: tokenInfo.putPolicy.getBucket(),
+      accessKey: tokenInfo.accessKey,
+    );
 
     final initPartsTask = _createInitParts(host);
     final initParts = await initPartsTask.future;

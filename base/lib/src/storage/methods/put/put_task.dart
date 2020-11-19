@@ -40,8 +40,8 @@ class PutTask extends Task<PutResponse> {
 
   @override
   Future<PutResponse> createTask() async {
-    final fileSize = await file.length();
     Task<PutResponse> task;
+    final fileSize = await file.length();
 
     /// 文件尺寸大于设置的数值时使用分片上传
     if (usePart(fileSize)) {

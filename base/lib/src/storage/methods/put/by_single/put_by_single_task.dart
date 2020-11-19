@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
 
+import '../../../../auth/auth.dart';
 import '../../../task/request_task.dart';
 import '../put_response.dart';
 
@@ -29,13 +30,20 @@ class PutBySingleTask extends RequestTask<PutResponse> {
 
   @override
   Future<PutResponse> createTask() async {
+    final tokenInfo = Auth.parseUpToken(token);
+    final putPolicy = tokenInfo.putPolicy;
+
     final formData = FormData.fromMap(<String, dynamic>{
       'file': await MultipartFile.fromFile(file.path),
       'token': token,
       'key': key,
     });
 
-    final host = await config.hostProvider.getUpHost(token: token);
+    final host = await config.hostProvider.getUpHost(
+      accessKey: tokenInfo.accessKey,
+      bucket: putPolicy.getBucket(),
+    );
+
     final response = await client.post<Map<String, dynamic>>(
       host,
       data: formData,

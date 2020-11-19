@@ -140,9 +140,12 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
       var cachedList = <Part>[];
 
       try {
-        cachedList = json.decode(cachedData) as List<Part>;
+        final _cachedList = json.decode(cachedData) as List<dynamic>;
+        cachedList = _cachedList
+            .map((dynamic item) => Part.fromJson(item as Map<String, dynamic>))
+            .toList();
       } catch (error) {
-        //
+        rethrow;
       }
 
       for (final part in cachedList) {
@@ -288,8 +291,9 @@ class UploadPartTask extends RequestTask<UploadPart> {
       Headers.contentLengthHeader: byteLength,
     };
 
-    final paramUrl =
-        'buckets/$bucket/objects/${base64Url.encode(utf8.encode(key ?? "~"))}';
+    final encodedKey = key != null ? base64Url.encode(utf8.encode(key)) : '~';
+    final paramUrl = 'buckets/$bucket/objects/$encodedKey';
+
     final response = await client.put<Map<String, dynamic>>(
       '$host/$paramUrl/uploads/$uploadId/$partNumber',
       data: byteStream,
