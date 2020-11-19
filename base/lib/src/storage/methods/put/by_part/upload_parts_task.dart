@@ -141,7 +141,9 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
 
       try {
         final _cachedList = json.decode(cachedData) as List<dynamic>;
-        cachedList = _cachedList.map((dynamic item) => Part.fromJson(item as Map<String, dynamic> )).toList();
+        cachedList = _cachedList
+            .map((dynamic item) => Part.fromJson(item as Map<String, dynamic>))
+            .toList();
       } catch (error) {
         rethrow;
       }

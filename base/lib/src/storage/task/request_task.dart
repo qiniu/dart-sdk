@@ -26,7 +26,7 @@ abstract class RequestTask<T> extends Task<T> {
       options
         ..cancelToken = controller?.cancelToken
         ..onSendProgress = controller?.notifyProgressListeners;
-        
+
       return options;
     }));
     super.preStart();
