@@ -16,13 +16,10 @@ class SelectFile extends StatefulWidget {
 }
 
 class SelectFileState extends State<SelectFile> {
-  String selectedFilePath;
-
   void openSelectFileWindow() async {
     final fileResult = await FilePicker.platform.pickFiles();
     if (fileResult != null && fileResult.paths?.first != null) {
       final path = fileResult.paths?.first;
-      setState(() => selectedFilePath = path);
       widget.onSelected(File(path));
     }
   }
