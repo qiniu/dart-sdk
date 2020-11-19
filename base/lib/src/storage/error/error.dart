@@ -31,8 +31,7 @@ class StorageRequestError extends StorageError {
   final int code;
   final StorageRequestErrorType type;
 
-  StorageRequestError({this.type, this.code, String message})
-      : super(message);
+  StorageRequestError({this.type, this.code, String message}) : super(message);
 
   @override
   String toString() {
