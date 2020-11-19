@@ -1,8 +1,12 @@
 import 'package:dio/dio.dart';
-import 'package:qiniu_sdk_base/src/exception/exception.dart';
+import 'package:qiniu_sdk_base/src/error/error.dart';
+
+class StorageError extends BaseError {
+  StorageError(String message) : super(message);
+}
 
 // same as DioErrorType
-enum StorageRequestExceptionType {
+enum StorageRequestErrorType {
   /// It occurs when url is opened timeout.
   CONNECT_TIMEOUT,
 
@@ -20,14 +24,14 @@ enum StorageRequestExceptionType {
 
   /// Default error type, Some other Error. In this case, you can
   /// use the DioError.error if it is not null.
-  DEFAULT,
+  UNKNOW,
 }
 
-class StorageRequestException extends BaseException {
-  int code;
-  StorageRequestExceptionType type;
+class StorageRequestError extends StorageError {
+  final int code;
+  final StorageRequestErrorType type;
 
-  StorageRequestException({this.type, this.code, String message})
+  StorageRequestError({this.type, this.code, String message})
       : super(message);
 
   @override
@@ -38,20 +42,20 @@ class StorageRequestException extends BaseException {
   }
 }
 
-StorageRequestExceptionType mapDioErrorType(DioErrorType type) {
+StorageRequestErrorType mapDioErrorType(DioErrorType type) {
   switch (type) {
     case DioErrorType.CONNECT_TIMEOUT:
-      return StorageRequestExceptionType.CONNECT_TIMEOUT;
+      return StorageRequestErrorType.CONNECT_TIMEOUT;
     case DioErrorType.SEND_TIMEOUT:
-      return StorageRequestExceptionType.SEND_TIMEOUT;
+      return StorageRequestErrorType.SEND_TIMEOUT;
     case DioErrorType.RECEIVE_TIMEOUT:
-      return StorageRequestExceptionType.RECEIVE_TIMEOUT;
+      return StorageRequestErrorType.RECEIVE_TIMEOUT;
     case DioErrorType.RESPONSE:
-      return StorageRequestExceptionType.RESPONSE;
+      return StorageRequestErrorType.RESPONSE;
     case DioErrorType.CANCEL:
-      return StorageRequestExceptionType.CANCEL;
+      return StorageRequestErrorType.CANCEL;
     case DioErrorType.DEFAULT:
     default:
-      return StorageRequestExceptionType.DEFAULT;
+      return StorageRequestErrorType.UNKNOW;
   }
 }

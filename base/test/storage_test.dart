@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:meta/meta.dart';
-import 'package:qiniu_sdk_base/src/storage/exception/exception.dart';
+import 'package:qiniu_sdk_base/src/storage/error/error.dart';
 import 'package:qiniu_sdk_base/src/storage/methods/put/by_part/put_parts_task.dart';
 import 'package:qiniu_sdk_base/src/storage/methods/put/put_response.dart';
 import 'package:test/test.dart';
@@ -98,11 +98,11 @@ void main() {
     try {
       await future;
     } catch (error) {
-      expect(error, isA<StorageRequestException>());
-      expect((error as StorageRequestException).type,
-          StorageRequestExceptionType.CANCEL);
+      expect(error, isA<StorageRequestError>());
+      expect((error as StorageRequestError).type,
+          StorageRequestErrorType.CANCEL);
     }
-    expect(future, throwsA(TypeMatcher<StorageRequestException>()));
+    expect(future, throwsA(TypeMatcher<StorageRequestError>()));
     expect(statusList[0], RequestTaskStatus.Init);
     expect(statusList[1], RequestTaskStatus.Request);
     expect(statusList[2], RequestTaskStatus.Cancel);
@@ -198,10 +198,10 @@ void main() {
     try {
       await future;
     } catch (error) {
-      expect((error as StorageRequestException).type,
-          StorageRequestExceptionType.CANCEL);
+      expect((error as StorageRequestError).type,
+          StorageRequestErrorType.CANCEL);
     }
-    expect(future, throwsA(TypeMatcher<StorageRequestException>()));
+    expect(future, throwsA(TypeMatcher<StorageRequestError>()));
     expect(statusList[0], RequestTaskStatus.Init);
     expect(statusList[1], RequestTaskStatus.Request);
     expect(statusList[2], RequestTaskStatus.Cancel);
@@ -225,12 +225,12 @@ void main() {
     try {
       await future;
     } catch (error) {
-      expect(error, isA<StorageRequestException>());
-      expect((error as StorageRequestException).type,
-          StorageRequestExceptionType.CANCEL);
+      expect(error, isA<StorageRequestError>());
+      expect((error as StorageRequestError).type,
+          StorageRequestErrorType.CANCEL);
     }
 
-    expect(future, throwsA(TypeMatcher<StorageRequestException>()));
+    expect(future, throwsA(TypeMatcher<StorageRequestError>()));
 
     final response = await storage.putFileByPart(
       File('test_resource/test_for_put_parts.mp4'),
@@ -288,9 +288,9 @@ void main() {
     try {
       await future;
     } catch (error) {
-      expect(error, isA<StorageRequestException>());
-      expect((error as StorageRequestException).type,
-          StorageRequestExceptionType.CANCEL);
+      expect(error, isA<StorageRequestError>());
+      expect((error as StorageRequestError).type,
+          StorageRequestErrorType.CANCEL);
     }
 
     final response = await storage.putFileByPart(

@@ -2,8 +2,6 @@ import 'dart:async';
 
 import 'package:meta/meta.dart';
 import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
-import 'package:qiniu_sdk_base/src/exception/exception.dart';
-import 'package:qiniu_sdk_base/src/storage/exception/exception.dart';
 
 export 'request_task.dart';
 export 'task_manager.dart';

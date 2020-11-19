@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
-import 'package:qiniu_sdk_base/src/exception/exception.dart';
-import 'package:qiniu_sdk_base/src/storage/exception/exception.dart';
+import 'package:qiniu_sdk_base/src/storage/error/error.dart';
 
 import '../config/config.dart';
 
@@ -60,14 +59,14 @@ abstract class RequestTask<T> extends Task<T> {
 
     // 处理错误
     if (error is DioError && error.type != DioErrorType.DEFAULT) {
-      final _error = StorageRequestException(
+      final _error = StorageRequestError(
         type: mapDioErrorType(error.type),
         code: error.response?.statusCode,
         message: error.response?.data.toString(),
       );
       super.postError(_error);
     } else {
-      super.postError(BaseException(error.toString()));
+      super.postError(error);
     }
   }
 }
