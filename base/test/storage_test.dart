@@ -99,8 +99,7 @@ void main() {
       await future;
     } catch (error) {
       expect(error, isA<StorageError>());
-      expect(
-          (error as StorageError).type, StorageErrorType.CANCEL);
+      expect((error as StorageError).type, StorageErrorType.CANCEL);
     }
     expect(future, throwsA(TypeMatcher<StorageError>()));
     expect(statusList[0], RequestTaskStatus.Init);
@@ -198,8 +197,7 @@ void main() {
     try {
       await future;
     } catch (error) {
-      expect(
-          (error as StorageError).type, StorageErrorType.CANCEL);
+      expect((error as StorageError).type, StorageErrorType.CANCEL);
     }
     expect(future, throwsA(TypeMatcher<StorageError>()));
     expect(statusList[0], RequestTaskStatus.Init);
@@ -226,8 +224,7 @@ void main() {
       await future;
     } catch (error) {
       expect(error, isA<StorageError>());
-      expect(
-          (error as StorageError).type, StorageErrorType.CANCEL);
+      expect((error as StorageError).type, StorageErrorType.CANCEL);
     }
 
     expect(future, throwsA(TypeMatcher<StorageError>()));
@@ -289,8 +286,7 @@ void main() {
       await future;
     } catch (error) {
       expect(error, isA<StorageError>());
-      expect(
-          (error as StorageError).type, StorageErrorType.CANCEL);
+      expect((error as StorageError).type, StorageErrorType.CANCEL);
     }
 
     final response = await storage.putFileByPart(
