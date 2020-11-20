@@ -98,11 +98,11 @@ void main() {
     try {
       await future;
     } catch (error) {
-      expect(error, isA<StorageRequestError>());
+      expect(error, isA<StorageError>());
       expect(
-          (error as StorageRequestError).type, StorageRequestErrorType.CANCEL);
+          (error as StorageError).type, StorageErrorType.CANCEL);
     }
-    expect(future, throwsA(TypeMatcher<StorageRequestError>()));
+    expect(future, throwsA(TypeMatcher<StorageError>()));
     expect(statusList[0], RequestTaskStatus.Init);
     expect(statusList[1], RequestTaskStatus.Request);
     expect(statusList[2], RequestTaskStatus.Cancel);
@@ -199,9 +199,9 @@ void main() {
       await future;
     } catch (error) {
       expect(
-          (error as StorageRequestError).type, StorageRequestErrorType.CANCEL);
+          (error as StorageError).type, StorageErrorType.CANCEL);
     }
-    expect(future, throwsA(TypeMatcher<StorageRequestError>()));
+    expect(future, throwsA(TypeMatcher<StorageError>()));
     expect(statusList[0], RequestTaskStatus.Init);
     expect(statusList[1], RequestTaskStatus.Request);
     expect(statusList[2], RequestTaskStatus.Cancel);
@@ -225,12 +225,12 @@ void main() {
     try {
       await future;
     } catch (error) {
-      expect(error, isA<StorageRequestError>());
+      expect(error, isA<StorageError>());
       expect(
-          (error as StorageRequestError).type, StorageRequestErrorType.CANCEL);
+          (error as StorageError).type, StorageErrorType.CANCEL);
     }
 
-    expect(future, throwsA(TypeMatcher<StorageRequestError>()));
+    expect(future, throwsA(TypeMatcher<StorageError>()));
 
     final response = await storage.putFileByPart(
       File('test_resource/test_for_put_parts.mp4'),
@@ -288,9 +288,9 @@ void main() {
     try {
       await future;
     } catch (error) {
-      expect(error, isA<StorageRequestError>());
+      expect(error, isA<StorageError>());
       expect(
-          (error as StorageRequestError).type, StorageRequestErrorType.CANCEL);
+          (error as StorageError).type, StorageErrorType.CANCEL);
     }
 
     final response = await storage.putFileByPart(

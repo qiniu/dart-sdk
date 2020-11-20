@@ -82,8 +82,8 @@ class PutByPartTask extends Task<PutResponse> {
   // 类似 [RequestTask.postError] 的处理逻辑
   @override
   void postError(Object error) {
-    if (error is StorageRequestError) {
-      if (error.type == StorageRequestErrorType.CANCEL) {
+    if (error is StorageError) {
+      if (error.type == StorageErrorType.CANCEL) {
         controller?.notifyStatusListeners(RequestTaskStatus.Cancel);
       } else {
         controller?.notifyStatusListeners(RequestTaskStatus.Error);
@@ -121,7 +121,7 @@ class PutByPartTask extends Task<PutResponse> {
       /// UploadPartsTask 那边给 total 做了 +1 的操作，这里完成后补上 1 字节确保 100%
       notifyProgress(_sent + 1, _total);
     } catch (error) {
-      if (error is StorageRequestError) {
+      if (error is StorageError) {
         /// 满足以下两种情况清理缓存：
         /// 1、如果服务端文件被删除了，清除本地缓存
         /// 2、如果 uploadId 等参数不对原因会导致 400

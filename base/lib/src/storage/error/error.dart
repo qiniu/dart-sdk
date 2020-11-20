@@ -1,12 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:qiniu_sdk_base/src/error/error.dart';
 
-class StorageError extends BaseError {
-  StorageError(String message) : super(message);
-}
-
 // same as DioErrorType
-enum StorageRequestErrorType {
+enum StorageErrorType {
   /// It occurs when url is opened timeout.
   CONNECT_TIMEOUT,
 
@@ -27,11 +23,11 @@ enum StorageRequestErrorType {
   UNKNOW,
 }
 
-class StorageRequestError extends StorageError {
+class StorageError extends QiniuError {
   final int code;
-  final StorageRequestErrorType type;
+  final StorageErrorType type;
 
-  StorageRequestError({this.type, this.code, String message}) : super(message);
+  StorageError({this.type, this.code, String message}) : super(message);
 
   @override
   String toString() {
@@ -41,20 +37,20 @@ class StorageRequestError extends StorageError {
   }
 }
 
-StorageRequestErrorType mapDioErrorType(DioErrorType type) {
+StorageErrorType mapDioErrorType(DioErrorType type) {
   switch (type) {
     case DioErrorType.CONNECT_TIMEOUT:
-      return StorageRequestErrorType.CONNECT_TIMEOUT;
+      return StorageErrorType.CONNECT_TIMEOUT;
     case DioErrorType.SEND_TIMEOUT:
-      return StorageRequestErrorType.SEND_TIMEOUT;
+      return StorageErrorType.SEND_TIMEOUT;
     case DioErrorType.RECEIVE_TIMEOUT:
-      return StorageRequestErrorType.RECEIVE_TIMEOUT;
+      return StorageErrorType.RECEIVE_TIMEOUT;
     case DioErrorType.RESPONSE:
-      return StorageRequestErrorType.RESPONSE;
+      return StorageErrorType.RESPONSE;
     case DioErrorType.CANCEL:
-      return StorageRequestErrorType.CANCEL;
+      return StorageErrorType.CANCEL;
     case DioErrorType.DEFAULT:
     default:
-      return StorageRequestErrorType.UNKNOW;
+      return StorageErrorType.UNKNOW;
   }
 }

@@ -1,5 +1,5 @@
-class BaseError extends Error {
+class QiniuError extends Error {
   String message;
 
-  BaseError(this.message);
+  QiniuError(this.message);
 }

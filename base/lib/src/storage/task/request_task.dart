@@ -59,7 +59,7 @@ abstract class RequestTask<T> extends Task<T> {
 
     // 处理错误
     if (error is DioError && error.type != DioErrorType.DEFAULT) {
-      final _error = StorageRequestError(
+      final _error = StorageError(
         type: mapDioErrorType(error.type),
         code: error.response?.statusCode,
         message: error.response?.data.toString(),
