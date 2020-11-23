@@ -11,7 +11,7 @@ import 'widgets/app.dart';
 import 'widgets/dispose.dart';
 import 'widgets/progress.dart';
 import 'widgets/select_file.dart';
-import 'widgets/token_input.dart';
+import 'widgets/string_input.dart';
 
 void main() {
   runApp(
@@ -33,6 +33,8 @@ class Base extends StatefulWidget implements Example {
 }
 
 class BaseState extends DisposableState<Base> {
+  String key;
+
   String token;
 
   /// storage 实例
@@ -112,16 +114,36 @@ class BaseState extends DisposableState<Base> {
       storage.putFile(
         selectedFile,
         usedToken,
-        options: PutOptions(
-          controller: putController,
-          partSize: 1,
-        ),
+        options: PutOptions(controller: putController, partSize: 1, key: key),
       )
         ..then((PutResponse response) {
           printToConsole('上传已完成: 原始响应数据: ${jsonEncode(response.rawData)}');
           printToConsole('------------------------');
         })
         ..catchError((dynamic error) {
+          if (error is StorageError) {
+            switch (error.type) {
+              case StorageErrorType.CONNECT_TIMEOUT:
+                // TODO: Handle this case.
+                break;
+              case StorageErrorType.SEND_TIMEOUT:
+                // TODO: Handle this case.
+                break;
+              case StorageErrorType.RECEIVE_TIMEOUT:
+                // TODO: Handle this case.
+                break;
+              case StorageErrorType.RESPONSE:
+                // TODO: Handle this case.
+                break;
+              case StorageErrorType.CANCEL:
+                // TODO: Handle this case.
+                break;
+              case StorageErrorType.UNKNOW:
+                // TODO: Handle this case.
+                break;
+            }
+          }
+
           var message = '未知错误';
 
           if (error.error != null) {
@@ -158,9 +180,14 @@ class BaseState extends DisposableState<Base> {
     });
   }
 
-  void onChangedToken(String token) {
+  void onTokenChange(String token) {
     printToConsole('设置 Token: $token');
     this.token = token;
+  }
+
+  void onKeyChange(String key) {
+    printToConsole('设置 key: $key');
+    this.key = key;
   }
 
   Widget get cancelButton {
@@ -189,7 +216,17 @@ class BaseState extends DisposableState<Base> {
         ),
         Padding(
           padding: const EdgeInsets.all(8.0),
-          child: TokenInput(onChangedToken),
+          child: StringInput(
+            onTokenChange,
+            label: '请输入 Key',
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: StringInput(
+            onTokenChange,
+            label: '请输入 Token',
+          ),
         ),
         Padding(
           padding: const EdgeInsets.all(8.0),

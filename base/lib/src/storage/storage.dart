@@ -7,6 +7,7 @@ import 'methods/put/put.dart';
 import 'methods/put/put_task.dart';
 import 'task/task_manager.dart';
 
+export './error/error.dart';
 export './methods/put/put_controller.dart';
 export './task/request_task.dart';
 export './task/request_task.dart';
