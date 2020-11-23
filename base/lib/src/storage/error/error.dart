@@ -20,7 +20,7 @@ enum StorageErrorType {
 
   /// Default error type, Some other Error. In this case, you can
   /// use the DioError.error if it is not null.
-  UNKNOW,
+  UNKNOWN,
 }
 
 class StorageError extends QiniuError {
@@ -51,6 +51,6 @@ StorageErrorType mapDioErrorType(DioErrorType type) {
       return StorageErrorType.CANCEL;
     case DioErrorType.DEFAULT:
     default:
-      return StorageErrorType.UNKNOW;
+      return StorageErrorType.UNKNOWN;
   }
 }

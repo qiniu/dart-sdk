@@ -109,63 +109,41 @@ class BaseState extends DisposableState<Base> {
       return;
     }
 
-    try {
-      printToConsole('开始上传文件');
-      storage.putFile(
-        selectedFile,
-        usedToken,
-        options: PutOptions(controller: putController, partSize: 1, key: key),
-      )
-        ..then((PutResponse response) {
-          printToConsole('上传已完成: 原始响应数据: ${jsonEncode(response.rawData)}');
-          printToConsole('------------------------');
-        })
-        ..catchError((dynamic error) {
-          if (error is StorageError) {
-            switch (error.type) {
-              case StorageErrorType.CONNECT_TIMEOUT:
-                // TODO: Handle this case.
-                break;
-              case StorageErrorType.SEND_TIMEOUT:
-                // TODO: Handle this case.
-                break;
-              case StorageErrorType.RECEIVE_TIMEOUT:
-                // TODO: Handle this case.
-                break;
-              case StorageErrorType.RESPONSE:
-                // TODO: Handle this case.
-                break;
-              case StorageErrorType.CANCEL:
-                // TODO: Handle this case.
-                break;
-              case StorageErrorType.UNKNOW:
-                // TODO: Handle this case.
-                break;
-            }
+    printToConsole('开始上传文件');
+    storage.putFile(
+      selectedFile,
+      usedToken,
+      options: PutOptions(controller: putController, partSize: 1, key: key),
+    )
+      ..then((PutResponse response) {
+        printToConsole('上传已完成: 原始响应数据: ${jsonEncode(response.rawData)}');
+        printToConsole('------------------------');
+      })
+      ..catchError((dynamic error) {
+        if (error is StorageError) {
+          switch (error.type) {
+            case StorageErrorType.CONNECT_TIMEOUT:
+              printToConsole('发生错误: 连接超时');
+              break;
+            case StorageErrorType.SEND_TIMEOUT:
+              printToConsole('发生错误: 发送数据超时');
+              break;
+            case StorageErrorType.RECEIVE_TIMEOUT:
+              printToConsole('发生错误: 响应数据超时');
+              break;
+            case StorageErrorType.RESPONSE:
+              printToConsole('发生错误: ${error.message}');
+              break;
+            case StorageErrorType.CANCEL:
+              printToConsole('发生错误: 请求取消');
+              break;
+            case StorageErrorType.UNKNOWN:
+              printToConsole('发生错误: 未知错误');
+              break;
           }
-
-          var message = '未知错误';
-
-          if (error.error != null) {
-            message = error.error as String;
-          }
-
-          if (error.message != null) {
-            message = error.message as String;
-          }
-
-          if (error.response != null &&
-              error.response.data != null &&
-              error.response.data['error'] != null) {
-            message = error.response.data['error'] as String;
-          }
-
-          printToConsole('发生错误: $message');
-          printToConsole('------------------------');
-        });
-    } catch (error) {
-      printToConsole('发生 SDK 级别未知错误，请联系开发者: ${error.toString()}');
-    }
+        }
+        printToConsole('------------------------');
+      });
   }
 
   void onSelectedFile(File file) {
@@ -217,7 +195,7 @@ class BaseState extends DisposableState<Base> {
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: StringInput(
-            onTokenChange,
+            onKeyChange,
             label: '请输入 Key',
           ),
         ),
