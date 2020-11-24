@@ -35,6 +35,8 @@ class Base extends StatefulWidget implements Example {
 class BaseState extends DisposableState<Base> {
   String key;
 
+  int partSize = 4;
+
   String token;
 
   /// storage 实例
@@ -113,7 +115,11 @@ class BaseState extends DisposableState<Base> {
     storage.putFile(
       selectedFile,
       usedToken,
-      options: PutOptions(controller: putController, partSize: 1, key: key),
+      options: PutOptions(
+        key: key,
+        partSize: partSize,
+        controller: putController,
+      ),
     )
       ..then((PutResponse response) {
         printToConsole('上传已完成: 原始响应数据: ${jsonEncode(response.rawData)}');
@@ -141,7 +147,10 @@ class BaseState extends DisposableState<Base> {
               printToConsole('发生错误: 未知错误');
               break;
           }
+        } else {
+          printToConsole('发生错误: ${error.toString()}');
         }
+
         printToConsole('------------------------');
       });
   }
@@ -158,12 +167,35 @@ class BaseState extends DisposableState<Base> {
     });
   }
 
+  void onPartSizeChange(String partSize) {
+    if (partSize == '' || partSize == null) {
+      printToConsole('设置默认 partSize');
+      this.partSize = 4;
+      return;
+    }
+
+    printToConsole('设置 partSize: $partSize');
+    this.partSize = int.parse(partSize);
+  }
+
   void onTokenChange(String token) {
+    if (token == '' || token == null) {
+      printToConsole('清除 token');
+      this.token = null;
+      return;
+    }
+
     printToConsole('设置 Token: $token');
     this.token = token;
   }
 
   void onKeyChange(String key) {
+    if (key == '' || key == null) {
+      printToConsole('清除 key');
+      this.key = null;
+      return;
+    }
+
     printToConsole('设置 key: $key');
     this.key = key;
   }
@@ -196,14 +228,21 @@ class BaseState extends DisposableState<Base> {
           padding: const EdgeInsets.all(8.0),
           child: StringInput(
             onKeyChange,
-            label: '请输入 Key',
+            label: '请输入 Key（可选）',
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: StringInput(
+            onPartSizeChange,
+            label: '请输入分片尺寸，单位 M（默认 4，可选）',
           ),
         ),
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: StringInput(
             onTokenChange,
-            label: '请输入 Token',
+            label: '请输入 Token（可选）',
           ),
         ),
         Padding(
