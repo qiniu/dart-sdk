@@ -11,7 +11,7 @@ import 'widgets/app.dart';
 import 'widgets/dispose.dart';
 import 'widgets/progress.dart';
 import 'widgets/select_file.dart';
-import 'widgets/token_input.dart';
+import 'widgets/string_input.dart';
 
 void main() {
   runApp(
@@ -33,6 +33,10 @@ class Base extends StatefulWidget implements Example {
 }
 
 class BaseState extends DisposableState<Base> {
+  String key;
+
+  int partSize = 4;
+
   String token;
 
   /// storage 实例
@@ -107,43 +111,48 @@ class BaseState extends DisposableState<Base> {
       return;
     }
 
-    try {
-      printToConsole('开始上传文件');
-      storage.putFile(
-        selectedFile,
-        usedToken,
-        options: PutOptions(
-          controller: putController,
-          partSize: 1,
-        ),
-      )
-        ..then((PutResponse response) {
-          printToConsole('上传已完成: 原始响应数据: ${jsonEncode(response.rawData)}');
-          printToConsole('------------------------');
-        })
-        ..catchError((dynamic error) {
-          var message = '未知错误';
-
-          if (error.error != null) {
-            message = error.error as String;
+    printToConsole('开始上传文件');
+    storage.putFile(
+      selectedFile,
+      usedToken,
+      options: PutOptions(
+        key: key,
+        partSize: partSize,
+        controller: putController,
+      ),
+    )
+      ..then((PutResponse response) {
+        printToConsole('上传已完成: 原始响应数据: ${jsonEncode(response.rawData)}');
+        printToConsole('------------------------');
+      })
+      ..catchError((dynamic error) {
+        if (error is StorageError) {
+          switch (error.type) {
+            case StorageErrorType.CONNECT_TIMEOUT:
+              printToConsole('发生错误: 连接超时');
+              break;
+            case StorageErrorType.SEND_TIMEOUT:
+              printToConsole('发生错误: 发送数据超时');
+              break;
+            case StorageErrorType.RECEIVE_TIMEOUT:
+              printToConsole('发生错误: 响应数据超时');
+              break;
+            case StorageErrorType.RESPONSE:
+              printToConsole('发生错误: ${error.message}');
+              break;
+            case StorageErrorType.CANCEL:
+              printToConsole('发生错误: 请求取消');
+              break;
+            case StorageErrorType.UNKNOWN:
+              printToConsole('发生错误: 未知错误');
+              break;
           }
+        } else {
+          printToConsole('发生错误: ${error.toString()}');
+        }
 
-          if (error.message != null) {
-            message = error.message as String;
-          }
-
-          if (error.response != null &&
-              error.response.data != null &&
-              error.response.data['error'] != null) {
-            message = error.response.data['error'] as String;
-          }
-
-          printToConsole('发生错误: $message');
-          printToConsole('------------------------');
-        });
-    } catch (error) {
-      printToConsole('发生 SDK 级别未知错误，请联系开发者: ${error.toString()}');
-    }
+        printToConsole('------------------------');
+      });
   }
 
   void onSelectedFile(File file) {
@@ -158,9 +167,37 @@ class BaseState extends DisposableState<Base> {
     });
   }
 
-  void onChangedToken(String token) {
+  void onPartSizeChange(String partSize) {
+    if (partSize == '' || partSize == null) {
+      printToConsole('设置默认 partSize');
+      this.partSize = 4;
+      return;
+    }
+
+    printToConsole('设置 partSize: $partSize');
+    this.partSize = int.parse(partSize);
+  }
+
+  void onTokenChange(String token) {
+    if (token == '' || token == null) {
+      printToConsole('清除 token');
+      this.token = null;
+      return;
+    }
+
     printToConsole('设置 Token: $token');
     this.token = token;
+  }
+
+  void onKeyChange(String key) {
+    if (key == '' || key == null) {
+      printToConsole('清除 key');
+      this.key = null;
+      return;
+    }
+
+    printToConsole('设置 key: $key');
+    this.key = key;
   }
 
   Widget get cancelButton {
@@ -189,7 +226,24 @@ class BaseState extends DisposableState<Base> {
         ),
         Padding(
           padding: const EdgeInsets.all(8.0),
-          child: TokenInput(onChangedToken),
+          child: StringInput(
+            onKeyChange,
+            label: '请输入 Key（可选）',
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: StringInput(
+            onPartSizeChange,
+            label: '请输入分片尺寸，单位 M（默认 4，可选）',
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: StringInput(
+            onTokenChange,
+            label: '请输入 Token（可选）',
+          ),
         ),
         Padding(
           padding: const EdgeInsets.all(8.0),
