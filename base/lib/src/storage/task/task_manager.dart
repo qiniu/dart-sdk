@@ -21,11 +21,12 @@ class TaskManager {
   @mustCallSuper
   void addTask(Task task) {
     workingTasks.add(task);
-    task.manager = this;
+    task
+      ..manager = this
+      ..preStart();
 
     /// 把同步的任务改成异步，防止 [RequestTask.addStatusListener] 没有被触发
     Future.delayed(Duration(milliseconds: 0), () {
-      task.preStart();
       task.createTask().then(task.postReceive).catchError(task.postError);
       task.postStart();
     });

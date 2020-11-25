@@ -29,11 +29,11 @@ class PutByPartTask extends Task<PutResponse> {
 
   final String key;
 
-  String bucket;
-
   RequestTaskController controller;
 
   HostProvider hostProvider;
+
+  TokenInfo _tokenInfo;
 
   PutByPartTask({
     @required this.file,
@@ -65,6 +65,7 @@ class PutByPartTask extends Task<PutResponse> {
 
   @override
   void preStart() {
+    _tokenInfo = Auth.parseUpToken(token);
     controller?.cancelToken?.whenCancel?.then((_) {
       _currentWorkingTaskController?.cancel();
     });
@@ -94,9 +95,6 @@ class PutByPartTask extends Task<PutResponse> {
 
   @override
   Future<PutResponse> createTask() async {
-    final putPolicy = Auth.parseUpToken(token).putPolicy;
-    bucket = putPolicy.getBucket();
-
     /// 如果已经取消了，直接报错
     // ignore: null_aware_in_condition
     if (controller != null && controller.cancelToken.isCancelled) {
@@ -105,10 +103,9 @@ class PutByPartTask extends Task<PutResponse> {
 
     controller?.notifyStatusListeners(RequestTaskStatus.Request);
 
-    final tokenInfo = Auth.parseUpToken(token);
     final host = await hostProvider.getUpHost(
-      bucket: tokenInfo.putPolicy.getBucket(),
-      accessKey: tokenInfo.accessKey,
+      bucket: _tokenInfo.putPolicy.getBucket(),
+      accessKey: _tokenInfo.accessKey,
     );
 
     final initPartsTask = _createInitParts(host);
@@ -157,7 +154,7 @@ class PutByPartTask extends Task<PutResponse> {
     final task = InitPartsTask(
       file: file,
       token: token,
-      bucket: bucket,
+      bucket: _tokenInfo.putPolicy.getBucket(),
       host: host,
       key: key,
       controller: _controller,
@@ -177,7 +174,7 @@ class PutByPartTask extends Task<PutResponse> {
     final task = UploadPartsTask(
       file: file,
       token: token,
-      bucket: bucket,
+      bucket: _tokenInfo.putPolicy.getBucket(),
       host: host,
       partSize: partSize,
       uploadId: uploadId,
@@ -205,7 +202,7 @@ class PutByPartTask extends Task<PutResponse> {
     final _controller = RequestTaskController();
     final task = CompletePartsTask(
       token: token,
-      bucket: bucket,
+      bucket: _tokenInfo.putPolicy.getBucket(),
       uploadId: uploadId,
       parts: parts,
       host: host,
