@@ -24,6 +24,7 @@ enum StorageErrorType {
 }
 
 class StorageError extends QiniuError {
+  /// [type] 不是 [StorageErrorType.RESPONSE] 的时候为 null
   final int code;
   final StorageErrorType type;
 
@@ -31,7 +32,7 @@ class StorageError extends QiniuError {
 
   @override
   String toString() {
-    var msg = 'StorageRequestException [$type, $code]: $message';
+    var msg = 'StorageError [$type, $code]: $message';
     msg += '\n${StackTrace.current}';
     return msg;
   }

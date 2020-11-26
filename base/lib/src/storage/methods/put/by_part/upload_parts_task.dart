@@ -29,9 +29,7 @@ class UploadPart {
 class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   final File file;
   final String token;
-  final String bucket;
   final String uploadId;
-  final String host;
 
   final int partSize;
   final int maxPartsRequestNumber;
@@ -67,9 +65,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   UploadPartsTask({
     @required this.file,
     @required this.token,
-    @required this.bucket,
     @required this.uploadId,
-    @required this.host,
     @required this.partSize,
     @required this.maxPartsRequestNumber,
     this.key,
@@ -197,9 +193,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
 
       final task = UploadPartTask(
         token: token,
-        bucket: bucket,
         uploadId: uploadId,
-        host: host,
         byteStream: byteStream,
         byteLength: _byteLength,
         partNumber: partNumber,
@@ -257,9 +251,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
 /// 上传一个 part 的任务
 class UploadPartTask extends RequestTask<UploadPart> {
   final String token;
-  final String bucket;
   final String uploadId;
-  final String host;
 
   /// 字节流的长度
   ///
@@ -272,11 +264,11 @@ class UploadPartTask extends RequestTask<UploadPart> {
 
   final String key;
 
+  TokenInfo _tokenInfo;
+
   UploadPartTask({
     @required this.token,
-    @required this.bucket,
     @required this.uploadId,
-    @required this.host,
     @required this.byteLength,
     @required this.partNumber,
     @required this.byteStream,
@@ -285,11 +277,24 @@ class UploadPartTask extends RequestTask<UploadPart> {
   }) : super(controller: controller);
 
   @override
+  void preStart() {
+    _tokenInfo = Auth.parseUpToken(token);
+    super.preStart();
+  }
+
+  @override
   Future<UploadPart> createTask() async {
     final headers = <String, dynamic>{
       'Authorization': 'UpToken $token',
       Headers.contentLengthHeader: byteLength,
     };
+
+    final bucket = _tokenInfo.putPolicy.getBucket();
+
+    final host = await config.hostProvider.getUpHost(
+      bucket: _tokenInfo.putPolicy.getBucket(),
+      accessKey: _tokenInfo.accessKey,
+    );
 
     final encodedKey = key != null ? base64Url.encode(utf8.encode(key)) : '~';
     final paramUrl = 'buckets/$bucket/objects/$encodedKey';

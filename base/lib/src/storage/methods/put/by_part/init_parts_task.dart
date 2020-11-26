@@ -29,17 +29,14 @@ class InitParts {
 class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
   final File file;
   final String token;
-  final String bucket;
-  final String host;
   final String key;
 
   @override
   String _cacheKey;
+  TokenInfo _tokenInfo;
 
   InitPartsTask({
     @required this.file,
-    @required this.host,
-    @required this.bucket,
     @required this.token,
     this.key,
     RequestTaskController controller,
@@ -51,6 +48,7 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
 
   @override
   void preStart() {
+    _tokenInfo = Auth.parseUpToken(token);
     _cacheKey = InitPartsTask.getCacheKey(file.path, file.lengthSync(), key);
     super.preStart();
   }
@@ -64,6 +62,13 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
       return InitParts.fromJson(
           json.decode(initPartsCache) as Map<String, dynamic>);
     }
+
+    final bucket = _tokenInfo.putPolicy.getBucket();
+
+    final host = await config.hostProvider.getUpHost(
+      bucket: _tokenInfo.putPolicy.getBucket(),
+      accessKey: _tokenInfo.accessKey,
+    );
 
     final encodedKey = key != null ? base64Url.encode(utf8.encode(key)) : '~';
     final paramUrl = '$host/buckets/$bucket/objects/$encodedKey/uploads';

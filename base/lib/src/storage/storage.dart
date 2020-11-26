@@ -81,7 +81,7 @@ class Storage {
       hostProvider: config.hostProvider,
     );
 
-    taskManager.addTask(task);
+    taskManager.addRequestTask(task);
 
     return task.future;
   }
