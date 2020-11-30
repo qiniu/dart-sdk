@@ -17,8 +17,8 @@ class DefaultHostProvider extends HostProvider {
   final _http = Dio();
   // 缓存的上传区域
   final _stashedUpDomains = <_Domain>[];
-  // 缓存之前的 bucket 用于判断是否需要走缓存
-  String _prevBucket;
+  // accessKey:bucket 用此 key 判断是否 up host 需要走缓存
+  String _cacheKey;
   // 冻结的上传区域
   final List<_Domain> _frozenUpDomains = [];
 
@@ -31,7 +31,7 @@ class DefaultHostProvider extends HostProvider {
     _frozenUpDomains.removeWhere((domain) => !domain.isFrozen());
 
     var _upDomains = <_Domain>[];
-    if (bucket == _prevBucket && _stashedUpDomains.isNotEmpty) {
+    if ('$accessKey:$bucket' == _cacheKey && _stashedUpDomains.isNotEmpty) {
       _upDomains.addAll(_stashedUpDomains);
     } else {
       final url =
@@ -49,7 +49,7 @@ class DefaultHostProvider extends HostProvider {
         _upDomains.addAll(domains);
       }
 
-      _prevBucket = bucket;
+      _cacheKey = '$accessKey:$bucket';
     }
 
     // 每次都从头遍历一遍，bucket 所在的区域的 host 总是会排在最前面
@@ -57,11 +57,9 @@ class DefaultHostProvider extends HostProvider {
     for (var index = 0; index < _upDomains.length; index++) {
       final availableDomain = _upDomains.elementAt(index);
       // 检查看起来可用的 host 是否之前被冻结过
-      final fronzenUpDomain = _frozenUpDomains.firstWhere(
-        (domain) => domain.isFrozen() && domain.value == availableDomain.value,
-        orElse: () => null,
-      );
-      if (fronzenUpDomain == null) {
+      final frozen = isFrozen(protocol + '://' + availableDomain.value);
+
+      if (!frozen) {
         return protocol + '://' + availableDomain.value;
       }
     }
@@ -72,8 +70,9 @@ class DefaultHostProvider extends HostProvider {
   @override
   bool isFrozen(String host) {
     final uri = Uri.parse(host);
-    final frozenDomain = _frozenUpDomains
-        .firstWhere((domain) => domain.value == uri.host, orElse: () => null);
+    final frozenDomain = _frozenUpDomains.firstWhere(
+        (domain) => domain.isFrozen() && domain.value == uri.host,
+        orElse: () => null);
     return frozenDomain != null;
   }
 
@@ -85,17 +84,6 @@ class DefaultHostProvider extends HostProvider {
     final uri = Uri.parse(host);
     _frozenUpDomains.add(_Domain(uri.host)..freeze());
   }
-
-  // @override
-  // void unfreezeHost(String host) {
-  //   final uri = Uri.parse(host);
-  //   final domain = _frozenUpDomains
-  //       .firstWhere((domain) => domain.value == uri.host, orElse: () => null);
-
-  //   if (domain != null) {
-  //     _frozenUpDomains.remove(domain);
-  //   }
-  // }
 }
 
 class _Host {
@@ -120,11 +108,11 @@ class _Domain {
   final _lockTime = 1000 * 60 * 10;
 
   bool isFrozen() {
-    return frozenTime + _lockTime > DateTime.now().millisecond;
+    return frozenTime + _lockTime > DateTime.now().millisecondsSinceEpoch;
   }
 
   void freeze() {
-    frozenTime = DateTime.now().millisecond;
+    frozenTime = DateTime.now().millisecondsSinceEpoch;
   }
 
   String value;
