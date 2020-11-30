@@ -30,6 +30,14 @@ class StorageError extends QiniuError {
 
   StorageError({this.type, this.code, String message}) : super(message);
 
+  factory StorageError.fromDioError(DioError error) {
+    return StorageError(
+      type: _mapDioErrorType(error.type),
+      code: error.response?.statusCode,
+      message: error.response?.data.toString(),
+    );
+  }
+
   @override
   String toString() {
     var msg = 'StorageError [$type, $code]: $message';
@@ -38,7 +46,7 @@ class StorageError extends QiniuError {
   }
 }
 
-StorageErrorType mapDioErrorType(DioErrorType type) {
+StorageErrorType _mapDioErrorType(DioErrorType type) {
   switch (type) {
     case DioErrorType.CONNECT_TIMEOUT:
       return StorageErrorType.CONNECT_TIMEOUT;
