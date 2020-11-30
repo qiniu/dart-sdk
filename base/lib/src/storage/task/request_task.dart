@@ -82,11 +82,7 @@ abstract class RequestTask<T> extends Task<T> {
       }
 
       if (error.type != DioErrorType.DEFAULT) {
-        final storageError = StorageError(
-          type: mapDioErrorType(error.type),
-          code: error.response?.statusCode,
-          message: error.response?.data.toString(),
-        );
+        final storageError = StorageError.fromDioError(error);
 
         // 通知状态
         if (error.type == DioErrorType.CANCEL) {
