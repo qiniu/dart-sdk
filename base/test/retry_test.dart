@@ -67,8 +67,9 @@ void main() {
     expect(_sent / _total, 1);
     expect(statusList[0], RequestTaskStatus.Init);
     expect(statusList[1], RequestTaskStatus.Request);
-    // 分片上传任务本身不会重试，子任务负责重试，所以不会有第二个 Request 状态
-    expect(statusList[2], RequestTaskStatus.Success);
+    // 重试了一次
+    expect(statusList[2], RequestTaskStatus.Request);
+    expect(statusList[3], RequestTaskStatus.Success);
   }, skip: !isSensitiveDataDefined);
 }
 

@@ -6,12 +6,15 @@ class CompletePartsTask extends RequestTask<PutResponse> {
   final String uploadId;
   final List<Part> parts;
   final String key;
+  final VoidCallback onRestart;
+
   TokenInfo _tokenInfo;
 
   CompletePartsTask({
     @required this.token,
     @required this.uploadId,
     @required this.parts,
+    @required this.onRestart,
     this.key,
     RequestTaskController controller,
   }) : super(controller: controller);
@@ -23,11 +26,17 @@ class CompletePartsTask extends RequestTask<PutResponse> {
   }
 
   @override
+  void postRestart() {
+    onRestart();
+    super.postStart();
+  }
+
+  @override
   Future<PutResponse> createTask() async {
     final bucket = _tokenInfo.putPolicy.getBucket();
 
     final host = await config.hostProvider.getUpHost(
-      bucket: _tokenInfo.putPolicy.getBucket(),
+      bucket: bucket,
       accessKey: _tokenInfo.accessKey,
     );
     final headers = <String, dynamic>{'Authorization': 'UpToken $token'};

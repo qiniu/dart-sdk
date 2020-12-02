@@ -30,6 +30,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   final File file;
   final String token;
   final String uploadId;
+  final VoidCallback onRestart;
 
   final int partSize;
   final int maxPartsRequestNumber;
@@ -68,6 +69,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     @required this.uploadId,
     @required this.partSize,
     @required this.maxPartsRequestNumber,
+    @required this.onRestart,
     this.key,
     RequestTaskController controller,
   }) : super(controller: controller);
@@ -199,6 +201,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
         partNumber: partNumber,
         key: key,
         controller: _controller,
+        onRestart: onRestart,
       );
 
       _controller.addProgressListener((sent, total) {
@@ -252,6 +255,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
 class UploadPartTask extends RequestTask<UploadPart> {
   final String token;
   final String uploadId;
+  final VoidCallback onRestart;
 
   /// 字节流的长度
   ///
@@ -272,6 +276,7 @@ class UploadPartTask extends RequestTask<UploadPart> {
     @required this.byteLength,
     @required this.partNumber,
     @required this.byteStream,
+    @required this.onRestart,
     this.key,
     RequestTaskController controller,
   }) : super(controller: controller);
@@ -280,6 +285,12 @@ class UploadPartTask extends RequestTask<UploadPart> {
   void preStart() {
     _tokenInfo = Auth.parseUpToken(token);
     super.preStart();
+  }
+
+  @override
+  void postRestart() {
+    onRestart();
+    super.postRestart();
   }
 
   @override
@@ -292,7 +303,7 @@ class UploadPartTask extends RequestTask<UploadPart> {
     final bucket = _tokenInfo.putPolicy.getBucket();
 
     final host = await config.hostProvider.getUpHost(
-      bucket: _tokenInfo.putPolicy.getBucket(),
+      bucket: bucket,
       accessKey: _tokenInfo.accessKey,
     );
 

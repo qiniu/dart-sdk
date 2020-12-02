@@ -30,6 +30,7 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
   final File file;
   final String token;
   final String key;
+  final VoidCallback onRestart;
 
   @override
   String _cacheKey;
@@ -38,6 +39,7 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
   InitPartsTask({
     @required this.file,
     @required this.token,
+    @required this.onRestart,
     this.key,
     RequestTaskController controller,
   }) : super(controller: controller);
@@ -54,6 +56,12 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
   }
 
   @override
+  void postRestart() {
+    onRestart();
+    super.postStart();
+  }
+
+  @override
   Future<InitParts> createTask() async {
     final headers = {'Authorization': 'UpToken $token'};
 
@@ -66,7 +74,7 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
     final bucket = _tokenInfo.putPolicy.getBucket();
 
     final host = await config.hostProvider.getUpHost(
-      bucket: _tokenInfo.putPolicy.getBucket(),
+      bucket: bucket,
       accessKey: _tokenInfo.accessKey,
     );
 
