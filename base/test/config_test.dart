@@ -1,3 +1,4 @@
+import 'package:dotenv/dotenv.dart';
 import 'package:qiniu_sdk_base/src/storage/storage.dart';
 import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
 import 'package:test/test.dart';
@@ -33,4 +34,21 @@ void main() {
 
     expect(cacheProvider.value.length, 0);
   });
+
+  test('freeze mechanism should works well with DefaultHostProvider.',
+      () async {
+    final config = Config();
+    final hostA = await config.hostProvider.getUpHost(
+      accessKey: env['QINIU_DART_SDK_ACCESS_KEY'],
+      bucket: env['QINIU_DART_SDK_TOKEN_SCOPE'],
+    );
+    config.hostProvider.freezeHost(hostA);
+    final hostB = await config.hostProvider.getUpHost(
+      accessKey: env['QINIU_DART_SDK_ACCESS_KEY'],
+      bucket: env['QINIU_DART_SDK_TOKEN_SCOPE'],
+    );
+
+    // getUpHost 会收集所有地区的 host 并以此吐出来，不用担心会少于两个
+    expect(hostA == hostB, false);
+  }, skip: !isSensitiveDataDefined);
 }

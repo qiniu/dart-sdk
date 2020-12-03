@@ -20,7 +20,7 @@ part 'part.dart';
 part 'upload_parts_task.dart';
 
 /// 分片上传任务
-class PutByPartTask extends Task<PutResponse> {
+class PutByPartTask extends RequestTask<PutResponse> {
   final File file;
   final String token;
 
@@ -28,10 +28,6 @@ class PutByPartTask extends Task<PutResponse> {
   final int maxPartsRequestNumber;
 
   final String key;
-
-  String bucket;
-
-  RequestTaskController controller;
 
   HostProvider hostProvider;
 
@@ -42,7 +38,7 @@ class PutByPartTask extends Task<PutResponse> {
     @required this.hostProvider,
     @required this.maxPartsRequestNumber,
     this.key,
-    this.controller,
+    RequestTaskController controller,
   })  : assert(file != null),
         assert(token != null),
         assert(partSize != null),
@@ -53,7 +49,8 @@ class PutByPartTask extends Task<PutResponse> {
                 'partSize must be greater than 1 and less than 1024');
           }
           return true;
-        }());
+        }()),
+        super(controller: controller);
 
   RequestTaskController _currentWorkingTaskController;
 
@@ -68,7 +65,6 @@ class PutByPartTask extends Task<PutResponse> {
     controller?.cancelToken?.whenCancel?.then((_) {
       _currentWorkingTaskController?.cancel();
     });
-    controller?.notifyStatusListeners(RequestTaskStatus.Init);
     super.preStart();
   }
 
@@ -79,24 +75,8 @@ class PutByPartTask extends Task<PutResponse> {
     super.postReceive(data);
   }
 
-  // 类似 [RequestTask.postError] 的处理逻辑
-  @override
-  void postError(Object error) {
-    if (error is StorageError) {
-      if (error.type == StorageErrorType.CANCEL) {
-        controller?.notifyStatusListeners(RequestTaskStatus.Cancel);
-      } else {
-        controller?.notifyStatusListeners(RequestTaskStatus.Error);
-      }
-      super.postError(error);
-    }
-  }
-
   @override
   Future<PutResponse> createTask() async {
-    final putPolicy = Auth.parseUpToken(token).putPolicy;
-    bucket = putPolicy.getBucket();
-
     /// 如果已经取消了，直接报错
     // ignore: null_aware_in_condition
     if (controller != null && controller.cancelToken.isCancelled) {
@@ -105,22 +85,16 @@ class PutByPartTask extends Task<PutResponse> {
 
     controller?.notifyStatusListeners(RequestTaskStatus.Request);
 
-    final tokenInfo = Auth.parseUpToken(token);
-    final host = await hostProvider.getUpHost(
-      bucket: tokenInfo.putPolicy.getBucket(),
-      accessKey: tokenInfo.accessKey,
-    );
-
-    final initPartsTask = _createInitParts(host);
+    final initPartsTask = _createInitParts();
     final initParts = await initPartsTask.future;
 
-    final uploadParts = _createUploadParts(host, initParts.uploadId);
+    final uploadParts = _createUploadParts(initParts.uploadId);
 
     PutResponse putResponse;
     try {
       final parts = await uploadParts.future;
       putResponse =
-          await _createCompleteParts(host, initParts.uploadId, parts).future;
+          await _createCompleteParts(initParts.uploadId, parts).future;
 
       /// UploadPartsTask 那边给 total 做了 +1 的操作，这里完成后补上 1 字节确保 100%
       notifyProgress(_sent + 1, _total);
@@ -151,16 +125,16 @@ class PutByPartTask extends Task<PutResponse> {
   }
 
   /// 初始化上传信息，分片上传的第一步
-  InitPartsTask _createInitParts(String host) {
+  InitPartsTask _createInitParts() {
     final _controller = RequestTaskController();
 
     final task = InitPartsTask(
       file: file,
       token: token,
-      bucket: bucket,
-      host: host,
       key: key,
       controller: _controller,
+      onRestart: () =>
+          controller.notifyStatusListeners(RequestTaskStatus.Request),
     );
 
     /// 假的 1 byte，说明任务已经开始且不是 0%
@@ -171,19 +145,19 @@ class PutByPartTask extends Task<PutResponse> {
     return task;
   }
 
-  UploadPartsTask _createUploadParts(String host, String uploadId) {
+  UploadPartsTask _createUploadParts(String uploadId) {
     final _controller = RequestTaskController();
 
     final task = UploadPartsTask(
       file: file,
       token: token,
-      bucket: bucket,
-      host: host,
       partSize: partSize,
       uploadId: uploadId,
       maxPartsRequestNumber: maxPartsRequestNumber,
       key: key,
       controller: _controller,
+      onRestart: () =>
+          controller.notifyStatusListeners(RequestTaskStatus.Request),
     );
 
     _controller.addProgressListener((sent, total) {
@@ -198,19 +172,18 @@ class PutByPartTask extends Task<PutResponse> {
 
   /// 创建文件，分片上传的最后一步
   CompletePartsTask _createCompleteParts(
-    String host,
     String uploadId,
     List<Part> parts,
   ) {
     final _controller = RequestTaskController();
     final task = CompletePartsTask(
       token: token,
-      bucket: bucket,
       uploadId: uploadId,
       parts: parts,
-      host: host,
       key: key,
       controller: _controller,
+      onRestart: () =>
+          controller.notifyStatusListeners(RequestTaskStatus.Request),
     );
 
     manager.addRequestTask(task);

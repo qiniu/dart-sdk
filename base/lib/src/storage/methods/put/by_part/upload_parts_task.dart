@@ -29,9 +29,8 @@ class UploadPart {
 class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   final File file;
   final String token;
-  final String bucket;
   final String uploadId;
-  final String host;
+  final VoidCallback onRestart;
 
   final int partSize;
   final int maxPartsRequestNumber;
@@ -67,11 +66,10 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   UploadPartsTask({
     @required this.file,
     @required this.token,
-    @required this.bucket,
     @required this.uploadId,
-    @required this.host,
     @required this.partSize,
     @required this.maxPartsRequestNumber,
+    @required this.onRestart,
     this.key,
     RequestTaskController controller,
   }) : super(controller: controller);
@@ -197,14 +195,13 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
 
       final task = UploadPartTask(
         token: token,
-        bucket: bucket,
         uploadId: uploadId,
-        host: host,
         byteStream: byteStream,
         byteLength: _byteLength,
         partNumber: partNumber,
         key: key,
         controller: _controller,
+        onRestart: onRestart,
       );
 
       _controller.addProgressListener((sent, total) {
@@ -257,9 +254,8 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
 /// 上传一个 part 的任务
 class UploadPartTask extends RequestTask<UploadPart> {
   final String token;
-  final String bucket;
   final String uploadId;
-  final String host;
+  final VoidCallback onRestart;
 
   /// 字节流的长度
   ///
@@ -272,17 +268,30 @@ class UploadPartTask extends RequestTask<UploadPart> {
 
   final String key;
 
+  TokenInfo _tokenInfo;
+
   UploadPartTask({
     @required this.token,
-    @required this.bucket,
     @required this.uploadId,
-    @required this.host,
     @required this.byteLength,
     @required this.partNumber,
     @required this.byteStream,
+    @required this.onRestart,
     this.key,
     RequestTaskController controller,
   }) : super(controller: controller);
+
+  @override
+  void preStart() {
+    _tokenInfo = Auth.parseUpToken(token);
+    super.preStart();
+  }
+
+  @override
+  void postRestart() {
+    onRestart();
+    super.postRestart();
+  }
 
   @override
   Future<UploadPart> createTask() async {
@@ -290,6 +299,13 @@ class UploadPartTask extends RequestTask<UploadPart> {
       'Authorization': 'UpToken $token',
       Headers.contentLengthHeader: byteLength,
     };
+
+    final bucket = _tokenInfo.putPolicy.getBucket();
+
+    final host = await config.hostProvider.getUpHost(
+      bucket: bucket,
+      accessKey: _tokenInfo.accessKey,
+    );
 
     final encodedKey = key != null ? base64Url.encode(utf8.encode(key)) : '~';
     final paramUrl = 'buckets/$bucket/objects/$encodedKey';

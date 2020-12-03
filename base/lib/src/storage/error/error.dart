@@ -24,20 +24,29 @@ enum StorageErrorType {
 }
 
 class StorageError extends QiniuError {
+  /// [type] 不是 [StorageErrorType.RESPONSE] 的时候为 null
   final int code;
   final StorageErrorType type;
 
   StorageError({this.type, this.code, String message}) : super(message);
 
+  factory StorageError.fromDioError(DioError error) {
+    return StorageError(
+      type: _mapDioErrorType(error.type),
+      code: error.response?.statusCode,
+      message: error.response?.data.toString(),
+    );
+  }
+
   @override
   String toString() {
-    var msg = 'StorageRequestException [$type, $code]: $message';
+    var msg = 'StorageError [$type, $code]: $message';
     msg += '\n${StackTrace.current}';
     return msg;
   }
 }
 
-StorageErrorType mapDioErrorType(DioErrorType type) {
+StorageErrorType _mapDioErrorType(DioErrorType type) {
   switch (type) {
     case DioErrorType.CONNECT_TIMEOUT:
       return StorageErrorType.CONNECT_TIMEOUT;
