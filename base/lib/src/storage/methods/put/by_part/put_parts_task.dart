@@ -134,7 +134,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
       key: key,
       controller: _controller,
       onRestart: () =>
-          controller.notifyStatusListeners(RequestTaskStatus.Request),
+          controller?.notifyStatusListeners(RequestTaskStatus.Request),
     );
 
     /// 假的 1 byte，说明任务已经开始且不是 0%
@@ -157,7 +157,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
       key: key,
       controller: _controller,
       onRestart: () =>
-          controller.notifyStatusListeners(RequestTaskStatus.Request),
+          controller?.notifyStatusListeners(RequestTaskStatus.Request),
     );
 
     _controller.addProgressListener((sent, total) {
@@ -183,7 +183,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
       key: key,
       controller: _controller,
       onRestart: () =>
-          controller.notifyStatusListeners(RequestTaskStatus.Request),
+          controller?.notifyStatusListeners(RequestTaskStatus.Request),
     );
 
     manager.addRequestTask(task);

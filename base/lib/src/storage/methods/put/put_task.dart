@@ -40,7 +40,7 @@ class PutTask extends Task<PutResponse> {
 
   @override
   Future<PutResponse> createTask() async {
-    Task<PutResponse> task;
+    RequestTask<PutResponse> task;
     final fileSize = await file.length();
 
     /// 文件尺寸大于设置的数值时使用分片上传
@@ -54,7 +54,7 @@ class PutTask extends Task<PutResponse> {
         controller: controller,
         hostProvider: hostProvider,
       );
-      manager.addTask(task);
+      manager.addRequestTask(task);
     } else {
       task = PutBySingleTask(
         file: file,
@@ -62,7 +62,7 @@ class PutTask extends Task<PutResponse> {
         key: key,
         controller: controller,
       );
-      manager.addRequestTask(task as RequestTask<PutResponse>);
+      manager.addRequestTask(task);
     }
 
     return task.future;
