@@ -17,13 +17,13 @@ void main() {
   final storage = Storage();
 
   test('put should works well.', () async {
-    final putController = PutController();
+    var putController = PutController();
     int _sent, _total;
     putController.addProgressListener((sent, total) {
       _sent = sent;
       _total = total;
     });
-    final statusList = <RequestTaskStatus>[];
+    var statusList = <RequestTaskStatus>[];
     putController.addStatusListener(statusList.add);
     final response = await storage.putFile(
       File('test_resource/test_for_put.txt'),
@@ -35,6 +35,35 @@ void main() {
     expect(statusList[2], RequestTaskStatus.Success);
     expect(_sent / _total, 1);
     expect(response.key, 'test_for_put.txt');
+
+    // 分片
+    putController = PutController();
+    statusList = <RequestTaskStatus>[];
+    putController
+      ..addStatusListener(statusList.add)
+      ..addProgressListener((sent, total) {
+        _sent = sent;
+        _total = total;
+      });
+    final file = File('test_resource/test_for_put_parts.mp4');
+    final putResponseByPart = await storage.putFileByPart(
+      file,
+      token,
+      options: PutByPartOptions(
+        key: 'test_for_put_parts.mp4',
+        partSize: 1,
+        controller: putController,
+      ),
+    );
+    expect(putResponseByPart, isA<PutResponse>());
+
+    /// 分片上传会给 _sent _total + 1
+    expect(_sent - 1, file.lengthSync());
+    expect(_total - 1, file.lengthSync());
+    expect(_sent / _total, 1);
+    expect(statusList[0], RequestTaskStatus.Init);
+    expect(statusList[1], RequestTaskStatus.Request);
+    expect(statusList[2], RequestTaskStatus.Success);
   }, skip: !isSensitiveDataDefined);
 
   test('put with returnBody should works well.', () async {
