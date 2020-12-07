@@ -255,7 +255,12 @@ void main() {
 
     final putController = PutController();
 
-    Future.delayed(Duration(milliseconds: 1), putController.cancel);
+    putController.addProgressListener((sent, total) {
+      if (sent / total > 0.8) {
+        putController.cancel();
+      }
+    });
+
     final future = storage.putFileByPart(
       file,
       token,
