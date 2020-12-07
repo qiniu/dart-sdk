@@ -167,7 +167,8 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
         min(_idleRequestNumber, _totalPartCount - _uploadingPartIndex);
     final taskFutures = <Future<Null>>[];
 
-    while (taskFutures.length < tasksLength) {
+    while (taskFutures.length < tasksLength &&
+        _uploadingPartIndex < _totalPartCount) {
       /// partNumber 按照后端要求必须从 1 开始
       final partNumber = ++_uploadingPartIndex;
 
