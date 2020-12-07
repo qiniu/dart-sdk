@@ -14,11 +14,7 @@ import 'widgets/select_file.dart';
 import 'widgets/string_input.dart';
 
 void main() {
-  runApp(
-    App(
-      child: Base(),
-    ),
-  );
+  runApp(App(child: Base()));
 }
 
 // 基础的上传示例
@@ -33,10 +29,13 @@ class Base extends StatefulWidget implements Example {
 }
 
 class BaseState extends DisposableState<Base> {
+  // 用户输入的文件 key
   String key;
 
+  // 用户输入的 partSize
   int partSize = 4;
 
+  // 用户输入的 token
   String token;
 
   /// storage 实例
