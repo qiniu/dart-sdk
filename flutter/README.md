@@ -13,7 +13,7 @@
 
 ## 概述
 
-Qiniu-Flutter-SDK 基于七牛云存储官方 [API](https://developer.qiniu.com/kodo) 构建，提供抽象的接口便于使用实现文件上传功能。
+Qiniu-Flutter-SDK 基于七牛云存储官方 [API](https://developer.qiniu.com/kodo) 构建，提供抽象的接口用于快速使用七牛的对象存储功能。
 
 Qiniu-Flutter-SDK 为客户端 SDK，没有包含 `token` 生成实现，为了安全，`token` 建议通过网络从服务端获取，具体生成代码可以参考以下服务端 SDK 的文档。
 

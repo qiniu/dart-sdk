@@ -54,7 +54,6 @@ class PutTask extends Task<PutResponse> {
         controller: controller,
         hostProvider: hostProvider,
       );
-      manager.addTask(task);
     } else {
       task = PutBySingleTask(
         file: file,
@@ -62,9 +61,9 @@ class PutTask extends Task<PutResponse> {
         key: key,
         controller: controller,
       );
-      manager.addRequestTask(task as RequestTask<PutResponse>);
     }
 
+    manager.addRequestTask(task as RequestTask<PutResponse>);
     return task.future;
   }
 }

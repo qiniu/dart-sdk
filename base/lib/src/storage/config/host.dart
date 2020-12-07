@@ -53,7 +53,7 @@ class DefaultHostProvider extends HostProvider {
     }
 
     // 每次都从头遍历一遍，bucket 所在的区域的 host 总是会排在最前面
-    // TODO 按照客户端所在区域选择更适合 ta 的 host
+    // TODO: 按照客户端所在区域选择更适合 ta 的 host
     for (var index = 0; index < _upDomains.length; index++) {
       final availableDomain = _upDomains.elementAt(index);
       // 检查看起来可用的 host 是否之前被冻结过
