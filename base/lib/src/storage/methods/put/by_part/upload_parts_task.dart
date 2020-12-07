@@ -166,10 +166,19 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     final tasksLength =
         min(_idleRequestNumber, _totalPartCount - _uploadingPartIndex);
     final taskFutures = <Future<Null>>[];
-    for (var i = 0; i < tasksLength; i++) {
+
+    while (taskFutures.length < tasksLength) {
       /// partNumber 按照后端要求必须从 1 开始
-      final future =
-          _createUploadPartTaskFutureByPartNumber(++_uploadingPartIndex);
+      final partNumber = ++_uploadingPartIndex;
+
+      final _uploadedPart = _uploadedPartMap[partNumber];
+      if (_uploadedPart != null) {
+        _sentMap[partNumber] = _getPartSizeByPartNumber(partNumber);
+        notifyProgress();
+        continue;
+      }
+
+      final future = _createUploadPartTaskFutureByPartNumber(partNumber);
       taskFutures.add(future);
     }
 
@@ -183,41 +192,34 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     /// 上传分片(part)的字节大小
     final _byteLength = _getPartSizeByPartNumber(partNumber);
 
-    final _uploadedPart = _uploadedPartMap[partNumber];
+    _idleRequestNumber--;
+    final _controller = RequestTaskController();
+    _workingUploadPartTaskControllers.add(_controller);
 
-    if (_uploadedPart != null) {
-      _sentMap[partNumber] = _byteLength;
+    final task = UploadPartTask(
+      token: token,
+      uploadId: uploadId,
+      byteStream: byteStream,
+      byteLength: _byteLength,
+      partNumber: partNumber,
+      key: key,
+      controller: _controller,
+      onRestart: onRestart,
+    );
+
+    _controller.addProgressListener((sent, total) {
+      _sentMap[partNumber] = sent;
       notifyProgress();
-    } else {
-      _idleRequestNumber--;
-      final _controller = RequestTaskController();
-      _workingUploadPartTaskControllers.add(_controller);
+    });
 
-      final task = UploadPartTask(
-        token: token,
-        uploadId: uploadId,
-        byteStream: byteStream,
-        byteLength: _byteLength,
-        partNumber: partNumber,
-        key: key,
-        controller: _controller,
-        onRestart: onRestart,
-      );
+    manager.addRequestTask(task);
 
-      _controller.addProgressListener((sent, total) {
-        _sentMap[partNumber] = sent;
-        notifyProgress();
-      });
+    final data = await task.future;
 
-      manager.addRequestTask(task);
-
-      final data = await task.future;
-
-      _idleRequestNumber++;
-      _uploadedPartMap[partNumber] =
-          Part(partNumber: partNumber, etag: data.etag);
-      _workingUploadPartTaskControllers.remove(_controller);
-    }
+    _idleRequestNumber++;
+    _uploadedPartMap[partNumber] =
+        Part(partNumber: partNumber, etag: data.etag);
+    _workingUploadPartTaskControllers.remove(_controller);
 
     /// 检查任务是否已经完成
     if (_uploadedPartMap.length != _totalPartCount) {
