@@ -50,6 +50,7 @@ class DefaultHostProvider extends HostProvider {
       }
 
       _cacheKey = '$accessKey:$bucket';
+      _stashedUpDomains.addAll(_upDomains);
     }
 
     // 每次都从头遍历一遍，bucket 所在的区域的 host 总是会排在最前面
