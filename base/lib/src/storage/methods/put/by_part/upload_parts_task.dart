@@ -1,6 +1,6 @@
 part of 'put_parts_task.dart';
 
-/// uploadPart 的返回体
+// uploadPart 的返回体
 class UploadPart {
   final String md5;
   final String etag;
@@ -25,7 +25,7 @@ class UploadPart {
   }
 }
 
-/// 批处理上传 parts 的任务，为 [CompletePartsTask] 提供 [Part]
+// 批处理上传 parts 的任务，为 [CompletePartsTask] 提供 [Part]
 class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   final File file;
   final String token;
@@ -40,28 +40,30 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   @override
   String _cacheKey;
 
-  /// 文件 bytes 长度
+  // 文件 bytes 长度
   int _fileByteLength;
 
-  /// 每个上传分片的字节长度
-  ///
-  /// 文件会按照此长度切片
+  // 每个上传分片的字节长度
+  //
+  // 文件会按照此长度切片
   int _partByteLength;
 
-  /// 文件总共被拆分的分片数
+  // 文件总共被拆分的分片数
   int _totalPartCount;
 
-  /// 上传成功后把 part 信息存起来
+  // 上传成功后把 part 信息存起来
   final Map<int, Part> _uploadedPartMap = {};
 
   // 处理分片上传任务的 UploadPartTask 的控制器
   final List<RequestTaskController> _workingUploadPartTaskControllers = [];
 
-  /// 已发送的数据记录，key 是 partNumber, value 是 已发送的长度
+  // 已发送的数据记录，key 是 partNumber, value 是 已发送的长度
   final Map<int, int> _sentMap = {};
 
-  /// 剩余多少被允许的请求数
+  // 剩余多少被允许的请求数
   int _idleRequestNumber;
+
+  RandomAccessFile _raf;
 
   UploadPartsTask({
     @required this.file,
@@ -104,18 +106,21 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     _totalPartCount = (_fileByteLength / _partByteLength).ceil();
     _cacheKey = getCacheKey(file.path, _fileByteLength, partSize, key);
     recoverUploadedPart();
+    _raf = file.openSync();
     super.preStart();
   }
 
   @override
   void postReceive(data) {
+    _raf.close();
     storeUploadedPart();
     super.postReceive(data);
   }
 
   @override
   void postError(Object error) {
-    /// 取消，网络问题等可能导致上传中断，缓存已上传的分片信息
+    _raf.close();
+    // 取消，网络问题等可能导致上传中断，缓存已上传的分片信息
     storeUploadedPart();
     super.postError(error);
   }
@@ -130,10 +135,10 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
 
   // 从缓存恢复已经上传的 part
   void recoverUploadedPart() {
-    /// 获取缓存
+    // 获取缓存
     final cachedData = getCache();
 
-    /// 尝试从缓存恢复
+    // 尝试从缓存恢复
     if (cachedData != null) {
       var cachedList = <Part>[];
 
@@ -161,7 +166,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
 
   int _uploadingPartIndex = 0;
 
-  /// 从指定的分片位置往后上传切片
+  // 从指定的分片位置往后上传切片
   Future<void> _uploadParts() async {
     final tasksLength =
         min(_idleRequestNumber, _totalPartCount - _uploadingPartIndex);
@@ -169,7 +174,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
 
     while (taskFutures.length < tasksLength &&
         _uploadingPartIndex < _totalPartCount) {
-      /// partNumber 按照后端要求必须从 1 开始
+      // partNumber 按照后端要求必须从 1 开始
       final partNumber = ++_uploadingPartIndex;
 
       final _uploadedPart = _uploadedPartMap[partNumber];
@@ -187,10 +192,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   }
 
   Future<Null> _createUploadPartTaskFutureByPartNumber(int partNumber) async {
-    /// 根据 part 读取文件
-    final byteStream = _readFileByPartNumber(partNumber);
-
-    /// 上传分片(part)的字节大小
+    // 上传分片(part)的字节大小
     final _byteLength = _getPartSizeByPartNumber(partNumber);
 
     _idleRequestNumber--;
@@ -199,10 +201,11 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
 
     final task = UploadPartTask(
       token: token,
+      raf: _raf,
       uploadId: uploadId,
-      byteStream: byteStream,
       byteLength: _byteLength,
       partNumber: partNumber,
+      partSize: partSize,
       key: key,
       controller: _controller,
       onRestart: onRestart,
@@ -222,22 +225,14 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
         Part(partNumber: partNumber, etag: data.etag);
     _workingUploadPartTaskControllers.remove(_controller);
 
-    /// 检查任务是否已经完成
+    // 检查任务是否已经完成
     if (_uploadedPartMap.length != _totalPartCount) {
-      /// 上传下一片
+      // 上传下一片
       await _uploadParts();
     }
   }
 
-  // 根据 partNumber 获取要上传的文件片段
-  Stream<List<int>> _readFileByPartNumber(int partNumber) {
-    final startOffset = (partNumber - 1) * _partByteLength;
-    final endOffset = startOffset + _partByteLength;
-
-    return file.openRead(startOffset, endOffset);
-  }
-
-  /// 根据 partNumber 算出当前切片的 byte 大小
+  // 根据 partNumber 算出当前切片的 byte 大小
   int _getPartSizeByPartNumber(int partNumber) {
     final startOffset = (partNumber - 1) * _partByteLength;
 
@@ -254,31 +249,32 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   }
 }
 
-/// 上传一个 part 的任务
+// 上传一个 part 的任务
 class UploadPartTask extends RequestTask<UploadPart> {
   final String token;
   final String uploadId;
   final VoidCallback onRestart;
+  final RandomAccessFile raf;
+  final int partSize;
 
-  /// 字节流的长度
-  ///
-  /// 如果 data 是 Stream 的话，Dio 需要判断 content-length 才会调用 onSendProgress
-  /// https://github.com/flutterchina/dio/blob/21136168ab39a7536835c7a59ce0465bb05feed4/dio/lib/src/dio.dart#L1000
+  // 如果 data 是 Stream 的话，Dio 需要判断 content-length 才会调用 onSendProgress
+  // https://github.com/flutterchina/dio/blob/21136168ab39a7536835c7a59ce0465bb05feed4/dio/lib/src/dio.dart#L1000
   final int byteLength;
 
   final int partNumber;
-  final Stream<List<int>> byteStream;
 
   final String key;
 
   TokenInfo _tokenInfo;
+  int _partByteLength;
 
   UploadPartTask({
     @required this.token,
+    @required this.raf,
     @required this.uploadId,
     @required this.byteLength,
     @required this.partNumber,
-    @required this.byteStream,
+    @required this.partSize,
     @required this.onRestart,
     this.key,
     RequestTaskController controller,
@@ -287,6 +283,7 @@ class UploadPartTask extends RequestTask<UploadPart> {
   @override
   void preStart() {
     _tokenInfo = Auth.parseUpToken(token);
+    _partByteLength = partSize * 1024 * 1024;
     super.preStart();
   }
 
@@ -315,13 +312,19 @@ class UploadPartTask extends RequestTask<UploadPart> {
 
     final response = await client.put<Map<String, dynamic>>(
       '$host/$paramUrl/uploads/$uploadId/$partNumber',
-      data: byteStream,
-      // 在 data 是 stream 的场景下， interceptor 传入 cancelToken 这里不传会有 bug，TODO 等 dio 回复
-      // https://github.com/flutterchina/dio/issues/986
+      data: Stream.fromIterable([_readFileByPartNumber(partNumber)]),
+      // 在 data 是 stream 的场景下， interceptor 传入 cancelToken 这里不传会有 bug
       cancelToken: controller.cancelToken,
       options: Options(headers: headers),
     );
 
     return UploadPart.fromJson(response.data);
+  }
+
+  // 根据 partNumber 获取要上传的文件片段
+  List<int> _readFileByPartNumber(int partNumber) {
+    final startOffset = (partNumber - 1) * _partByteLength;
+    raf.setPositionSync(startOffset);
+    return raf.readSync(byteLength);
   }
 }
