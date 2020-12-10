@@ -92,7 +92,6 @@ abstract class RequestTask<T> extends Task<T> {
           controller?.notifyStatusListeners(RequestTaskStatus.Error);
         }
 
-        manager.removeTask(this);
         super.postError(storageError);
         return;
       }
