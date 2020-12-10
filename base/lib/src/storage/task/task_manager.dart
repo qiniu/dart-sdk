@@ -72,9 +72,9 @@ class TaskManager {
   }
 
   /// 某个任务是不是运行中
-  bool isAlive(Type type) {
+  bool isAlive(Task task) {
     final found = workingTasks.firstWhere(
-        (element) => element.runtimeType == type,
+        (element) => element.runtimeType == task.runtimeType,
         orElse: () => null);
     if (found != null) {
       return true;

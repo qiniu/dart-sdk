@@ -52,9 +52,6 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
   void preStart() {
     _tokenInfo = Auth.parseUpToken(token);
     _cacheKey = InitPartsTask.getCacheKey(file.path, file.lengthSync(), key);
-    if (getCache() != null && manager.isAlive(PutByPartTask)) {
-      throw StorageError(message: '${file.path} 已在上传队列中');
-    }
     super.preStart();
   }
 
@@ -69,6 +66,8 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
     final headers = {'Authorization': 'UpToken $token'};
 
     final initPartsCache = getCache();
+    // 拿到缓存后，清理掉，防止相同任务拿到同一个 uploadId
+    clearCache();
     if (initPartsCache != null) {
       return InitParts.fromJson(
           json.decode(initPartsCache) as Map<String, dynamic>);

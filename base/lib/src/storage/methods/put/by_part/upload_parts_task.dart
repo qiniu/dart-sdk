@@ -137,7 +137,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   void recoverUploadedPart() {
     // 获取缓存
     final cachedData = getCache();
-
+    clearCache();
     // 尝试从缓存恢复
     if (cachedData != null) {
       var cachedList = <Part>[];
