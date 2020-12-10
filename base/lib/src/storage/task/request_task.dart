@@ -40,7 +40,6 @@ abstract class RequestTask<T> extends Task<T> {
   @mustCallSuper
   void postReceive(T data) {
     controller?.notifyStatusListeners(RequestTaskStatus.Success);
-    manager.removeTask(this);
     super.postReceive(data);
   }
 
@@ -53,7 +52,6 @@ abstract class RequestTask<T> extends Task<T> {
   @override
   @mustCallSuper
   void postError(Object error) async {
-    manager.removeTask(this);
     // 重试和冻结
     if (error is DioError) {
       if (!canConnectToHost(error)) {
