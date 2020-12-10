@@ -50,4 +50,15 @@ class TaskManager {
       task.postRestart();
     });
   }
+
+  /// 某个任务是不是运行中
+  bool isAlive(Type type) {
+    final found = workingTasks.firstWhere(
+        (element) => element.runtimeType == type,
+        orElse: () => null);
+    if (found != null) {
+      return true;
+    }
+    return false;
+  }
 }
