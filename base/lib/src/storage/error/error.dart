@@ -18,8 +18,14 @@ enum StorageErrorType {
   /// 请求被取消
   CANCEL,
 
-  /// 内部错误或者不能处理的错误
-  DEFAULT,
+  /// 没有可用的服务器
+  NO_AVAILABLE_HOST,
+
+  /// 已在处理队列中
+  IN_PROGRESS,
+
+  /// 未知或者不能处理的错误
+  UNKNOWN,
 }
 
 class StorageError extends QiniuError {
@@ -59,6 +65,6 @@ StorageErrorType _mapDioErrorType(DioErrorType type) {
       return StorageErrorType.CANCEL;
     case DioErrorType.DEFAULT:
     default:
-      return StorageErrorType.DEFAULT;
+      return StorageErrorType.UNKNOWN;
   }
 }

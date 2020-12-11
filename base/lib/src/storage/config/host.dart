@@ -38,7 +38,7 @@ class DefaultHostProvider extends HostProvider {
           '$protocol://api.qiniu.com/v4/query?ak=$accessKey&bucket=$bucket';
 
       final res = await _http.get<Map>(url);
-      print(res);
+
       final hosts = res.data['hosts']
           .map((dynamic json) => _Host.fromJson(json as Map))
           .cast<_Host>()
@@ -65,7 +65,7 @@ class DefaultHostProvider extends HostProvider {
       }
     }
     // 全部被冻结，几乎不存在的情况
-    throw StorageError(type: StorageErrorType.DEFAULT, message: '没有可用的服务器');
+    throw StorageError(type: StorageErrorType.NO_AVAILABLE_HOST, message: '没有可用的服务器');
   }
 
   @override

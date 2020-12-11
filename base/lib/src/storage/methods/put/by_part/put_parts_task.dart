@@ -92,7 +92,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
 
     if (initPartsCache != null && sameTaskExsist != null) {
       throw StorageError(
-          type: StorageErrorType.DEFAULT, message: '$file 已在上传队列中');
+          type: StorageErrorType.IN_PROGRESS, message: '$file 已在上传队列中');
     }
 
     controller?.notifyStatusListeners(RequestTaskStatus.Request);
