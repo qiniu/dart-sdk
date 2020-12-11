@@ -379,7 +379,7 @@ void main() {
         } catch (e) {
           errorOccurred = true;
           expect(e, isA<StorageError>());
-          expect((e as StorageError).message, '$file 已在上传队列中');
+          expect((e as StorageError).type, StorageErrorType.IN_PROGRESS);
         }
       });
 
