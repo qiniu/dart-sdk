@@ -82,6 +82,19 @@ class PutByPartTask extends RequestTask<PutResponse> {
       throw DioError(type: DioErrorType.CANCEL);
     }
 
+    // 处理相同任务
+    final sameTaskExsist = manager.workingTasks.firstWhere(
+        (element) => element is PutByPartTask && arePutPartsTaskEquals(element),
+        orElse: () => null);
+
+    final initPartsCache = config.cacheProvider
+        .getItem(InitPartsTask.getCacheKey(file.path, file.lengthSync(), key));
+
+    if (initPartsCache != null && sameTaskExsist != null) {
+      throw StorageError(
+          type: StorageErrorType.DEFAULT, message: '$file 已在上传队列中');
+    }
+
     controller?.notifyStatusListeners(RequestTaskStatus.Request);
 
     final initPartsTask = _createInitParts();
@@ -121,6 +134,12 @@ class PutByPartTask extends RequestTask<PutResponse> {
     uploadParts.clearCache();
 
     return putResponse;
+  }
+
+  bool arePutPartsTaskEquals(PutByPartTask target) {
+    return target.file.path == file.path &&
+        target.key == key &&
+        target.file.lengthSync() == file.lengthSync();
   }
 
   /// 初始化上传信息，分片上传的第一步

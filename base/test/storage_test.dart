@@ -186,6 +186,14 @@ void main() {
     expect(statusList[0], RequestTaskStatus.Init);
     expect(statusList[1], RequestTaskStatus.Request);
     expect(statusList[2], RequestTaskStatus.Success);
+
+    // 不设置参数的情况
+    final responseNoOps = await storage.putFileByPart(
+      file,
+      token,
+    );
+
+    expect(responseNoOps, isA<PutResponse>());
   }, skip: !isSensitiveDataDefined);
 
   test('putFileByPart should works well while response 612.', () async {
@@ -237,6 +245,12 @@ void main() {
   test('putFileByPart can be resumed.', () async {
     final storage = Storage(config: Config(hostProvider: HostProviderTest()));
     final putController = PutController();
+    putController.addProgressListener((sent, total) {
+      // 开始上传了取消
+      if (sent > 0) {
+        putController.cancel();
+      }
+    });
 
     Future.delayed(Duration(milliseconds: 1), putController.cancel);
     final future = storage.putFileByPart(
@@ -326,6 +340,60 @@ void main() {
     );
 
     expect(response, isA<PutResponse>());
+
+    /// 上传完成后缓存应该被清理
+    expect(cacheProvider.value.length, 0);
+  }, skip: !isSensitiveDataDefined);
+
+  test(
+      'putFileByPart should throw error while there is a same task is working.',
+      () async {
+    final cacheProvider = DefaultCacheProvider();
+    final config = Config(cacheProvider: cacheProvider);
+    final storage = Storage(config: config);
+    final file = File('test_resource/test_for_put_parts.mp4');
+    final key = 'test_for_put_parts.mp4';
+
+    /// 初始化的缓存 key 生成逻辑
+    final cacheKey = InitPartsTask.getCacheKey(
+      file.path,
+      file.lengthSync(),
+      key,
+    );
+
+    var errorOccurred = false;
+
+    final putController = PutController()
+      ..addProgressListener((_, __) async {
+        try {
+          if (cacheProvider.getItem(cacheKey) != null) {
+            await storage.putFileByPart(
+              file,
+              token,
+              options: PutByPartOptions(
+                key: key,
+                partSize: 1,
+              ),
+            );
+          }
+        } catch (e) {
+          errorOccurred = true;
+          expect(e, isA<StorageError>());
+          expect((e as StorageError).message, '$file 已在上传队列中');
+        }
+      });
+
+    await storage.putFileByPart(
+      file,
+      token,
+      options: PutByPartOptions(
+        key: key,
+        partSize: 1,
+        controller: putController,
+      ),
+    );
+
+    expect(errorOccurred, true);
 
     /// 上传完成后缓存应该被清理
     expect(cacheProvider.value.length, 0);

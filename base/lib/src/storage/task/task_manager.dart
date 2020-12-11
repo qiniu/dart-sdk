@@ -6,7 +6,6 @@ import 'request_task.dart';
 import 'task.dart';
 
 class TaskManager {
-  @protected
   final List<Task> workingTasks = [];
 
   final Config config;

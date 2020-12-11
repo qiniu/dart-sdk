@@ -3,24 +3,23 @@ import 'package:qiniu_sdk_base/src/error/error.dart';
 
 // same as DioErrorType
 enum StorageErrorType {
-  /// It occurs when url is opened timeout.
+  /// 连接超时
   CONNECT_TIMEOUT,
 
-  /// It occurs when url is sent timeout.
+  /// 发送超时
   SEND_TIMEOUT,
 
-  ///It occurs when receiving timeout.
+  /// 接受超时
   RECEIVE_TIMEOUT,
 
-  /// When the server response, but with a incorrect status, such as 404, 503...
+  /// 服务端响应了但是状态码是 400 以上
   RESPONSE,
 
-  /// When the request is cancelled, dio will throw a error with this type.
+  /// 请求被取消
   CANCEL,
 
-  /// Default error type, Some other Error. In this case, you can
-  /// use the DioError.error if it is not null.
-  UNKNOWN,
+  /// 内部错误或者不能处理的错误
+  DEFAULT,
 }
 
 class StorageError extends QiniuError {
@@ -60,6 +59,6 @@ StorageErrorType _mapDioErrorType(DioErrorType type) {
       return StorageErrorType.CANCEL;
     case DioErrorType.DEFAULT:
     default:
-      return StorageErrorType.UNKNOWN;
+      return StorageErrorType.DEFAULT;
   }
 }

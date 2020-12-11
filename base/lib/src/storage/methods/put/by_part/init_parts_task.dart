@@ -66,8 +66,6 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
     final headers = {'Authorization': 'UpToken $token'};
 
     final initPartsCache = getCache();
-    // 拿到缓存后，清理掉，防止相同任务拿到同一个 uploadId
-    clearCache();
     if (initPartsCache != null) {
       return InitParts.fromJson(
           json.decode(initPartsCache) as Map<String, dynamic>);
