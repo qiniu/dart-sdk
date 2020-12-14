@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:qiniu_sdk_base/src/error/error.dart';
 
-// same as DioErrorType
 enum StorageErrorType {
   /// 连接超时
   CONNECT_TIMEOUT,

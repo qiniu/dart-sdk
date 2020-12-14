@@ -108,7 +108,7 @@ void main() {
     expect(response.key, 'test_for_put.txt');
   }, skip: !isSensitiveDataDefined);
 
-  test('putFileBySingle can be canceled.', () async {
+  test('putFileBySingle can be cancelled.', () async {
     final putController = PutController();
 
     final statusList = <RequestTaskStatus>[];
@@ -160,10 +160,14 @@ void main() {
   test('putFileByPart should works well.', () async {
     final putController = PutController();
     final statusList = <RequestTaskStatus>[];
-    int _sent, _total;
+    int _sent,
+        _total,
+        // addProgressListener 调用次数
+        callnumber = 0;
     putController
       ..addStatusListener(statusList.add)
       ..addProgressListener((sent, total) {
+        callnumber++;
         _sent = sent;
         _total = total;
       });
@@ -178,6 +182,8 @@ void main() {
       ),
     );
     expect(response, isA<PutResponse>());
+    // 开始一次，2片分片2次，完成1次，共4次
+    expect(callnumber, 4);
 
     /// 分片上传会给 _sent _total + 1
     expect(_sent - 1, file.lengthSync());
@@ -210,7 +216,7 @@ void main() {
     expect(response, isA<PutResponse>());
   }, skip: !isSensitiveDataDefined);
 
-  test('putFileByPart can be canceled.', () async {
+  test('putFileByPart can be cancelled.', () async {
     final putController = PutController();
     final storage = Storage(config: Config(hostProvider: HostProviderTest()));
     final statusList = <RequestTaskStatus>[];

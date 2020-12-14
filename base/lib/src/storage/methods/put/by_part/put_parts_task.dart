@@ -18,6 +18,7 @@ part 'complete_parts_task.dart';
 part 'init_parts_task.dart';
 part 'part.dart';
 part 'upload_parts_task.dart';
+part 'upload_part_task.dart';
 
 /// 分片上传任务
 class PutByPartTask extends RequestTask<PutResponse> {
