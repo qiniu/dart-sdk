@@ -84,15 +84,18 @@ class PutByPartTask extends RequestTask<PutResponse> {
 
     // 处理相同任务
     final sameTaskExsist = manager.workingTasks.firstWhere(
-        (element) => element is PutByPartTask && arePutPartsTaskEquals(element),
-        orElse: () => null);
+      (element) => element is PutByPartTask && arePutPartsTaskEquals(element),
+      orElse: () => null,
+    );
 
     final initPartsCache = config.cacheProvider
         .getItem(InitPartsTask.getCacheKey(file.path, file.lengthSync(), key));
 
     if (initPartsCache != null && sameTaskExsist != null) {
       throw StorageError(
-          type: StorageErrorType.IN_PROGRESS, message: '$file 已在上传队列中');
+        type: StorageErrorType.IN_PROGRESS,
+        message: '$file 已在上传队列中',
+      );
     }
 
     controller?.notifyStatusListeners(RequestTaskStatus.Request);
