@@ -8,8 +8,9 @@ class RequestTaskController
   bool get isCancelled => cancelToken.isCancelled;
 
   void cancel() {
-    if (cancelToken.isCancelled) {
-      throw UnsupportedError('$this has been canceled.');
+    // 允许重复取消，但是已经取消后不会有任何行为发生
+    if (isCancelled) {
+      return;
     }
 
     cancelToken.cancel();
