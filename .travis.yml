@@ -29,7 +29,7 @@ jobs:
     - stage: base(analyze,format,test)
       name: "Vm Tests"
       os: linux
-      script: pub get --packages-dir && cd $TRAVIS_BUILD_DIR/base && pub run test -p vm . && pub run codecov && bash <(curl -s https://codecov.io/bash)
+      script: cd $TRAVIS_BUILD_DIR/base && pub run test -p vm . && pub run codecov && bash <(curl -s https://codecov.io/bash)
 
     #######################################
     ####### jobs for flutter_sdk ##########
