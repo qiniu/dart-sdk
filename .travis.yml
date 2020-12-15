@@ -1,7 +1,7 @@
 language: dart
 
 dart:
-  - beta
+  - stable
 
 install:
   - cd $TRAVIS_BUILD_DIR/base && pub get
@@ -29,7 +29,7 @@ jobs:
     - stage: base(analyze,format,test)
       name: "Vm Tests"
       os: linux
-      script: cd $TRAVIS_BUILD_DIR/base && pub run test -p vm .
+      script: cd $TRAVIS_BUILD_DIR/base && pub run test -p vm . && pub run test_coverage && bash <(curl -s https://codecov.io/bash)
 
     #######################################
     ####### jobs for flutter_sdk ##########
