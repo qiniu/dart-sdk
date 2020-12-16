@@ -70,6 +70,16 @@ class TaskManager {
     });
   }
 
+  /// 返回当前运行中的 [Task]
+  List<Task<dynamic>> getTasks() {
+    return workingTasks;
+  }
+
+  /// 查找类型符合 [T] 的 [Task]
+  List<T> getTasksByType<T extends Task<dynamic>>() {
+    return workingTasks.whereType<T>().toList();
+  }
+
   /// 某个任务是不是运行中
   bool isAlive(Task task) {
     final found = workingTasks.firstWhere(

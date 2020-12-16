@@ -4,7 +4,6 @@ part of 'put_parts_task.dart';
 class UploadPartTask extends RequestTask<UploadPart> {
   final String token;
   final String uploadId;
-  final VoidCallback onRestart;
   final RandomAccessFile raf;
   final int partSize;
 
@@ -25,7 +24,6 @@ class UploadPartTask extends RequestTask<UploadPart> {
     @required this.byteLength,
     @required this.partNumber,
     @required this.partSize,
-    @required this.onRestart,
     this.key,
     RequestTaskController controller,
   }) : super(controller: controller);
@@ -34,12 +32,6 @@ class UploadPartTask extends RequestTask<UploadPart> {
   void preStart() {
     _tokenInfo = Auth.parseUpToken(token);
     super.preStart();
-  }
-
-  @override
-  void postRestart() {
-    onRestart();
-    super.postRestart();
   }
 
   @override
@@ -86,5 +78,30 @@ class UploadPartTask extends RequestTask<UploadPart> {
     final startOffset = (partNumber - 1) * partSize * 1024 * 1024;
     raf.setPositionSync(startOffset);
     return raf.readSync(byteLength);
+  }
+}
+
+// uploadPart 的返回体
+class UploadPart {
+  final String md5;
+  final String etag;
+
+  UploadPart({
+    @required this.md5,
+    @required this.etag,
+  });
+
+  factory UploadPart.fromJson(Map json) {
+    return UploadPart(
+      md5: json['md5'] as String,
+      etag: json['etag'] as String,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'etag': etag,
+      'md5': md5,
+    };
   }
 }

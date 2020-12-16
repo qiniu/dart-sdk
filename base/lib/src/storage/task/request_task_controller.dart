@@ -57,7 +57,10 @@ enum RequestTaskStatus {
   Cancel,
 
   /// 请求出错后触发
-  Error
+  Error,
+
+  /// 请求出错触发重试时触发
+  Retry
 }
 
 typedef RequestTaskStatusListener = void Function(RequestTaskStatus status);

@@ -295,8 +295,7 @@ void main() {
     final key = 'test_for_put_parts.mp4';
 
     /// 手动初始化一个初始化文件的任务，确定分片上传的第一步会被缓存
-    final task = InitPartsTask(
-        token: token, file: file, key: key, onRestart: () => null);
+    final task = InitPartsTask(token: token, file: file, key: key);
 
     storage.taskManager.addRequestTask(task);
 

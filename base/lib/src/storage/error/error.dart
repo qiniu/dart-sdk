@@ -8,7 +8,7 @@ enum StorageErrorType {
   /// 发送超时
   SEND_TIMEOUT,
 
-  /// 接受超时
+  /// 接收超时
   RECEIVE_TIMEOUT,
 
   /// 服务端响应了但是状态码是 400 以上

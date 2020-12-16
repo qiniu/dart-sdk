@@ -1,36 +1,10 @@
 part of 'put_parts_task.dart';
 
-// uploadPart 的返回体
-class UploadPart {
-  final String md5;
-  final String etag;
-
-  UploadPart({
-    @required this.md5,
-    @required this.etag,
-  });
-
-  factory UploadPart.fromJson(Map json) {
-    return UploadPart(
-      md5: json['md5'] as String,
-      etag: json['etag'] as String,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return <String, dynamic>{
-      'etag': etag,
-      'md5': md5,
-    };
-  }
-}
-
 // 批处理上传 parts 的任务，为 [CompletePartsTask] 提供 [Part]
 class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   final File file;
   final String token;
   final String uploadId;
-  final VoidCallback onRestart;
 
   final int partSize;
   final int maxPartsRequestNumber;
@@ -71,7 +45,6 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     @required this.uploadId,
     @required this.partSize,
     @required this.maxPartsRequestNumber,
-    @required this.onRestart,
     this.key,
     RequestTaskController controller,
   }) : super(controller: controller);
@@ -158,6 +131,13 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
 
   @override
   Future<List<Part>> createTask() async {
+    /// 如果已经取消了，直接报错
+    // ignore: null_aware_in_condition
+    if (controller != null && controller.cancelToken.isCancelled) {
+      throw StorageError(type: StorageErrorType.CANCEL);
+    }
+
+    controller.notifyStatusListeners(RequestTaskStatus.Request);
     // 上传分片
     await _uploadParts();
     return _uploadedPartMap.values.toList();
@@ -207,7 +187,6 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
       partSize: partSize,
       key: key,
       controller: _controller,
-      onRestart: onRestart,
     );
 
     _controller.addProgressListener((sent, total) {

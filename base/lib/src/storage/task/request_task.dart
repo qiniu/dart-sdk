@@ -38,6 +38,13 @@ abstract class RequestTask<T> extends Task<T> {
 
   @override
   @mustCallSuper
+  void preRestart() {
+    controller?.notifyStatusListeners(RequestTaskStatus.Retry);
+    super.preRestart();
+  }
+
+  @override
+  @mustCallSuper
   void postReceive(T data) {
     controller?.notifyStatusListeners(RequestTaskStatus.Success);
     super.postReceive(data);
