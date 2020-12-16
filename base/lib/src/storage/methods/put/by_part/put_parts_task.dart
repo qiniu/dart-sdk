@@ -85,9 +85,9 @@ class PutByPartTask extends RequestTask<PutResponse> {
 
     // 处理相同任务
     final sameTaskExsist = manager.getTasks().firstWhere(
-      (element) => element is PutByPartTask && isEquals(element),
-      orElse: () => null,
-    );
+          (element) => element is PutByPartTask && isEquals(element),
+          orElse: () => null,
+        );
 
     final initPartsCache = config.cacheProvider
         .getItem(InitPartsTask.getCacheKey(file.path, file.lengthSync(), key));
