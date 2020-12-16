@@ -38,6 +38,7 @@ class DefaultHostProvider extends HostProvider {
           '$protocol://api.qiniu.com/v4/query?ak=$accessKey&bucket=$bucket';
 
       final res = await _http.get<Map>(url);
+
       final hosts = res.data['hosts']
           .map((dynamic json) => _Host.fromJson(json as Map))
           .cast<_Host>()
@@ -50,10 +51,10 @@ class DefaultHostProvider extends HostProvider {
       }
 
       _cacheKey = '$accessKey:$bucket';
+      _stashedUpDomains.addAll(_upDomains);
     }
 
-    // 每次都从头遍历一遍，bucket 所在的区域的 host 总是会排在最前面
-    // TODO 按照客户端所在区域选择更适合 ta 的 host
+    // 每次都从头遍历一遍，最合适的 host 总是会排在最前面
     for (var index = 0; index < _upDomains.length; index++) {
       final availableDomain = _upDomains.elementAt(index);
       // 检查看起来可用的 host 是否之前被冻结过
@@ -64,7 +65,10 @@ class DefaultHostProvider extends HostProvider {
       }
     }
     // 全部被冻结，几乎不存在的情况
-    throw StorageError(type: StorageErrorType.UNKNOWN, message: '没有可用的服务器');
+    throw StorageError(
+      type: StorageErrorType.NO_AVAILABLE_HOST,
+      message: '没有可用的上传域名',
+    );
   }
 
   @override

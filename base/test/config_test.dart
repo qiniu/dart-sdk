@@ -48,7 +48,7 @@ void main() {
       bucket: env['QINIU_DART_SDK_TOKEN_SCOPE'],
     );
 
-    // getUpHost 会收集所有地区的 host 并以此吐出来，不用担心会少于两个
+    // getUpHost 会返回至少2个host，不用担心会少于两个
     expect(hostA == hostB, false);
   }, skip: !isSensitiveDataDefined);
 }

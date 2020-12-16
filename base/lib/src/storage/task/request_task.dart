@@ -29,7 +29,7 @@ abstract class RequestTask<T> extends Task<T> {
       controller?.notifyStatusListeners(RequestTaskStatus.Request);
       options
         ..cancelToken = controller?.cancelToken
-        ..onSendProgress = controller?.notifyProgressListeners;
+        ..onSendProgress = onSendProgress;
 
       return options;
     }));
@@ -38,9 +38,15 @@ abstract class RequestTask<T> extends Task<T> {
 
   @override
   @mustCallSuper
+  void preRestart() {
+    controller?.notifyStatusListeners(RequestTaskStatus.Retry);
+    super.preRestart();
+  }
+
+  @override
+  @mustCallSuper
   void postReceive(T data) {
     controller?.notifyStatusListeners(RequestTaskStatus.Success);
-    manager.removeTask(this);
     super.postReceive(data);
   }
 
@@ -55,9 +61,9 @@ abstract class RequestTask<T> extends Task<T> {
   void postError(Object error) async {
     // 重试和冻结
     if (error is DioError) {
-      if (!canConnectToHost(error)) {
+      if (!_canConnectToHost(error)) {
         // host 连不上，判断是否 host 不可用造成的, 比如 tls error(没做还)
-        if (isHostUnavailable(error)) {
+        if (_isHostUnavailable(error)) {
           config.hostProvider.freezeHost(error.request.path);
         }
 
@@ -70,7 +76,7 @@ abstract class RequestTask<T> extends Task<T> {
       }
 
       // 能连上但是服务器不可用，比如 502
-      if (isHostUnavailable(error)) {
+      if (_isHostUnavailable(error)) {
         config.hostProvider.freezeHost(error.request.path);
 
         // 切换到其他 host
@@ -107,8 +113,13 @@ abstract class RequestTask<T> extends Task<T> {
     super.postError(error);
   }
 
+  // 自定义发送进度处理逻辑
+  void onSendProgress(int sent, int total) {
+    controller?.notifyProgressListeners(sent, total);
+  }
+
   // host 是否可以连接上
-  bool canConnectToHost(Object error) {
+  bool _canConnectToHost(Object error) {
     if (error is DioError) {
       if (error.type == DioErrorType.RESPONSE &&
           error.response.statusCode > 99) {
@@ -124,7 +135,7 @@ abstract class RequestTask<T> extends Task<T> {
   }
 
   // host 是否不可用
-  bool isHostUnavailable(Object error) {
+  bool _isHostUnavailable(Object error) {
     if (error is DioError) {
       if (error.type == DioErrorType.RESPONSE) {
         final statusCode = error.response.statusCode;

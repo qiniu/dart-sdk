@@ -12,7 +12,7 @@ class Part {
 
   factory Part.fromJson(Map<String, dynamic> json) {
     return Part(
-      etag: json['map'] as String,
+      etag: json['etag'] as String,
       partNumber: json['partNumber'] as int,
     );
   }

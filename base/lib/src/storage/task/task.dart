@@ -31,12 +31,14 @@ abstract class Task<T> {
   /// 在 [createTask] 的返回值接收到结果之后调用
   @mustCallSuper
   void postReceive(T data) {
+    manager.removeTask(this);
     completer.complete(data);
   }
 
   /// 在 [createTask] 的返回值出错之后调用
   @mustCallSuper
   void postError(Object error) {
+    manager.removeTask(this);
     completer.completeError(error);
   }
 
