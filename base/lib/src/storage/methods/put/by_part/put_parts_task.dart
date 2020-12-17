@@ -65,8 +65,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
   void preStart() {
     // 处理相同任务
     final sameTaskExsist = manager.getTasks().firstWhere(
-          (element) =>
-              element != this && element is PutByPartTask && isEquals(element),
+          (element) => element is PutByPartTask && isEquals(element),
           orElse: () => null,
         );
 
