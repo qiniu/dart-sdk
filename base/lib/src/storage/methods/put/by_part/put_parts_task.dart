@@ -69,10 +69,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
           orElse: () => null,
         );
 
-    final initPartsCache = config.cacheProvider
-        .getItem(InitPartsTask.getCacheKey(file.path, file.lengthSync(), key));
-
-    if (initPartsCache != null && sameTaskExsist != null) {
+    if (sameTaskExsist != null) {
       throw StorageError(
         type: StorageErrorType.IN_PROGRESS,
         message: '$file 已在上传队列中',
