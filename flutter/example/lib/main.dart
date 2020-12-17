@@ -145,6 +145,12 @@ class BaseState extends DisposableState<Base> {
             case StorageErrorType.UNKNOWN:
               printToConsole('发生错误: 未知错误');
               break;
+            case StorageErrorType.NO_AVAILABLE_HOST:
+              printToConsole('发生错误: 无可用服务');
+              break;
+            case StorageErrorType.IN_PROGRESS:
+              printToConsole('发生错误: 已在队列中');
+              break;
           }
         } else {
           printToConsole('发生错误: ${error.toString()}');
