@@ -110,6 +110,8 @@ void main() {
 
   test('putFileBySingle can be cancelled.', () async {
     final putController = PutController();
+    final key = 'test_for_put.txt';
+    final file = File('test_resource/test_for_put.txt');
 
     final statusList = <RequestTaskStatus>[];
     putController.addStatusListener((status) {
@@ -118,11 +120,10 @@ void main() {
         putController.cancel();
       }
     });
-    final future = storage.putFileBySingle(
-      File('test_resource/test_for_put.txt'),
+    var future = storage.putFileBySingle(
+      file,
       token,
-      options: PutBySingleOptions(
-          key: 'test_for_put.txt', controller: putController),
+      options: PutBySingleOptions(key: key, controller: putController),
     );
     try {
       await future;
@@ -134,6 +135,30 @@ void main() {
     expect(statusList[0], RequestTaskStatus.Init);
     expect(statusList[1], RequestTaskStatus.Request);
     expect(statusList[2], RequestTaskStatus.Cancel);
+
+    try {
+      // 预期同步发生
+      // ignore: unawaited_futures
+      storage.putFileBySingle(
+        file,
+        token,
+        options: PutBySingleOptions(key: key, controller: putController),
+      );
+    } catch (error) {
+      // 复用了相同的 controller，所以也会触发取消的错误
+      expect(error, isA<StorageError>());
+      expect((error as StorageError).type, StorageErrorType.CANCEL);
+    }
+
+    expect(future, throwsA(TypeMatcher<StorageError>()));
+
+    final response = await storage.putFileBySingle(
+      file,
+      token,
+      options: PutBySingleOptions(key: key),
+    );
+
+    expect(response, isA<PutResponse>());
   }, skip: !isSensitiveDataDefined);
 
   test('listenProgress on putFileBySingle method should works well.', () async {
@@ -220,19 +245,21 @@ void main() {
     final putController = PutController();
     final storage = Storage(config: Config(hostProvider: HostProviderTest()));
     final statusList = <RequestTaskStatus>[];
+    final file = File('test_resource/test_for_put_parts.mp4');
+    final key = 'test_for_put_parts.mp4';
     putController
       ..addStatusListener(statusList.add)
       ..addProgressListener((sent, total) {
-        // 开始上传了取消
-        if (sent > 0) {
+        // 开始上传并且 InitPartsTask 设置完缓存后取消
+        if (sent > 1) {
           putController.cancel();
         }
       });
-    final future = storage.putFileByPart(
-      File('test_resource/test_for_put_parts.mp4'),
+    var future = storage.putFileByPart(
+      file,
       token,
       options: PutByPartOptions(
-        key: 'test_for_put_parts.mp4',
+        key: key,
         partSize: 1,
         controller: putController,
       ),
@@ -246,6 +273,33 @@ void main() {
     expect(statusList[0], RequestTaskStatus.Init);
     expect(statusList[1], RequestTaskStatus.Request);
     expect(statusList[2], RequestTaskStatus.Cancel);
+
+    try {
+      // 预期出错是同步发生的
+      // ignore: unawaited_futures
+      storage.putFileByPart(
+        file,
+        token,
+        options: PutByPartOptions(
+          key: key,
+          partSize: 1,
+          controller: putController,
+        ),
+      );
+    } catch (error) {
+      // 复用了相同的 controller，所以也会触发取消的错误
+      expect(error, isA<StorageError>());
+      expect((error as StorageError).type, StorageErrorType.CANCEL);
+    }
+
+    expect(future, throwsA(isA<StorageError>()));
+
+    final response = await storage.putFileByPart(
+      file,
+      token,
+      options: PutByPartOptions(key: key, partSize: 1),
+    );
+    expect(response, isA<PutResponse>());
   }, skip: !isSensitiveDataDefined);
 
   test('putFileByPart can be resumed.', () async {
