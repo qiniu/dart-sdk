@@ -63,11 +63,6 @@ class PutByPartTask extends RequestTask<PutResponse> {
 
   @override
   void preStart() {
-    // controller 被取消后取消当前运行的子任务
-    controller?.cancelToken?.whenCancel?.then((_) {
-      _currentWorkingTaskController?.cancel();
-    });
-
     // 处理相同任务
     final sameTaskExsist = manager.getTasks().firstWhere(
           (element) =>
@@ -84,6 +79,11 @@ class PutByPartTask extends RequestTask<PutResponse> {
         message: '$file 已在上传队列中',
       );
     }
+
+    // controller 被取消后取消当前运行的子任务
+    controller?.cancelToken?.whenCancel?.then((_) {
+      _currentWorkingTaskController?.cancel();
+    });
     super.preStart();
   }
 
