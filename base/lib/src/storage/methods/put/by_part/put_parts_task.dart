@@ -63,25 +63,10 @@ class PutByPartTask extends RequestTask<PutResponse> {
 
   @override
   void preStart() {
+    // controller 被取消后取消当前运行的子任务
     controller?.cancelToken?.whenCancel?.then((_) {
       _currentWorkingTaskController?.cancel();
     });
-    super.preStart();
-  }
-
-  @override
-  void postReceive(PutResponse data) {
-    _currentWorkingTaskController = null;
-    super.postReceive(data);
-  }
-
-  @override
-  Future<PutResponse> createTask() async {
-    /// 如果已经取消了，直接报错
-    // ignore: null_aware_in_condition
-    if (controller != null && controller.cancelToken.isCancelled) {
-      throw DioError(type: DioErrorType.CANCEL);
-    }
 
     // 处理相同任务
     final sameTaskExsist = manager.getTasks().firstWhere(
@@ -99,7 +84,17 @@ class PutByPartTask extends RequestTask<PutResponse> {
         message: '$file 已在上传队列中',
       );
     }
+    super.preStart();
+  }
 
+  @override
+  void postReceive(PutResponse data) {
+    _currentWorkingTaskController = null;
+    super.postReceive(data);
+  }
+
+  @override
+  Future<PutResponse> createTask() async {
     controller?.notifyStatusListeners(RequestTaskStatus.Request);
 
     final initPartsTask = _createInitParts();

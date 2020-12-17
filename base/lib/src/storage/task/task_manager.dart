@@ -19,18 +19,17 @@ class TaskManager {
   /// 被添加的 [task] 会被立即执行 [createTask]
   @mustCallSuper
   void addTask(Task task) {
-    workingTasks.add(task);
     try {
       task
         ..manager = this
         ..preStart();
     } catch (e) {
-      removeTask(task);
       rethrow;
     }
 
-    /// 把同步的任务改成异步，防止 [RequestTask.addStatusListener] 没有被触发
+    // 把同步的任务改成异步，防止 [RequestTask.addStatusListener] 没有被触发
     Future.delayed(Duration(milliseconds: 0), () {
+      workingTasks.add(task);
       task.createTask().then(task.postReceive).catchError(task.postError);
       try {
         task.postStart();

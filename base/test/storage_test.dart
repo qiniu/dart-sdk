@@ -135,13 +135,15 @@ void main() {
     expect(statusList[0], RequestTaskStatus.Init);
     expect(statusList[1], RequestTaskStatus.Request);
     expect(statusList[2], RequestTaskStatus.Cancel);
-    future = storage.putFileBySingle(
-      file,
-      token,
-      options: PutBySingleOptions(key: key, controller: putController),
-    );
+
     try {
-      await future;
+      // 预期同步发生
+      // ignore: unawaited_futures
+      storage.putFileBySingle(
+        file,
+        token,
+        options: PutBySingleOptions(key: key, controller: putController),
+      );
     } catch (error) {
       // 复用了相同的 controller，所以也会触发取消的错误
       expect(error, isA<StorageError>());
@@ -272,17 +274,18 @@ void main() {
     expect(statusList[1], RequestTaskStatus.Request);
     expect(statusList[2], RequestTaskStatus.Cancel);
 
-    future = storage.putFileByPart(
-      file,
-      token,
-      options: PutByPartOptions(
-        key: key,
-        partSize: 1,
-        controller: putController,
-      ),
-    );
     try {
-      await future;
+      // 预期出错是同步发生的
+      // ignore: unawaited_futures
+      storage.putFileByPart(
+        file,
+        token,
+        options: PutByPartOptions(
+          key: key,
+          partSize: 1,
+          controller: putController,
+        ),
+      );
     } catch (error) {
       // 复用了相同的 controller，所以也会触发取消的错误
       expect(error, isA<StorageError>());
