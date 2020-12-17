@@ -30,7 +30,6 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
   final File file;
   final String token;
   final String key;
-  final VoidCallback onRestart;
 
   @override
   String _cacheKey;
@@ -39,7 +38,6 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
   InitPartsTask({
     @required this.file,
     @required this.token,
-    @required this.onRestart,
     this.key,
     RequestTaskController controller,
   }) : super(controller: controller);
@@ -53,12 +51,6 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
     _tokenInfo = Auth.parseUpToken(token);
     _cacheKey = InitPartsTask.getCacheKey(file.path, file.lengthSync(), key);
     super.preStart();
-  }
-
-  @override
-  void postRestart() {
-    onRestart();
-    super.postStart();
   }
 
   @override

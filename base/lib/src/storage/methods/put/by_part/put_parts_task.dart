@@ -18,6 +18,7 @@ part 'complete_parts_task.dart';
 part 'init_parts_task.dart';
 part 'part.dart';
 part 'upload_parts_task.dart';
+part 'upload_part_task.dart';
 
 /// 分片上传任务
 class PutByPartTask extends RequestTask<PutResponse> {
@@ -71,7 +72,6 @@ class PutByPartTask extends RequestTask<PutResponse> {
   @override
   void postReceive(PutResponse data) {
     _currentWorkingTaskController = null;
-    controller?.notifyStatusListeners(RequestTaskStatus.Success);
     super.postReceive(data);
   }
 
@@ -81,6 +81,22 @@ class PutByPartTask extends RequestTask<PutResponse> {
     // ignore: null_aware_in_condition
     if (controller != null && controller.cancelToken.isCancelled) {
       throw DioError(type: DioErrorType.CANCEL);
+    }
+
+    // 处理相同任务
+    final sameTaskExsist = manager.getTasks().firstWhere(
+          (element) => element is PutByPartTask && isEquals(element),
+          orElse: () => null,
+        );
+
+    final initPartsCache = config.cacheProvider
+        .getItem(InitPartsTask.getCacheKey(file.path, file.lengthSync(), key));
+
+    if (initPartsCache != null && sameTaskExsist != null) {
+      throw StorageError(
+        type: StorageErrorType.IN_PROGRESS,
+        message: '$file 已在上传队列中',
+      );
     }
 
     controller?.notifyStatusListeners(RequestTaskStatus.Request);
@@ -99,6 +115,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
       /// UploadPartsTask 那边给 total 做了 +1 的操作，这里完成后补上 1 字节确保 100%
       notifyProgress(_sent + 1, _total);
     } catch (error) {
+      // 拿不到 initPartsTask 和 uploadParts 的引用，所以不放到 postError 去
       if (error is StorageError) {
         /// 满足以下两种情况清理缓存：
         /// 1、如果服务端文件被删除了，清除本地缓存
@@ -110,6 +127,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
 
         /// 如果服务端文件被删除了，重新上传
         if (error.code == 612) {
+          controller?.notifyStatusListeners(RequestTaskStatus.Retry);
           return createTask();
         }
       }
@@ -124,6 +142,12 @@ class PutByPartTask extends RequestTask<PutResponse> {
     return putResponse;
   }
 
+  bool isEquals(PutByPartTask target) {
+    return target.file.path == file.path &&
+        target.key == key &&
+        target.file.lengthSync() == file.lengthSync();
+  }
+
   /// 初始化上传信息，分片上传的第一步
   InitPartsTask _createInitParts() {
     final _controller = RequestTaskController();
@@ -133,15 +157,13 @@ class PutByPartTask extends RequestTask<PutResponse> {
       token: token,
       key: key,
       controller: _controller,
-      onRestart: () =>
-          controller.notifyStatusListeners(RequestTaskStatus.Request),
     );
-
-    /// 假的 1 byte，说明任务已经开始且不是 0%
-    notifyProgress(1, file.lengthSync() + 1);
 
     manager.addRequestTask(task);
     _currentWorkingTaskController = _controller;
+
+    /// 假的 1 byte，说明任务已经开始且不是 0%
+    notifyProgress(1, file.lengthSync() + 1);
     return task;
   }
 
@@ -156,8 +178,6 @@ class PutByPartTask extends RequestTask<PutResponse> {
       maxPartsRequestNumber: maxPartsRequestNumber,
       key: key,
       controller: _controller,
-      onRestart: () =>
-          controller.notifyStatusListeners(RequestTaskStatus.Request),
     );
 
     _controller.addProgressListener((sent, total) {
@@ -183,7 +203,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
       key: key,
       controller: _controller,
       onRestart: () =>
-          controller.notifyStatusListeners(RequestTaskStatus.Request),
+          controller?.notifyStatusListeners(RequestTaskStatus.Retry),
     );
 
     manager.addRequestTask(task);

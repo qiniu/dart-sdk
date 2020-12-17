@@ -6,7 +6,6 @@ import 'request_task.dart';
 import 'task.dart';
 
 class TaskManager {
-  @protected
   final List<Task> workingTasks = [];
 
   final Config config;
@@ -21,14 +20,24 @@ class TaskManager {
   @mustCallSuper
   void addTask(Task task) {
     workingTasks.add(task);
-    task
-      ..manager = this
-      ..preStart();
+    try {
+      task
+        ..manager = this
+        ..preStart();
+    } catch (e) {
+      removeTask(task);
+      rethrow;
+    }
 
     /// 把同步的任务改成异步，防止 [RequestTask.addStatusListener] 没有被触发
     Future.delayed(Duration(milliseconds: 0), () {
       task.createTask().then(task.postReceive).catchError(task.postError);
-      task.postStart();
+      try {
+        task.postStart();
+      } catch (e) {
+        removeTask(task);
+        rethrow;
+      }
     });
   }
 
@@ -44,10 +53,41 @@ class TaskManager {
 
   @mustCallSuper
   void restartTask(Task task) {
-    task.preRestart();
+    try {
+      task.preRestart();
+    } catch (e) {
+      removeTask(task);
+      rethrow;
+    }
     Future.delayed(Duration(milliseconds: 0), () {
       task.createTask().then(task.postReceive).catchError(task.postError);
-      task.postRestart();
+      try {
+        task.postRestart();
+      } catch (e) {
+        removeTask(task);
+        rethrow;
+      }
     });
+  }
+
+  /// 返回当前运行中的 [Task]
+  List<Task<dynamic>> getTasks() {
+    return workingTasks;
+  }
+
+  /// 查找类型符合 [T] 的 [Task]
+  List<T> getTasksByType<T extends Task<dynamic>>() {
+    return workingTasks.whereType<T>().toList();
+  }
+
+  /// 某个任务是不是运行中
+  bool isAlive(Task task) {
+    final found = workingTasks.firstWhere(
+        (element) => element.runtimeType == task.runtimeType,
+        orElse: () => null);
+    if (found != null) {
+      return true;
+    }
+    return false;
   }
 }

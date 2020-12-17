@@ -17,13 +17,13 @@ void main() {
   final storage = Storage();
 
   test('put should works well.', () async {
-    final putController = PutController();
+    var putController = PutController();
     int _sent, _total;
     putController.addProgressListener((sent, total) {
       _sent = sent;
       _total = total;
     });
-    final statusList = <RequestTaskStatus>[];
+    var statusList = <RequestTaskStatus>[];
     putController.addStatusListener(statusList.add);
     final response = await storage.putFile(
       File('test_resource/test_for_put.txt'),
@@ -35,6 +35,35 @@ void main() {
     expect(statusList[2], RequestTaskStatus.Success);
     expect(_sent / _total, 1);
     expect(response.key, 'test_for_put.txt');
+
+    // 分片
+    putController = PutController();
+    statusList = <RequestTaskStatus>[];
+    putController
+      ..addStatusListener(statusList.add)
+      ..addProgressListener((sent, total) {
+        _sent = sent;
+        _total = total;
+      });
+    final file = File('test_resource/test_for_put_parts.mp4');
+    final putResponseByPart = await storage.putFileByPart(
+      file,
+      token,
+      options: PutByPartOptions(
+        key: 'test_for_put_parts.mp4',
+        partSize: 1,
+        controller: putController,
+      ),
+    );
+    expect(putResponseByPart, isA<PutResponse>());
+
+    /// 分片上传会给 _sent _total + 1
+    expect(_sent - 1, file.lengthSync());
+    expect(_total - 1, file.lengthSync());
+    expect(_sent / _total, 1);
+    expect(statusList[0], RequestTaskStatus.Init);
+    expect(statusList[1], RequestTaskStatus.Request);
+    expect(statusList[2], RequestTaskStatus.Success);
   }, skip: !isSensitiveDataDefined);
 
   test('put with returnBody should works well.', () async {
@@ -79,7 +108,7 @@ void main() {
     expect(response.key, 'test_for_put.txt');
   }, skip: !isSensitiveDataDefined);
 
-  test('putFileBySingle can be canceled.', () async {
+  test('putFileBySingle can be cancelled.', () async {
     final putController = PutController();
 
     final statusList = <RequestTaskStatus>[];
@@ -131,10 +160,14 @@ void main() {
   test('putFileByPart should works well.', () async {
     final putController = PutController();
     final statusList = <RequestTaskStatus>[];
-    int _sent, _total;
+    int _sent,
+        _total,
+        // addProgressListener 调用次数
+        callnumber = 0;
     putController
       ..addStatusListener(statusList.add)
       ..addProgressListener((sent, total) {
+        callnumber++;
         _sent = sent;
         _total = total;
       });
@@ -149,6 +182,8 @@ void main() {
       ),
     );
     expect(response, isA<PutResponse>());
+    // 开始一次，2片分片2次，完成1次，共4次
+    expect(callnumber, 4);
 
     /// 分片上传会给 _sent _total + 1
     expect(_sent - 1, file.lengthSync());
@@ -157,6 +192,14 @@ void main() {
     expect(statusList[0], RequestTaskStatus.Init);
     expect(statusList[1], RequestTaskStatus.Request);
     expect(statusList[2], RequestTaskStatus.Success);
+
+    // 不设置参数的情况
+    final responseNoOps = await storage.putFileByPart(
+      file,
+      token,
+    );
+
+    expect(responseNoOps, isA<PutResponse>());
   }, skip: !isSensitiveDataDefined);
 
   test('putFileByPart should works well while response 612.', () async {
@@ -173,7 +216,7 @@ void main() {
     expect(response, isA<PutResponse>());
   }, skip: !isSensitiveDataDefined);
 
-  test('putFileByPart can be canceled.', () async {
+  test('putFileByPart can be cancelled.', () async {
     final putController = PutController();
     final storage = Storage(config: Config(hostProvider: HostProviderTest()));
     final statusList = <RequestTaskStatus>[];
@@ -208,6 +251,12 @@ void main() {
   test('putFileByPart can be resumed.', () async {
     final storage = Storage(config: Config(hostProvider: HostProviderTest()));
     final putController = PutController();
+    putController.addProgressListener((sent, total) {
+      // 开始上传了取消
+      if (sent > 0) {
+        putController.cancel();
+      }
+    });
 
     Future.delayed(Duration(milliseconds: 1), putController.cancel);
     final future = storage.putFileByPart(
@@ -246,8 +295,7 @@ void main() {
     final key = 'test_for_put_parts.mp4';
 
     /// 手动初始化一个初始化文件的任务，确定分片上传的第一步会被缓存
-    final task = InitPartsTask(
-        token: token, file: file, key: key, onRestart: () => null);
+    final task = InitPartsTask(token: token, file: file, key: key);
 
     storage.taskManager.addRequestTask(task);
 
@@ -255,7 +303,12 @@ void main() {
 
     final putController = PutController();
 
-    Future.delayed(Duration(milliseconds: 1), putController.cancel);
+    putController.addProgressListener((sent, total) {
+      if (sent / total > 0.8) {
+        putController.cancel();
+      }
+    });
+
     final future = storage.putFileByPart(
       file,
       token,
@@ -274,6 +327,7 @@ void main() {
     );
 
     expect(cacheProvider.getItem(cacheKey), isA<String>());
+    cacheProvider.clear();
 
     try {
       await future;
@@ -282,6 +336,8 @@ void main() {
       expect((error as StorageError).type, StorageErrorType.CANCEL);
     }
 
+    cacheProvider.clear();
+
     final response = await storage.putFileByPart(
       file,
       token,
@@ -289,6 +345,60 @@ void main() {
     );
 
     expect(response, isA<PutResponse>());
+
+    /// 上传完成后缓存应该被清理
+    expect(cacheProvider.value.length, 0);
+  }, skip: !isSensitiveDataDefined);
+
+  test(
+      'putFileByPart should throw error while there is a same task is working.',
+      () async {
+    final cacheProvider = DefaultCacheProvider();
+    final config = Config(cacheProvider: cacheProvider);
+    final storage = Storage(config: config);
+    final file = File('test_resource/test_for_put_parts.mp4');
+    final key = 'test_for_put_parts.mp4';
+
+    /// 初始化的缓存 key 生成逻辑
+    final cacheKey = InitPartsTask.getCacheKey(
+      file.path,
+      file.lengthSync(),
+      key,
+    );
+
+    var errorOccurred = false;
+
+    final putController = PutController()
+      ..addProgressListener((_, __) async {
+        try {
+          if (cacheProvider.getItem(cacheKey) != null) {
+            await storage.putFileByPart(
+              file,
+              token,
+              options: PutByPartOptions(
+                key: key,
+                partSize: 1,
+              ),
+            );
+          }
+        } catch (e) {
+          errorOccurred = true;
+          expect(e, isA<StorageError>());
+          expect((e as StorageError).type, StorageErrorType.IN_PROGRESS);
+        }
+      });
+
+    await storage.putFileByPart(
+      file,
+      token,
+      options: PutByPartOptions(
+        key: key,
+        partSize: 1,
+        controller: putController,
+      ),
+    );
+
+    expect(errorOccurred, true);
 
     /// 上传完成后缓存应该被清理
     expect(cacheProvider.value.length, 0);

@@ -66,8 +66,6 @@ class Storage {
   }
 
   /// 分片上传
-  /// FIXME: 应该使用 [listParts](https://developer.qiniu.com/kodo/api/6858/listparts) 重写现有缓存机制
-  /// FIXME: 取消时应该实现 [abortMultipartUpload](https://developer.qiniu.com/kodo/api/6367/abort-multipart-upload) 接口
   Future<PutResponse> putFileByPart(
     File file,
     String token, {
