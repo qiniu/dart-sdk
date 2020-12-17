@@ -23,6 +23,10 @@ abstract class RequestTask<T> extends Task<T> {
   @override
   @mustCallSuper
   void preStart() {
+    // 如果已经取消了，直接报错
+    if (controller != null && controller.cancelToken.isCancelled) {
+      throw StorageError(type: StorageErrorType.CANCEL);
+    }
     controller?.notifyStatusListeners(RequestTaskStatus.Init);
     client.httpClientAdapter = config.httpClientAdapter;
     client.interceptors.add(InterceptorsWrapper(onRequest: (options) {
