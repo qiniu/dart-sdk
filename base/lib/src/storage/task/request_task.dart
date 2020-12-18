@@ -9,11 +9,11 @@ import 'task.dart';
 part 'request_task_controller.dart';
 
 abstract class RequestTask<T> extends Task<T> {
-  // 初始化阶段占总任务的百分比
-  static double preStartTakePercentOfTotal = 0.1;
-  // 发送数据阶段占总任务的百分比
+  // 准备阶段占总任务的百分比
+  static double preStartTakePercentOfTotal = 0.01;
+  // 处理中阶段占总任务的百分比
   static double onSendProgressTakePercentOfTotal = 0.98;
-  // 任务完成阶段占总任务的百分比
+  // 完成阶段占总任务的百分比
   static double postReceiveTakePercentOfTotal = 1;
 
   final Dio client = Dio();
