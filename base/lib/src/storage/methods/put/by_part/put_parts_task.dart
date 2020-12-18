@@ -56,12 +56,6 @@ class PutByPartTask extends RequestTask<PutResponse> {
 
   RequestTaskController _currentWorkingTaskController;
 
-  /// 已发送字节长度
-  int _sent = 0;
-
-  /// 文件字节长度
-  int _total = 0;
-
   @override
   void preStart() {
     // 处理相同任务

@@ -204,7 +204,6 @@ void main() {
   test('putFileByPart can be cancelled.', () async {
     final pcb = PutControllerBuilder();
     final storage = Storage(config: Config(hostProvider: HostProviderTest()));
-    final statusList = <RequestTaskStatus>[];
     final file = File('test_resource/test_for_put_parts.mp4');
     final key = 'test_for_put_parts.mp4';
     pcb.putController.addSendProgressListener((percent) {
