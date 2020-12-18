@@ -18,13 +18,18 @@ void main() {
 
   test('put should works well.', () async {
     var putController = PutController();
-    int _sent, _total;
-    putController.addProgressListener((sent, total) {
-      _sent = sent;
-      _total = total;
-    });
     var statusList = <RequestTaskStatus>[];
-    putController.addStatusListener(statusList.add);
+    int _sent, _total;
+    double _percent;
+    putController
+      ..addSendProgressListener((sent, total) {
+        _sent = sent;
+        _total = total;
+      })
+      ..addStatusListener(statusList.add)
+      ..addProgressListener((percent) {
+        _percent = percent;
+      });
     final response = await storage.putFile(
       File('test_resource/test_for_put.txt'),
       token,
@@ -33,7 +38,7 @@ void main() {
     expect(statusList[0], RequestTaskStatus.Init);
     expect(statusList[1], RequestTaskStatus.Request);
     expect(statusList[2], RequestTaskStatus.Success);
-    expect(_sent / _total, 1);
+    expect(_percent, 1);
     expect(response.key, 'test_for_put.txt');
 
     // 分片
@@ -41,15 +46,18 @@ void main() {
     statusList = <RequestTaskStatus>[];
     putController
       ..addStatusListener(statusList.add)
-      ..addProgressListener((sent, total) {
+      ..addSendProgressListener((sent, total) {
         _sent = sent;
         _total = total;
+      })
+      ..addProgressListener((percent) {
+        _percent = percent;
       });
     final file = File('test_resource/test_for_put_parts.mp4');
-    final putResponseByPart = await storage.putFileByPart(
+    final putResponseByPart = await storage.putFile(
       file,
       token,
-      options: PutByPartOptions(
+      options: PutOptions(
         key: 'test_for_put_parts.mp4',
         partSize: 1,
         controller: putController,
@@ -58,9 +66,9 @@ void main() {
     expect(putResponseByPart, isA<PutResponse>());
 
     /// 分片上传会给 _sent _total + 1
-    expect(_sent - 1, file.lengthSync());
-    expect(_total - 1, file.lengthSync());
-    expect(_sent / _total, 1);
+    expect(_sent, file.lengthSync());
+    expect(_total, file.lengthSync());
+    expect(_percent, 1);
     expect(statusList[0], RequestTaskStatus.Init);
     expect(statusList[1], RequestTaskStatus.Request);
     expect(statusList[2], RequestTaskStatus.Success);
@@ -92,16 +100,38 @@ void main() {
 
   test('putFileBySingle should works well.', () async {
     final putController = PutController();
+    final file = File('test_resource/test_for_put.txt');
     final statusList = <RequestTaskStatus>[];
-    putController.addStatusListener(statusList.add);
+    int _sent,
+        _total,
+        // addSendProgressListener 调用次数
+        callnumber = 0;
+    double _percent;
+    putController
+      ..addStatusListener(statusList.add)
+      ..addSendProgressListener((sent, total) {
+        callnumber++;
+        _sent = sent;
+        _total = total;
+      })
+      ..addProgressListener((percent) {
+        _percent = percent;
+      });
     final response = await storage.putFileBySingle(
-      File('test_resource/test_for_put.txt'),
+      file,
       token,
       options: PutBySingleOptions(
         key: 'test_for_put.txt',
         controller: putController,
       ),
     );
+
+    expect(callnumber > 1, true);
+    expect(_sent, _total);
+    // Dio 给的长度是 FormData.length 计算出来的，不仅仅是文件的 byte length
+    expect(_sent > file.lengthSync(), true);
+    expect(_total > file.lengthSync(), true);
+    expect(_percent, 1);
     expect(statusList[0], RequestTaskStatus.Init);
     expect(statusList[1], RequestTaskStatus.Request);
     expect(statusList[2], RequestTaskStatus.Success);
@@ -165,7 +195,7 @@ void main() {
     final putController = PutController();
 
     int _sent, _total;
-    putController.addProgressListener((sent, total) {
+    putController.addSendProgressListener((sent, total) {
       _sent = sent;
       _total = total;
     });
@@ -187,14 +217,18 @@ void main() {
     final statusList = <RequestTaskStatus>[];
     int _sent,
         _total,
-        // addProgressListener 调用次数
+        // addSendProgressListener 调用次数
         callnumber = 0;
+    double _percent;
     putController
       ..addStatusListener(statusList.add)
-      ..addProgressListener((sent, total) {
+      ..addSendProgressListener((sent, total) {
         callnumber++;
         _sent = sent;
         _total = total;
+      })
+      ..addProgressListener((percent) {
+        _percent = percent;
       });
     final file = File('test_resource/test_for_put_parts.mp4');
     final response = await storage.putFileByPart(
@@ -207,13 +241,12 @@ void main() {
       ),
     );
     expect(response, isA<PutResponse>());
-    // 开始一次，2片分片2次，完成1次，共4次
-    expect(callnumber, 4);
+    // 2 片分片所以 2 次
+    expect(callnumber, 2);
 
-    /// 分片上传会给 _sent _total + 1
-    expect(_sent - 1, file.lengthSync());
-    expect(_total - 1, file.lengthSync());
-    expect(_sent / _total, 1);
+    expect(_sent, file.lengthSync());
+    expect(_total, file.lengthSync());
+    expect(_percent, 1);
     expect(statusList[0], RequestTaskStatus.Init);
     expect(statusList[1], RequestTaskStatus.Request);
     expect(statusList[2], RequestTaskStatus.Success);
@@ -249,7 +282,7 @@ void main() {
     final key = 'test_for_put_parts.mp4';
     putController
       ..addStatusListener(statusList.add)
-      ..addProgressListener((sent, total) {
+      ..addSendProgressListener((sent, total) {
         // 开始上传并且 InitPartsTask 设置完缓存后取消
         if (sent > 1) {
           putController.cancel();
@@ -305,7 +338,7 @@ void main() {
   test('putFileByPart can be resumed.', () async {
     final storage = Storage(config: Config(hostProvider: HostProviderTest()));
     final putController = PutController();
-    putController.addProgressListener((sent, total) {
+    putController.addSendProgressListener((sent, total) {
       // 开始上传了取消
       if (sent > 0) {
         putController.cancel();
@@ -357,7 +390,7 @@ void main() {
 
     final putController = PutController();
 
-    putController.addProgressListener((sent, total) {
+    putController.addSendProgressListener((sent, total) {
       if (sent / total > 0.8) {
         putController.cancel();
       }
@@ -423,7 +456,7 @@ void main() {
     var errorOccurred = false;
 
     final putController = PutController()
-      ..addProgressListener((_, __) async {
+      ..addSendProgressListener((_, __) async {
         try {
           if (cacheProvider.getItem(cacheKey) != null) {
             await storage.putFileByPart(
@@ -462,7 +495,7 @@ void main() {
     final putController = PutController();
 
     int _sent, _total;
-    putController.addProgressListener((sent, total) {
+    putController.addSendProgressListener((sent, total) {
       _sent = sent;
       _total = total;
     });

@@ -2,9 +2,9 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
+import 'package:qiniu_sdk_base/src/storage/task/task.dart';
 
 import '../../../../auth/auth.dart';
-import '../../../task/request_task.dart';
 import '../put_response.dart';
 
 // 直传任务
@@ -54,6 +54,7 @@ class PutBySingleTask extends RequestTask<PutResponse> {
       data: formData,
       cancelToken: controller?.cancelToken,
     );
+
     return PutResponse.fromJson(response.data);
   }
 }

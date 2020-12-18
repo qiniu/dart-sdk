@@ -45,45 +45,52 @@ void main() {
       httpClientAdapter: HttpAdapterTestWith502(),
     );
     final storage = Storage(config: config);
+    final file = File('test_resource/test_for_put_parts.mp4');
+    final key = 'test_for_put_parts.mp4';
+    final initPartsTaskStatusList = <RequestTaskStatus>[];
+
+    // 重试阶段会发生在 InitPartsTask 调用 getUpHost 的时候
+    // 手动初始化一个用于测试
+    final task = InitPartsTask(
+        token: token,
+        file: file,
+        key: key,
+        controller: PutController()
+          ..addStatusListener(initPartsTaskStatusList.add));
+    storage.taskManager.addRequestTask(task);
+
+    // 接下来是正常流程
     final putController = PutController();
     final statusList = <RequestTaskStatus>[];
-    final initPartsTaskStatusList = <RequestTaskStatus>[];
     int _sent, _total;
+    double _percent;
     putController
       ..addStatusListener(statusList.add)
-      ..addProgressListener((sent, total) {
+      ..addProgressListener((percent) {
+        _percent = percent;
+      })
+      ..addSendProgressListener((sent, total) {
         _sent = sent;
         _total = total;
-        // 1 是 InitPartsTask 创建后触发的，在这个时机去拿他的实例
-        if (sent == 1) {
-          Future.delayed(Duration(milliseconds: 0), () {
-            final initPartsTask =
-                storage.taskManager.getTasksByType<InitPartsTask>().first;
-            initPartsTask.controller
-                .addStatusListener(initPartsTaskStatusList.add);
-          });
-        }
       });
-    final file = File('test_resource/test_for_put_parts.mp4');
     final response = await storage.putFileByPart(
       file,
       token,
       options: PutByPartOptions(
-        key: 'test_for_put_parts.mp4',
+        key: key,
         partSize: 1,
         controller: putController,
       ),
     );
     expect(response, isA<PutResponse>());
 
-    /// 分片上传会给 _sent _total + 1
-    expect(_sent - 1, file.lengthSync());
-    expect(_total - 1, file.lengthSync());
-    expect(_sent / _total, 1);
+    expect(_sent, file.lengthSync());
+    expect(_total, file.lengthSync());
+    expect(_percent, 1);
     expect(
         initPartsTaskStatusList,
         equals([
-          // 拿到 InitpartsTask 的实例的时候他已经被运行了，所以没有 init 状态
+          RequestTaskStatus.Init,
           RequestTaskStatus.Request,
           RequestTaskStatus.Retry,
           RequestTaskStatus.Request,
@@ -91,7 +98,7 @@ void main() {
         ]));
     expect(statusList[0], RequestTaskStatus.Init);
     expect(statusList[1], RequestTaskStatus.Request);
-    // 分片上传 PutPartsTask 本身不会重试，子任务 UploadPartTask 会去重试，所以没有 Retry 状态
+    // 分片上传 PutPartsTask 本身不会重试，子任务会去重试，所以没有 Retry 状态
     expect(statusList[2], RequestTaskStatus.Success);
   }, skip: !isSensitiveDataDefined);
 }

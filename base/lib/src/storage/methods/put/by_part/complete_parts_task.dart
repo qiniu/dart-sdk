@@ -6,7 +6,6 @@ class CompletePartsTask extends RequestTask<PutResponse> {
   final String uploadId;
   final List<Part> parts;
   final String key;
-  final VoidCallback onRestart;
 
   TokenInfo _tokenInfo;
 
@@ -14,21 +13,14 @@ class CompletePartsTask extends RequestTask<PutResponse> {
     @required this.token,
     @required this.uploadId,
     @required this.parts,
-    @required this.onRestart,
     this.key,
-    RequestTaskController controller,
+    PutController controller,
   }) : super(controller: controller);
 
   @override
   void preStart() {
     _tokenInfo = Auth.parseUpToken(token);
     super.preStart();
-  }
-
-  @override
-  void postRestart() {
-    onRestart();
-    super.postStart();
   }
 
   @override
