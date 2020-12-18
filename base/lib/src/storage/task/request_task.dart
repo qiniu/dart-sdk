@@ -41,7 +41,7 @@ abstract class RequestTask<T> extends Task<T> {
       controller?.notifyStatusListeners(RequestTaskStatus.Request);
       options
         ..cancelToken = controller?.cancelToken
-        ..onSendProgress = onSendProgress;
+        ..onSendProgress = (sent, total) => onSendProgress(sent / total);
 
       return options;
     }));
@@ -127,10 +127,10 @@ abstract class RequestTask<T> extends Task<T> {
   }
 
   // 自定义发送进度处理逻辑
-  void onSendProgress(int sent, int total) {
-    controller?.notifySendProgressListeners(sent, total);
-    controller?.notifyProgressListeners(
-        sent / total * onSendProgressTakePercentOfTotal);
+  void onSendProgress(double percent) {
+    controller?.notifySendProgressListeners(percent);
+    controller
+        ?.notifyProgressListeners(percent * onSendProgressTakePercentOfTotal);
   }
 
   // host 是否可以连接上

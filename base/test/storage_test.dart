@@ -10,6 +10,7 @@ import 'package:dotenv/dotenv.dart' show env;
 import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
 
 import 'config.dart';
+import 'put_controller_builder.dart';
 
 void main() {
   configEnv();
@@ -17,42 +18,20 @@ void main() {
   final storage = Storage();
 
   test('put should works well.', () async {
-    var putController = PutController();
-    var statusList = <RequestTaskStatus>[];
-    int _sent, _total;
-    double _percent;
-    putController
-      ..addSendProgressListener((sent, total) {
-        _sent = sent;
-        _total = total;
-      })
-      ..addStatusListener(statusList.add)
-      ..addProgressListener((percent) {
-        _percent = percent;
-      });
+    var pcb = PutControllerBuilder();
     final response = await storage.putFile(
       File('test_resource/test_for_put.txt'),
       token,
-      options: PutOptions(key: 'test_for_put.txt', controller: putController),
+      options: PutOptions(
+        key: 'test_for_put.txt',
+        controller: pcb.putController,
+      ),
     );
-    expect(statusList[0], RequestTaskStatus.Init);
-    expect(statusList[1], RequestTaskStatus.Request);
-    expect(statusList[2], RequestTaskStatus.Success);
-    expect(_percent, 1);
+    pcb.testAll();
     expect(response.key, 'test_for_put.txt');
 
     // 分片
-    putController = PutController();
-    statusList = <RequestTaskStatus>[];
-    putController
-      ..addStatusListener(statusList.add)
-      ..addSendProgressListener((sent, total) {
-        _sent = sent;
-        _total = total;
-      })
-      ..addProgressListener((percent) {
-        _percent = percent;
-      });
+    pcb = PutControllerBuilder();
     final file = File('test_resource/test_for_put_parts.mp4');
     final putResponseByPart = await storage.putFile(
       file,
@@ -60,18 +39,13 @@ void main() {
       options: PutOptions(
         key: 'test_for_put_parts.mp4',
         partSize: 1,
-        controller: putController,
+        controller: pcb.putController,
       ),
     );
+
     expect(putResponseByPart, isA<PutResponse>());
 
-    /// 分片上传会给 _sent _total + 1
-    expect(_sent, file.lengthSync());
-    expect(_total, file.lengthSync());
-    expect(_percent, 1);
-    expect(statusList[0], RequestTaskStatus.Init);
-    expect(statusList[1], RequestTaskStatus.Request);
-    expect(statusList[2], RequestTaskStatus.Success);
+    pcb.testAll();
   }, skip: !isSensitiveDataDefined);
 
   test('put with returnBody should works well.', () async {
@@ -99,42 +73,18 @@ void main() {
   }, skip: !isSensitiveDataDefined);
 
   test('putFileBySingle should works well.', () async {
-    final putController = PutController();
     final file = File('test_resource/test_for_put.txt');
-    final statusList = <RequestTaskStatus>[];
-    int _sent,
-        _total,
-        // addSendProgressListener 调用次数
-        callnumber = 0;
-    double _percent;
-    putController
-      ..addStatusListener(statusList.add)
-      ..addSendProgressListener((sent, total) {
-        callnumber++;
-        _sent = sent;
-        _total = total;
-      })
-      ..addProgressListener((percent) {
-        _percent = percent;
-      });
+    var pcb = PutControllerBuilder();
     final response = await storage.putFileBySingle(
       file,
       token,
       options: PutBySingleOptions(
         key: 'test_for_put.txt',
-        controller: putController,
+        controller: pcb.putController,
       ),
     );
 
-    expect(callnumber > 1, true);
-    expect(_sent, _total);
-    // Dio 给的长度是 FormData.length 计算出来的，不仅仅是文件的 byte length
-    expect(_sent > file.lengthSync(), true);
-    expect(_total > file.lengthSync(), true);
-    expect(_percent, 1);
-    expect(statusList[0], RequestTaskStatus.Init);
-    expect(statusList[1], RequestTaskStatus.Request);
-    expect(statusList[2], RequestTaskStatus.Success);
+    pcb.testAll();
     expect(response.key, 'test_for_put.txt');
   }, skip: !isSensitiveDataDefined);
 
@@ -192,44 +142,26 @@ void main() {
   }, skip: !isSensitiveDataDefined);
 
   test('listenProgress on putFileBySingle method should works well.', () async {
-    final putController = PutController();
-
-    int _sent, _total;
-    putController.addSendProgressListener((sent, total) {
-      _sent = sent;
-      _total = total;
-    });
+    final pcb = PutControllerBuilder();
 
     final response = await storage.putFileBySingle(
       File('test_resource/test_for_put.txt'),
       token,
       options: PutBySingleOptions(
         key: 'test_for_put.txt',
-        controller: putController,
+        controller: pcb.putController,
       ),
     );
     expect(response.key, 'test_for_put.txt');
-    expect(_sent / _total, equals(1));
+    pcb.testAll();
   }, skip: !isSensitiveDataDefined);
 
   test('putFileByPart should works well.', () async {
-    final putController = PutController();
-    final statusList = <RequestTaskStatus>[];
-    int _sent,
-        _total,
-        // addSendProgressListener 调用次数
-        callnumber = 0;
-    double _percent;
-    putController
-      ..addStatusListener(statusList.add)
-      ..addSendProgressListener((sent, total) {
-        callnumber++;
-        _sent = sent;
-        _total = total;
-      })
-      ..addProgressListener((percent) {
-        _percent = percent;
-      });
+    final pcb = PutControllerBuilder();
+    var callnumber = 0;
+    pcb.putController.addSendProgressListener((percent) {
+      callnumber++;
+    });
     final file = File('test_resource/test_for_put_parts.mp4');
     final response = await storage.putFileByPart(
       file,
@@ -237,19 +169,14 @@ void main() {
       options: PutByPartOptions(
         key: 'test_for_put_parts.mp4',
         partSize: 1,
-        controller: putController,
+        controller: pcb.putController,
       ),
     );
     expect(response, isA<PutResponse>());
     // 2 片分片所以 2 次
     expect(callnumber, 2);
 
-    expect(_sent, file.lengthSync());
-    expect(_total, file.lengthSync());
-    expect(_percent, 1);
-    expect(statusList[0], RequestTaskStatus.Init);
-    expect(statusList[1], RequestTaskStatus.Request);
-    expect(statusList[2], RequestTaskStatus.Success);
+    pcb.testAll();
 
     // 不设置参数的情况
     final responseNoOps = await storage.putFileByPart(
@@ -275,26 +202,24 @@ void main() {
   }, skip: !isSensitiveDataDefined);
 
   test('putFileByPart can be cancelled.', () async {
-    final putController = PutController();
+    final pcb = PutControllerBuilder();
     final storage = Storage(config: Config(hostProvider: HostProviderTest()));
     final statusList = <RequestTaskStatus>[];
     final file = File('test_resource/test_for_put_parts.mp4');
     final key = 'test_for_put_parts.mp4';
-    putController
-      ..addStatusListener(statusList.add)
-      ..addSendProgressListener((sent, total) {
-        // 开始上传并且 InitPartsTask 设置完缓存后取消
-        if (sent > 1) {
-          putController.cancel();
-        }
-      });
+    pcb.putController.addSendProgressListener((percent) {
+      // 开始上传并且 InitPartsTask 设置完缓存后取消
+      if (percent > 0.1) {
+        pcb.putController.cancel();
+      }
+    });
     var future = storage.putFileByPart(
       file,
       token,
       options: PutByPartOptions(
         key: key,
         partSize: 1,
-        controller: putController,
+        controller: pcb.putController,
       ),
     );
     try {
@@ -303,9 +228,11 @@ void main() {
       expect((error as StorageError).type, StorageErrorType.CANCEL);
     }
     expect(future, throwsA(TypeMatcher<StorageError>()));
-    expect(statusList[0], RequestTaskStatus.Init);
-    expect(statusList[1], RequestTaskStatus.Request);
-    expect(statusList[2], RequestTaskStatus.Cancel);
+    pcb.testStatus([
+      RequestTaskStatus.Init,
+      RequestTaskStatus.Request,
+      RequestTaskStatus.Cancel
+    ]);
 
     try {
       // 预期出错是同步发生的
@@ -316,7 +243,7 @@ void main() {
         options: PutByPartOptions(
           key: key,
           partSize: 1,
-          controller: putController,
+          controller: pcb.putController,
         ),
       );
     } catch (error) {
@@ -338,9 +265,9 @@ void main() {
   test('putFileByPart can be resumed.', () async {
     final storage = Storage(config: Config(hostProvider: HostProviderTest()));
     final putController = PutController();
-    putController.addSendProgressListener((sent, total) {
+    putController.addSendProgressListener((percent) {
       // 开始上传了取消
-      if (sent > 0) {
+      if (percent > 0.1) {
         putController.cancel();
       }
     });
@@ -390,8 +317,8 @@ void main() {
 
     final putController = PutController();
 
-    putController.addSendProgressListener((sent, total) {
-      if (sent / total > 0.8) {
+    putController.addSendProgressListener((percent) {
+      if (percent > 0.5) {
         putController.cancel();
       }
     });
@@ -456,7 +383,7 @@ void main() {
     var errorOccurred = false;
 
     final putController = PutController()
-      ..addSendProgressListener((_, __) async {
+      ..addSendProgressListener((_) async {
         try {
           if (cacheProvider.getItem(cacheKey) != null) {
             await storage.putFileByPart(
@@ -494,10 +421,9 @@ void main() {
   test('listenProgress on putFileByPart method should works well.', () async {
     final putController = PutController();
 
-    int _sent, _total;
-    putController.addSendProgressListener((sent, total) {
-      _sent = sent;
-      _total = total;
+    double _percent;
+    putController.addSendProgressListener((percent) {
+      _percent = percent;
     });
 
     final response = await storage.putFileByPart(
@@ -510,7 +436,7 @@ void main() {
       ),
     );
     expect(response, isA<PutResponse>());
-    expect(_sent / _total, equals(1));
+    expect(_percent, equals(1));
   }, skip: !isSensitiveDataDefined);
 }
 

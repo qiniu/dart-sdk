@@ -167,7 +167,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
       controller: _controller,
     );
 
-    _controller.addSendProgressListener(notifySendProgress);
+    _controller.addSendProgressListener(onSendProgress);
 
     manager.addRequestTask(task);
     _currentWorkingTaskController = _controller;
@@ -191,11 +191,5 @@ class PutByPartTask extends RequestTask<PutResponse> {
     manager.addRequestTask(task);
     _currentWorkingTaskController = _controller;
     return task;
-  }
-
-  void notifySendProgress(int sent, int total) {
-    _sent = sent;
-    _total = total;
-    onSendProgress(sent, total);
   }
 }

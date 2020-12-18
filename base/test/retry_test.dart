@@ -62,16 +62,14 @@ void main() {
     // 接下来是正常流程
     final putController = PutController();
     final statusList = <RequestTaskStatus>[];
-    int _sent, _total;
-    double _percent;
+    double _sendPercent, _totalPercent;
     putController
       ..addStatusListener(statusList.add)
       ..addProgressListener((percent) {
-        _percent = percent;
+        _totalPercent = percent;
       })
-      ..addSendProgressListener((sent, total) {
-        _sent = sent;
-        _total = total;
+      ..addSendProgressListener((percent) {
+        _sendPercent = percent;
       });
     final response = await storage.putFileByPart(
       file,
@@ -84,9 +82,8 @@ void main() {
     );
     expect(response, isA<PutResponse>());
 
-    expect(_sent, file.lengthSync());
-    expect(_total, file.lengthSync());
-    expect(_percent, 1);
+    expect(_sendPercent, 1);
+    expect(_totalPercent, 1);
     expect(
         initPartsTaskStatusList,
         equals([

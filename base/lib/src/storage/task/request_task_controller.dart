@@ -20,7 +20,7 @@ class RequestTaskController
   }
 }
 
-typedef PutTaskSendProgressListener = void Function(int sent, int total);
+typedef PutTaskSendProgressListener = void Function(double percent);
 
 /// 请求发送进度
 ///
@@ -38,9 +38,9 @@ mixin PutTaskSendProgressListenersMixin {
     _sendProgressListeners.remove(listener);
   }
 
-  void notifySendProgressListeners(int sent, int total) {
+  void notifySendProgressListeners(double percent) {
     for (final listener in _sendProgressListeners) {
-      listener(sent, total);
+      listener(percent);
     }
   }
 }
