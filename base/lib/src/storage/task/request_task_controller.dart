@@ -20,21 +20,21 @@ class RequestTaskController
   }
 }
 
-typedef PutTaskSendProgressListener = void Function(double percent);
+typedef RequestTaskSendProgressListener = void Function(double percent);
 
 /// 请求发送进度
 ///
 /// 使用 Dio 发出去的请求才会触发
 mixin PutTaskSendProgressListenersMixin {
-  final List<PutTaskSendProgressListener> _sendProgressListeners = [];
+  final List<RequestTaskSendProgressListener> _sendProgressListeners = [];
 
   void Function() addSendProgressListener(
-      PutTaskSendProgressListener listener) {
+      RequestTaskSendProgressListener listener) {
     _sendProgressListeners.add(listener);
     return () => removeSendProgressListener(listener);
   }
 
-  void removeSendProgressListener(PutTaskSendProgressListener listener) {
+  void removeSendProgressListener(RequestTaskSendProgressListener listener) {
     _sendProgressListeners.remove(listener);
   }
 
