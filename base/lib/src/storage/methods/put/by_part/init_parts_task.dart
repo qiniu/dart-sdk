@@ -27,7 +27,6 @@ class InitParts {
 
 /// 初始化一个分片上传任务，为 [UploadPartsTask] 提供 uploadId
 class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
-  static double initPartsTaskTakePercentOfTotal = 0.01;
   final File file;
   final String token;
   final String key;
@@ -49,8 +48,6 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
 
   @override
   void preStart() {
-    // 初始化任务完成后也告诉外部一个进度
-    controller?.notifyProgressListeners(initPartsTaskTakePercentOfTotal);
     _tokenInfo = Auth.parseUpToken(token);
     _cacheKey = InitPartsTask.getCacheKey(file.path, file.lengthSync(), key);
     super.preStart();

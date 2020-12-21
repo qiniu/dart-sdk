@@ -92,6 +92,9 @@ class PutByPartTask extends RequestTask<PutResponse> {
     final initPartsTask = _createInitParts();
     final initParts = await initPartsTask.future;
 
+    // 初始化任务完成后也告诉外部一个进度
+    controller?.notifyProgressListeners(0.01);
+
     final uploadParts = _createUploadParts(initParts.uploadId);
 
     PutResponse putResponse;
