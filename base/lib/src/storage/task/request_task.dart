@@ -10,9 +10,9 @@ part 'request_task_controller.dart';
 
 abstract class RequestTask<T> extends Task<T> {
   // 准备阶段占总任务的百分比
-  static double preStartTakePercentOfTotal = 0.01;
+  static double preStartTakePercentOfTotal = 0.001;
   // 处理中阶段占总任务的百分比
-  static double onSendProgressTakePercentOfTotal = 0.98;
+  static double onSendProgressTakePercentOfTotal = 0.99;
   // 完成阶段占总任务的百分比
   static double postReceiveTakePercentOfTotal = 1;
 

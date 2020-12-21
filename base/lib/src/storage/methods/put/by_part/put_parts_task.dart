@@ -58,6 +58,8 @@ class PutByPartTask extends RequestTask<PutResponse> {
 
   @override
   void preStart() {
+    super.preStart();
+
     // 处理相同任务
     final sameTaskExsist = manager.getTasks().firstWhere(
           (element) => element is PutByPartTask && isEquals(element),
@@ -75,7 +77,6 @@ class PutByPartTask extends RequestTask<PutResponse> {
     controller?.cancelToken?.whenCancel?.then((_) {
       _currentWorkingTaskController?.cancel();
     });
-    super.preStart();
   }
 
   @override
