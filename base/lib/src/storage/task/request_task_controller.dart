@@ -4,7 +4,7 @@ class RequestTaskController
     with
         RequestTaskProgressListenersMixin,
         RequestTaskStatusListenersMixin,
-        PutTaskSendProgressListenersMixin {
+        RequestTaskSendProgressListenersMixin {
   final CancelToken cancelToken = CancelToken();
 
   /// 是否被取消过
@@ -25,7 +25,7 @@ typedef RequestTaskSendProgressListener = void Function(double percent);
 /// 请求发送进度
 ///
 /// 使用 Dio 发出去的请求才会触发
-mixin PutTaskSendProgressListenersMixin {
+mixin RequestTaskSendProgressListenersMixin {
   final List<RequestTaskSendProgressListener> _sendProgressListeners = [];
 
   void Function() addSendProgressListener(
