@@ -39,7 +39,7 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
     @required this.file,
     @required this.token,
     this.key,
-    RequestTaskController controller,
+    PutController controller,
   }) : super(controller: controller);
 
   static String getCacheKey(String path, int length, String key) {

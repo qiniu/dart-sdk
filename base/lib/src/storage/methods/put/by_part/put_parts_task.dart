@@ -11,14 +11,15 @@ import '../../../../auth/auth.dart';
 import '../../../config/config.dart';
 import '../../../task/request_task.dart';
 import '../../../task/task.dart';
+import '../put_controller.dart';
 import '../put_response.dart';
 
 part 'cache_mixin.dart';
 part 'complete_parts_task.dart';
 part 'init_parts_task.dart';
 part 'part.dart';
-part 'upload_parts_task.dart';
 part 'upload_part_task.dart';
+part 'upload_parts_task.dart';
 
 /// 分片上传任务
 class PutByPartTask extends RequestTask<PutResponse> {
@@ -39,7 +40,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
     @required this.hostProvider,
     @required this.maxPartsRequestNumber,
     this.key,
-    RequestTaskController controller,
+    PutController controller,
   })  : assert(file != null),
         assert(token != null),
         assert(partSize != null),
@@ -55,14 +56,10 @@ class PutByPartTask extends RequestTask<PutResponse> {
 
   RequestTaskController _currentWorkingTaskController;
 
-  /// 已发送字节长度
-  int _sent = 0;
-
-  /// 文件字节长度
-  int _total = 0;
-
   @override
   void preStart() {
+    super.preStart();
+
     // 处理相同任务
     final sameTaskExsist = manager.getTasks().firstWhere(
           (element) => element is PutByPartTask && isEquals(element),
@@ -80,7 +77,6 @@ class PutByPartTask extends RequestTask<PutResponse> {
     controller?.cancelToken?.whenCancel?.then((_) {
       _currentWorkingTaskController?.cancel();
     });
-    super.preStart();
   }
 
   @override
@@ -96,6 +92,9 @@ class PutByPartTask extends RequestTask<PutResponse> {
     final initPartsTask = _createInitParts();
     final initParts = await initPartsTask.future;
 
+    // 初始化任务完成后也告诉外部一个进度
+    controller?.notifyProgressListeners(0.01);
+
     final uploadParts = _createUploadParts(initParts.uploadId);
 
     PutResponse putResponse;
@@ -103,9 +102,6 @@ class PutByPartTask extends RequestTask<PutResponse> {
       final parts = await uploadParts.future;
       putResponse =
           await _createCompleteParts(initParts.uploadId, parts).future;
-
-      /// UploadPartsTask 那边给 total 做了 +1 的操作，这里完成后补上 1 字节确保 100%
-      notifyProgress(_sent + 1, _total);
     } catch (error) {
       // 拿不到 initPartsTask 和 uploadParts 的引用，所以不放到 postError 去
       if (error is StorageError) {
@@ -142,7 +138,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
 
   /// 初始化上传信息，分片上传的第一步
   InitPartsTask _createInitParts() {
-    final _controller = RequestTaskController();
+    final _controller = PutController();
 
     final task = InitPartsTask(
       file: file,
@@ -153,14 +149,11 @@ class PutByPartTask extends RequestTask<PutResponse> {
 
     manager.addRequestTask(task);
     _currentWorkingTaskController = _controller;
-
-    /// 假的 1 byte，说明任务已经开始且不是 0%
-    notifyProgress(1, file.lengthSync() + 1);
     return task;
   }
 
   UploadPartsTask _createUploadParts(String uploadId) {
-    final _controller = RequestTaskController();
+    final _controller = PutController();
 
     final task = UploadPartsTask(
       file: file,
@@ -172,10 +165,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
       controller: _controller,
     );
 
-    _controller.addProgressListener((sent, total) {
-      /// complete parts 没完成之前应该是 99%，所以 + 1
-      notifyProgress(sent, total + 1);
-    });
+    _controller.addSendProgressListener(onSendProgress);
 
     manager.addRequestTask(task);
     _currentWorkingTaskController = _controller;
@@ -187,25 +177,17 @@ class PutByPartTask extends RequestTask<PutResponse> {
     String uploadId,
     List<Part> parts,
   ) {
-    final _controller = RequestTaskController();
+    final _controller = PutController();
     final task = CompletePartsTask(
       token: token,
       uploadId: uploadId,
       parts: parts,
       key: key,
       controller: _controller,
-      onRestart: () =>
-          controller?.notifyStatusListeners(RequestTaskStatus.Retry),
     );
 
     manager.addRequestTask(task);
     _currentWorkingTaskController = _controller;
     return task;
-  }
-
-  void notifyProgress(int sent, int total) {
-    _sent = sent;
-    _total = total;
-    controller?.notifyProgressListeners(_sent, _total);
   }
 }

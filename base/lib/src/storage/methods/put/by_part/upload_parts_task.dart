@@ -31,8 +31,8 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   // 处理分片上传任务的 UploadPartTask 的控制器
   final List<RequestTaskController> _workingUploadPartTaskControllers = [];
 
-  // 已发送的数据记录，key 是 partNumber, value 是 已发送的长度
-  final Map<int, int> _sentMap = {};
+  // 已发送的数据记录，key 是 partNumber, value 是 已发送的百分比
+  final Map<int, double> _sentMap = {};
 
   // 剩余多少被允许的请求数
   int _idleRequestNumber;
@@ -46,7 +46,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     @required this.partSize,
     @required this.maxPartsRequestNumber,
     this.key,
-    RequestTaskController controller,
+    PutController controller,
   }) : super(controller: controller);
 
   static String getCacheKey(
@@ -158,7 +158,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
 
       final _uploadedPart = _uploadedPartMap[partNumber];
       if (_uploadedPart != null) {
-        _sentMap[partNumber] = _getPartSizeByPartNumber(partNumber);
+        _sentMap[partNumber] = 1;
         notifyProgress();
         continue;
       }
@@ -175,7 +175,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     final _byteLength = _getPartSizeByPartNumber(partNumber);
 
     _idleRequestNumber--;
-    final _controller = RequestTaskController();
+    final _controller = PutController();
     _workingUploadPartTaskControllers.add(_controller);
 
     final task = UploadPartTask(
@@ -189,8 +189,8 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
       controller: _controller,
     );
 
-    _controller.addProgressListener((sent, total) {
-      _sentMap[partNumber] = sent;
+    _controller.addSendProgressListener((percent) {
+      _sentMap[partNumber] = percent;
       notifyProgress();
     });
 
@@ -222,7 +222,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   }
 
   void notifyProgress() {
-    final _sent = _sentMap.values.reduce((value, element) => value + element);
-    controller?.notifyProgressListeners(_sent, _fileByteLength);
+    final _sent = _sentMap.values.where((element) => element == 1).length;
+    onSendProgress(_sent / _totalPartCount);
   }
 }
