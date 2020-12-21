@@ -89,6 +89,9 @@ void main() {
       RequestTaskStatus.Init,
       RequestTaskStatus.Request,
       RequestTaskStatus.Cancel
+    ], targetProgressList: [
+      0.001,
+      0.01,
     ]);
 
     try {
