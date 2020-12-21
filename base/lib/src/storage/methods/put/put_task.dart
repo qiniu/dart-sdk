@@ -7,6 +7,7 @@ import '../../task/request_task.dart';
 import '../../task/task.dart';
 import 'by_part/put_parts_task.dart';
 import 'by_single/put_by_single_task.dart';
+import 'put_controller.dart';
 import 'put_response.dart';
 
 class PutTask extends Task<PutResponse> {
@@ -19,7 +20,7 @@ class PutTask extends Task<PutResponse> {
   final int maxPartsRequestNumber;
 
   final String key;
-  final RequestTaskController controller;
+  final PutController controller;
   final HostProvider hostProvider;
 
   PutTask({

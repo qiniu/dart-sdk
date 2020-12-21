@@ -9,6 +9,13 @@ import 'task.dart';
 part 'request_task_controller.dart';
 
 abstract class RequestTask<T> extends Task<T> {
+  // 准备阶段占总任务的百分比
+  static double preStartTakePercentOfTotal = 0.001;
+  // 处理中阶段占总任务的百分比
+  static double onSendProgressTakePercentOfTotal = 0.99;
+  // 完成阶段占总任务的百分比
+  static double postReceiveTakePercentOfTotal = 1;
+
   final Dio client = Dio();
 
   /// [RequestTaskManager.addRequestTask] 会初始化这个
@@ -28,12 +35,13 @@ abstract class RequestTask<T> extends Task<T> {
       throw StorageError(type: StorageErrorType.CANCEL);
     }
     controller?.notifyStatusListeners(RequestTaskStatus.Init);
+    controller?.notifyProgressListeners(preStartTakePercentOfTotal);
     client.httpClientAdapter = config.httpClientAdapter;
     client.interceptors.add(InterceptorsWrapper(onRequest: (options) {
       controller?.notifyStatusListeners(RequestTaskStatus.Request);
       options
         ..cancelToken = controller?.cancelToken
-        ..onSendProgress = onSendProgress;
+        ..onSendProgress = (sent, total) => onSendProgress(sent / total);
 
       return options;
     }));
@@ -51,6 +59,7 @@ abstract class RequestTask<T> extends Task<T> {
   @mustCallSuper
   void postReceive(T data) {
     controller?.notifyStatusListeners(RequestTaskStatus.Success);
+    controller?.notifyProgressListeners(postReceiveTakePercentOfTotal);
     super.postReceive(data);
   }
 
@@ -118,8 +127,10 @@ abstract class RequestTask<T> extends Task<T> {
   }
 
   // 自定义发送进度处理逻辑
-  void onSendProgress(int sent, int total) {
-    controller?.notifyProgressListeners(sent, total);
+  void onSendProgress(double percent) {
+    controller?.notifySendProgressListeners(percent);
+    controller
+        ?.notifyProgressListeners(percent * onSendProgressTakePercentOfTotal);
   }
 
   // host 是否可以连接上

@@ -1,7 +1,10 @@
 part of 'request_task.dart';
 
 class RequestTaskController
-    with RequestTaskProgressListenersMixin, RequestTaskStatusListenersMixin {
+    with
+        RequestTaskProgressListenersMixin,
+        RequestTaskStatusListenersMixin,
+        RequestTaskSendProgressListenersMixin {
   final CancelToken cancelToken = CancelToken();
 
   /// 是否被取消过
@@ -17,26 +20,51 @@ class RequestTaskController
   }
 }
 
-typedef RequestTaskProgressListener = void Function(int sent, int total);
+typedef RequestTaskSendProgressListener = void Function(double percent);
 
-/// 请求进度。
+/// 请求发送进度
 ///
-/// 使用 client 发出去的请求才会触发，其他情况继承 RequestTask 的需要手动触发
+/// 使用 Dio 发出去的请求才会触发
+mixin RequestTaskSendProgressListenersMixin {
+  final List<RequestTaskSendProgressListener> _sendProgressListeners = [];
+
+  void Function() addSendProgressListener(
+      RequestTaskSendProgressListener listener) {
+    _sendProgressListeners.add(listener);
+    return () => removeSendProgressListener(listener);
+  }
+
+  void removeSendProgressListener(RequestTaskSendProgressListener listener) {
+    _sendProgressListeners.remove(listener);
+  }
+
+  void notifySendProgressListeners(double percent) {
+    for (final listener in _sendProgressListeners) {
+      listener(percent);
+    }
+  }
+}
+
+typedef RequestTaskProgressListener = void Function(double percent);
+
+/// 任务进度
+///
+/// 当前任务的总体进度，初始化占 1%，处理请求占 98%，完成占 1%，总体 100%
 mixin RequestTaskProgressListenersMixin {
-  final List<RequestTaskProgressListener> progressListeners = [];
+  final List<RequestTaskProgressListener> _progressListeners = [];
 
   void Function() addProgressListener(RequestTaskProgressListener listener) {
-    progressListeners.add(listener);
+    _progressListeners.add(listener);
     return () => removeProgressListener(listener);
   }
 
   void removeProgressListener(RequestTaskProgressListener listener) {
-    progressListeners.remove(listener);
+    _progressListeners.remove(listener);
   }
 
-  void notifyProgressListeners(int sent, int total) {
-    for (final listener in progressListeners) {
-      listener(sent, total);
+  void notifyProgressListeners(double percent) {
+    for (final listener in _progressListeners) {
+      listener(percent);
     }
   }
 }

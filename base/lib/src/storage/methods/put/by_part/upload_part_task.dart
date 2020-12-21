@@ -25,7 +25,7 @@ class UploadPartTask extends RequestTask<UploadPart> {
     @required this.partNumber,
     @required this.partSize,
     this.key,
-    RequestTaskController controller,
+    PutController controller,
   }) : super(controller: controller);
 
   @override
@@ -33,17 +33,6 @@ class UploadPartTask extends RequestTask<UploadPart> {
     _tokenInfo = Auth.parseUpToken(token);
     super.preStart();
   }
-
-  @override
-  void postReceive(UploadPart data) {
-    // 上传完成后汇报进度
-    controller?.notifyProgressListeners(byteLength, byteLength);
-    super.postReceive(data);
-  }
-
-  // 覆盖默认的 onSendProgress，不要在发送的时候汇报进度
-  @override
-  void onSendProgress(sent, total) {}
 
   @override
   Future<UploadPart> createTask() async {
