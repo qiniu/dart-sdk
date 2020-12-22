@@ -121,7 +121,7 @@ import 'package:qiniu_flutter_sdk/qiniu_flutter_sdk.dart';
     storage = Storage(Config(
       // 通过自己的 hostProvider 来使用自己的 host 进行上传
       hostProvider: HostProvider,
-      // 可以通过实现 cacheProvider 来自己实现缓存系统支持分片端点续传
+      // 可以通过实现 cacheProvider 来自己实现缓存系统支持分片断点续传
       cacheProvider: CacheProvider,
       // 如果你需要对网络请求进行更基础的一些操作，你可以实现自己的 HttpClientAdapter 处理相关行为
       httpClientAdapter: HttpClientAdapter,
