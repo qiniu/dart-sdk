@@ -86,9 +86,9 @@ void main() {
     }
     expect(future, throwsA(TypeMatcher<StorageError>()));
     pcb.testStatus(targetStatusList: [
-      RequestTaskStatus.Init,
-      RequestTaskStatus.Request,
-      RequestTaskStatus.Cancel
+      StorageStatus.Init,
+      StorageStatus.Request,
+      StorageStatus.Cancel
     ], targetProgressList: [
       0.001,
       0.01,

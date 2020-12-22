@@ -3,7 +3,7 @@ part of 'request_task.dart';
 class RequestTaskController
     with
         RequestTaskProgressListenersMixin,
-        RequestTaskStatusListenersMixin,
+        StorageStatusListenersMixin,
         RequestTaskSendProgressListenersMixin {
   final CancelToken cancelToken = CancelToken();
 
@@ -69,48 +69,26 @@ mixin RequestTaskProgressListenersMixin {
   }
 }
 
-enum RequestTaskStatus {
-  None,
-
-  /// 初始化任务
-  Init,
-
-  /// 请求准备发出的时候触发
-  Request,
-
-  /// 请求完成后触发
-  Success,
-
-  /// 请求被取消后触发
-  Cancel,
-
-  /// 请求出错后触发
-  Error,
-
-  /// 请求出错触发重试时触发
-  Retry
-}
-
-typedef RequestTaskStatusListener = void Function(RequestTaskStatus status);
+typedef StorageStatusListener = void Function(StorageStatus status);
 
 /// 任务状态。
 ///
 /// 自动触发(preStart, postReceive)
-mixin RequestTaskStatusListenersMixin {
-  RequestTaskStatus status = RequestTaskStatus.None;
+mixin StorageStatusListenersMixin {
+  StorageStatus status = StorageStatus.None;
 
-  final List<RequestTaskStatusListener> _statusListeners = [];
+  final List<StorageStatusListener> _statusListeners = [];
 
-  void Function() addStatusListener(RequestTaskStatusListener listener) {
+  void Function() addStatusListener(StorageStatusListener listener) {
     _statusListeners.add(listener);
     return () => removeStatusListener(listener);
   }
 
-  void removeStatusListener(RequestTaskStatusListener listener) {
+  void removeStatusListener(StorageStatusListener listener) {
     _statusListeners.remove(listener);
   }
 
-  void notifyStatusListeners(RequestTaskStatus status) {
+  void notifyStatusListeners(StorageStatus status) {
     status = status;
     for (final listener in _statusListeners) {
       listener(status);

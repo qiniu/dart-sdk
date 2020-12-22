@@ -137,7 +137,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
       throw StorageError(type: StorageErrorType.CANCEL);
     }
 
-    controller.notifyStatusListeners(RequestTaskStatus.Request);
+    controller.notifyStatusListeners(StorageStatus.Request);
     // 上传分片
     await _uploadParts();
     return _uploadedPartMap.values.toList();

@@ -8,13 +8,11 @@ import 'methods/put/put_task.dart';
 import 'task/task_manager.dart';
 
 export 'package:dio/dio.dart' show HttpClientAdapter;
-
-export './error/error.dart';
-export './methods/put/put_controller.dart';
-export './task/request_task.dart';
-export './task/request_task.dart';
 export 'config/config.dart';
+export 'error/error.dart';
 export 'methods/put/put.dart';
+export 'status/status.dart';
+export 'task/request_task.dart';
 export 'task/task.dart';
 
 /// 客户端
