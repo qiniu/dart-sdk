@@ -26,8 +26,7 @@ class ConsoleControllerProvider extends InheritedWidget {
 
   @override
   bool updateShouldNotify(covariant ConsoleControllerProvider oldWidget) {
-    // 固定不变的，永不通知
-    return false;
+    return oldWidget.controller != controller;
   }
 }
 

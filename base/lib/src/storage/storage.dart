@@ -7,6 +7,8 @@ import 'methods/put/put.dart';
 import 'methods/put/put_task.dart';
 import 'task/task_manager.dart';
 
+export 'package:dio/dio.dart' show HttpClientAdapter;
+
 export './error/error.dart';
 export './methods/put/put_controller.dart';
 export './task/request_task.dart';
