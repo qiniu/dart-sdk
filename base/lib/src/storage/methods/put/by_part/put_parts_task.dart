@@ -5,14 +5,7 @@ import 'dart:math';
 
 import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
-import 'package:qiniu_sdk_base/src/storage/error/error.dart';
-
-import '../../../../auth/auth.dart';
-import '../../../config/config.dart';
-import '../../../task/request_task.dart';
-import '../../../task/task.dart';
-import '../put_controller.dart';
-import '../put_response.dart';
+import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
 
 part 'cache_mixin.dart';
 part 'complete_parts_task.dart';
@@ -87,7 +80,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
 
   @override
   Future<PutResponse> createTask() async {
-    controller?.notifyStatusListeners(RequestTaskStatus.Request);
+    controller?.notifyStatusListeners(StorageStatus.Request);
 
     final initPartsTask = _createInitParts();
     final initParts = await initPartsTask.future;
@@ -115,7 +108,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
 
         /// 如果服务端文件被删除了，重新上传
         if (error.code == 612) {
-          controller?.notifyStatusListeners(RequestTaskStatus.Retry);
+          controller?.notifyStatusListeners(StorageStatus.Retry);
           return createTask();
         }
       }

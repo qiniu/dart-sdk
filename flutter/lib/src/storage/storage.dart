@@ -14,7 +14,7 @@ export 'package:qiniu_sdk_base/qiniu_sdk_base.dart'
         StorageError,
         StorageErrorType,
         PutByPartOptions,
-        RequestTaskStatus,
+        StorageStatus,
         PutBySingleOptions;
 
 export './controller.dart';

@@ -3,7 +3,7 @@ import 'package:test/test.dart';
 
 class PutControllerBuilder {
   final putController = PutController();
-  final statusList = <RequestTaskStatus>[];
+  final statusList = <StorageStatus>[];
   final progressList = <double>[];
   double _sendPercent, _totalPercent;
 
@@ -33,13 +33,13 @@ class PutControllerBuilder {
 
   // 任务执行完成后执行此方法
   void testStatus({
-    List<RequestTaskStatus> targetStatusList,
+    List<StorageStatus> targetStatusList,
     List<double> targetProgressList,
   }) {
     targetStatusList ??= [
-      RequestTaskStatus.Init,
-      RequestTaskStatus.Request,
-      RequestTaskStatus.Success
+      StorageStatus.Init,
+      StorageStatus.Request,
+      StorageStatus.Success
     ];
     targetProgressList ??= [0.001, 0.99, 1];
     expect(statusList, equals(targetStatusList));

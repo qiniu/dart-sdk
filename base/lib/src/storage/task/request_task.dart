@@ -1,8 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
-import 'package:qiniu_sdk_base/src/storage/error/error.dart';
-
-import '../config/config.dart';
+import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
 
 import 'task.dart';
 
@@ -34,11 +32,11 @@ abstract class RequestTask<T> extends Task<T> {
     if (controller != null && controller.cancelToken.isCancelled) {
       throw StorageError(type: StorageErrorType.CANCEL);
     }
-    controller?.notifyStatusListeners(RequestTaskStatus.Init);
+    controller?.notifyStatusListeners(StorageStatus.Init);
     controller?.notifyProgressListeners(preStartTakePercentOfTotal);
     client.httpClientAdapter = config.httpClientAdapter;
     client.interceptors.add(InterceptorsWrapper(onRequest: (options) {
-      controller?.notifyStatusListeners(RequestTaskStatus.Request);
+      controller?.notifyStatusListeners(StorageStatus.Request);
       options
         ..cancelToken = controller?.cancelToken
         ..onSendProgress = (sent, total) => onSendProgress(sent / total);
@@ -51,14 +49,14 @@ abstract class RequestTask<T> extends Task<T> {
   @override
   @mustCallSuper
   void preRestart() {
-    controller?.notifyStatusListeners(RequestTaskStatus.Retry);
+    controller?.notifyStatusListeners(StorageStatus.Retry);
     super.preRestart();
   }
 
   @override
   @mustCallSuper
   void postReceive(T data) {
-    controller?.notifyStatusListeners(RequestTaskStatus.Success);
+    controller?.notifyStatusListeners(StorageStatus.Success);
     controller?.notifyProgressListeners(postReceiveTakePercentOfTotal);
     super.postReceive(data);
   }
@@ -66,7 +64,7 @@ abstract class RequestTask<T> extends Task<T> {
   /// [createTask] 被取消后触发
   @mustCallSuper
   void postCancel(StorageError error) {
-    controller?.notifyStatusListeners(RequestTaskStatus.Cancel);
+    controller?.notifyStatusListeners(StorageStatus.Cancel);
   }
 
   @override
@@ -107,7 +105,7 @@ abstract class RequestTask<T> extends Task<T> {
         if (error.type == DioErrorType.CANCEL) {
           postCancel(storageError);
         } else {
-          controller?.notifyStatusListeners(RequestTaskStatus.Error);
+          controller?.notifyStatusListeners(StorageStatus.Error);
         }
 
         super.postError(storageError);
@@ -119,7 +117,7 @@ abstract class RequestTask<T> extends Task<T> {
       if (error.type == StorageErrorType.CANCEL) {
         postCancel(error);
       } else {
-        controller?.notifyStatusListeners(RequestTaskStatus.Error);
+        controller?.notifyStatusListeners(StorageStatus.Error);
       }
     }
 

@@ -33,10 +33,10 @@ void main() {
     final key = 'test_for_put.txt';
     final file = File('test_resource/test_for_put.txt');
 
-    final statusList = <RequestTaskStatus>[];
+    final statusList = <StorageStatus>[];
     putController.addStatusListener((status) {
       statusList.add(status);
-      if (status == RequestTaskStatus.Request) {
+      if (status == StorageStatus.Request) {
         putController.cancel();
       }
     });
@@ -52,9 +52,9 @@ void main() {
       expect((error as StorageError).type, StorageErrorType.CANCEL);
     }
     expect(future, throwsA(TypeMatcher<StorageError>()));
-    expect(statusList[0], RequestTaskStatus.Init);
-    expect(statusList[1], RequestTaskStatus.Request);
-    expect(statusList[2], RequestTaskStatus.Cancel);
+    expect(statusList[0], StorageStatus.Init);
+    expect(statusList[1], StorageStatus.Request);
+    expect(statusList[2], StorageStatus.Cancel);
 
     try {
       // 预期同步发生

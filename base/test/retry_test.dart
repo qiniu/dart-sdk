@@ -17,7 +17,7 @@ void main() {
     );
     final storage = Storage(config: config);
     final putController = PutController();
-    final statusList = <RequestTaskStatus>[];
+    final statusList = <StorageStatus>[];
     putController.addStatusListener(statusList.add);
     final response = await storage.putFileBySingle(
       File('test_resource/test_for_put.txt'),
@@ -28,13 +28,13 @@ void main() {
       ),
     );
     expect(statusList, [
-      RequestTaskStatus.Init,
-      RequestTaskStatus.Request,
+      StorageStatus.Init,
+      StorageStatus.Request,
       // 重试了 1 次
-      RequestTaskStatus.Retry,
+      StorageStatus.Retry,
       // 重试后会重新发请求
-      RequestTaskStatus.Request,
-      RequestTaskStatus.Success
+      StorageStatus.Request,
+      StorageStatus.Success
     ]);
     expect(response.key, 'test_for_put.txt');
   }, skip: !isSensitiveDataDefined);
@@ -47,7 +47,7 @@ void main() {
     final storage = Storage(config: config);
     final file = File('test_resource/test_for_put_parts.mp4');
     final key = 'test_for_put_parts.mp4';
-    final initPartsTaskStatusList = <RequestTaskStatus>[];
+    final initPartsTaskStatusList = <StorageStatus>[];
 
     // 重试阶段会发生在 InitPartsTask 调用 getUpHost 的时候
     // 手动初始化一个用于测试
@@ -61,7 +61,7 @@ void main() {
 
     // 接下来是正常流程
     final putController = PutController();
-    final statusList = <RequestTaskStatus>[];
+    final statusList = <StorageStatus>[];
     double _sendPercent, _totalPercent;
     putController
       ..addStatusListener(statusList.add)
@@ -87,16 +87,16 @@ void main() {
     expect(
         initPartsTaskStatusList,
         equals([
-          RequestTaskStatus.Init,
-          RequestTaskStatus.Request,
-          RequestTaskStatus.Retry,
-          RequestTaskStatus.Request,
-          RequestTaskStatus.Success
+          StorageStatus.Init,
+          StorageStatus.Request,
+          StorageStatus.Retry,
+          StorageStatus.Request,
+          StorageStatus.Success
         ]));
-    expect(statusList[0], RequestTaskStatus.Init);
-    expect(statusList[1], RequestTaskStatus.Request);
+    expect(statusList[0], StorageStatus.Init);
+    expect(statusList[1], StorageStatus.Request);
     // 分片上传 PutPartsTask 本身不会重试，子任务会去重试，所以没有 Retry 状态
-    expect(statusList[2], RequestTaskStatus.Success);
+    expect(statusList[2], StorageStatus.Success);
   }, skip: !isSensitiveDataDefined);
 }
 
