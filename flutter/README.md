@@ -75,7 +75,7 @@ import 'package:qiniu_flutter_sdk/qiniu_flutter_sdk.dart';
     });
 
     // 添加状态监听
-    putController.addStatusListener((RequestTaskStatus status) {
+    putController.addStatusListener((StorageStatus status) {
       print('状态变化: 当前任务状态：$status');
     });
 

@@ -48,7 +48,7 @@ class BaseState extends DisposableState<Base> {
   double progressValue = 1;
 
   // 当前的任务状态
-  RequestTaskStatus statusValue;
+  StorageStatus statusValue;
 
   // 控制器，可以用于取消任务、获取上述的状态，进度等信息
   PutController putController;
@@ -64,7 +64,7 @@ class BaseState extends DisposableState<Base> {
     super.dispose();
   }
 
-  void onStatus(RequestTaskStatus status) {
+  void onStatus(StorageStatus status) {
     printToConsole('状态变化: 当前任务状态：${status.toString()}');
     setState(() => statusValue = status);
   }
@@ -92,7 +92,7 @@ class BaseState extends DisposableState<Base> {
     printToConsole('创建 PutController');
     putController = PutController();
 
-    printToConsole('添加实际发送进度订阅'); 
+    printToConsole('添加实际发送进度订阅');
     addDisposer(putController.addSendProgressListener(onSendProgress));
 
     printToConsole('添加任务进度订阅');
@@ -211,7 +211,7 @@ class BaseState extends DisposableState<Base> {
   }
 
   Widget get cancelButton {
-    if (statusValue == RequestTaskStatus.Request) {
+    if (statusValue == StorageStatus.Request) {
       return Padding(
         padding: EdgeInsets.all(10),
         child: RaisedButton(
