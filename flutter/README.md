@@ -1,6 +1,7 @@
 # 七牛云存储 Flutter SDK
 
-基于七牛云 API 针对 Flutter 实现的 Dart SDK，封装了七牛云存储系统的的客户端操作。
+七牛云存储的 Flutter SDK。
+基于七牛云 API 实现，封装了七牛云存储系统的的客户端操作。
 
 ## 快速导航
 
@@ -8,8 +9,8 @@
 * [示例](#示例)
 * [快速开始](#快速开始)
 * [功能简介](#功能简介)
-* [功能简介](#贡献代码)
-* [功能简介](#许可证)
+* [贡献代码](#贡献代码)
+* [许可证](#许可证)
 
 ## 概述
 
@@ -84,7 +85,7 @@ import 'package:qiniu_flutter_sdk/qiniu_flutter_sdk.dart';
     ))
   ```
 
-### 取消正常上传的任务
+### 取消正在上传的任务
 
   ```dart
     // 创建 storage 对象
@@ -118,14 +119,14 @@ import 'package:qiniu_flutter_sdk/qiniu_flutter_sdk.dart';
   ```dart
     // 创建 storage 对象
     storage = Storage(Config(
-    // 通过自己的 hostProvider 来使用自己的 host 进行上传
-    hostProvider: HostProvider,
-    // 可以通过实现 cacheProvider 来自己实现缓存系统支持分片端点续传
-    cacheProvider: CacheProvider,
-    // 如果你需要对网络请求进行更基础的一些操作，你可以实现自己的 HttpClientAdapter 处理相关行为
-    httpClientAdapter: HttpClientAdapter,
-    // 设定内部的自动重试次数
-    retryLimit: 3,
+      // 通过自己的 hostProvider 来使用自己的 host 进行上传
+      hostProvider: HostProvider,
+      // 可以通过实现 cacheProvider 来自己实现缓存系统支持分片端点续传
+      cacheProvider: CacheProvider,
+      // 如果你需要对网络请求进行更基础的一些操作，你可以实现自己的 HttpClientAdapter 处理相关行为
+      httpClientAdapter: HttpClientAdapter,
+      // 设定网络请求重试次数
+      retryLimit: 3,
     ));
   ```
 
@@ -154,19 +155,11 @@ import 'package:qiniu_flutter_sdk/qiniu_flutter_sdk.dart';
 
 该接口内部封装了分片和直传两种实现，会根据文件的尺寸和上传配置信息自动选择使用分片还是直传的方式来上传对象
 
-#### `Storage.putFileBySingle`
-
-该接口内部封装了直传的实现，无论文件多大，都将会使用直传的形式进行上传，直传不支持断点续传，如果没有特殊需要，请使用 [`Storage.putFile`](#Storage.putFile)
-
-#### `Storage.putFileByPart`
-  
-该接口内部封装了分片上传的实现，该接口固定使用分片的方式进行上传，同时该接口支持断点续传，如果没有特殊需要，请使用 [`Storage.putFile`](#Storage.putFile)
-
 ### 其他说明
 
 1. 如果您想了解更多七牛的上传策略，建议您仔细阅读 [七牛官方文档-上传](https://developer.qiniu.com/kodo/manual/upload-types)。另外，七牛的上传策略是在后端服务指定的.
 
-2. 如果您想了解更多七牛的图片处理，建议您仔细阅读 [七牛官方文档-图片处理](https://developer.qiniu.com/dora/api/image-processing-api)
+2. 如果您想了解更多七牛的图片处理，建议您仔细阅读 [七牛官方文档-图片处理](https://developer.qiniu.com/dora/api/3683/img-directions-for-use)
 
 ## 贡献代码
 

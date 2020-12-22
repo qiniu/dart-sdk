@@ -29,7 +29,7 @@ class Base extends StatefulWidget implements Example {
 }
 
 class BaseState extends DisposableState<Base> {
-  // 用户输入的文件 key
+  // 用户输入的文件名
   String key;
 
   // 用户输入的 partSize
@@ -69,12 +69,14 @@ class BaseState extends DisposableState<Base> {
     setState(() => statusValue = status);
   }
 
-  void onProgress(int sent, int total) {
-    final progress = sent.toDouble() / total.toDouble();
-    final sentStr = humanizeFileSize(sent.toDouble());
-    setState(() => progressValue = progress);
+  void onProgress(double percent) {
+    setState(() => progressValue = percent);
+    printToConsole('任务进度变化：进度：${percent.toStringAsFixed(4)}');
+  }
 
-    printToConsole('进度变化：进度：${progress.toStringAsFixed(2)}, 已发送：$sentStr');
+  void onSendProgress(double percent) {
+    // setState(() => progressValue = percent);
+    printToConsole('实际发送变化：进度：${percent.toStringAsFixed(4)}');
   }
 
   void printToConsole(String message) {
@@ -90,7 +92,10 @@ class BaseState extends DisposableState<Base> {
     printToConsole('创建 PutController');
     putController = PutController();
 
-    printToConsole('添加进度订阅');
+    printToConsole('添加实际发送进度订阅'); 
+    addDisposer(putController.addSendProgressListener(onSendProgress));
+
+    printToConsole('添加任务进度订阅');
     addDisposer(putController.addProgressListener(onProgress));
 
     printToConsole('添加状态订阅');
@@ -146,7 +151,7 @@ class BaseState extends DisposableState<Base> {
               printToConsole('发生错误: 未知错误');
               break;
             case StorageErrorType.NO_AVAILABLE_HOST:
-              printToConsole('发生错误: 无可用服务');
+              printToConsole('发生错误: 无可用 Host');
               break;
             case StorageErrorType.IN_PROGRESS:
               printToConsole('发生错误: 已在队列中');
