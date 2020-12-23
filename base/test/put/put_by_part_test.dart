@@ -91,7 +91,7 @@ void main() {
       StorageStatus.Cancel
     ], targetProgressList: [
       0.001,
-      0.01,
+      0.002,
     ]);
 
     try {
@@ -294,7 +294,7 @@ void main() {
     expect(response, isA<PutResponse>());
     pcb
       ..testProcess()
-      ..testStatus(targetProgressList: [0.001, 0.01, 0.99, 1]);
+      ..testStatus(targetProgressList: [0.001, 0.002, 0.99, 1]);
   }, skip: !isSensitiveDataDefined);
 }
 
