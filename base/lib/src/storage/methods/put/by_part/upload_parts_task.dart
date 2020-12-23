@@ -82,6 +82,10 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     _totalPartCount = (_fileByteLength / _partByteLength).ceil();
     _cacheKey = getCacheKey(file.path, _fileByteLength, partSize, key);
     recoverUploadedPart();
+    // 子任务 UploadPartTask 从 file 去 open 的话虽然上传精度会颗粒更细但是会导致可能读不出文件的问题
+    // 可能 close 没办法立即关闭 file stream，而延迟 close 了，导致某次 open 的 stream 被立即关闭
+    // 所以读不出内容了
+    // 这里改成这里读取一次，子任务从中读取 bytes
     _raf = file.openSync();
     super.preStart();
   }
