@@ -118,9 +118,7 @@ void main() {
     ]);
 
     try {
-      // 预期出错是同步发生的
-      // ignore: unawaited_futures
-      storage.putFileByPart(
+      await storage.putFileByPart(
         file,
         token,
         options: PutByPartOptions(

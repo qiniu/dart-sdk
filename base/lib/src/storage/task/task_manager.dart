@@ -15,7 +15,8 @@ class TaskManager {
         ..manager = this
         ..preStart();
     } catch (e) {
-      rethrow;
+      task.postError(e);
+      return;
     }
 
     workingTasks.add(task);
@@ -24,8 +25,8 @@ class TaskManager {
     try {
       task.postStart();
     } catch (e) {
-      removeTask(task);
-      rethrow;
+      task.postError(e);
+      return;
     }
   }
 
@@ -39,8 +40,8 @@ class TaskManager {
     try {
       task.preRestart();
     } catch (e) {
-      removeTask(task);
-      rethrow;
+      task.postError(e);
+      return;
     }
 
     task.createTask().then(task.postReceive).catchError(task.postError);
@@ -48,8 +49,8 @@ class TaskManager {
     try {
       task.postRestart();
     } catch (e) {
-      removeTask(task);
-      rethrow;
+      task.postError(e);
+      return;
     }
   }
 
