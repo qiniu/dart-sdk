@@ -47,9 +47,10 @@ void main() {
 
   test('putFileByPart should throw error with incorrect partSize.', () async {
     final storage = Storage();
+    final file = File('test_resource/test_for_put_parts.mp4');
     try {
       await storage.putFileByPart(
-        File('test_resource/test_for_put_parts.mp4'),
+        file,
         token,
         options: PutByPartOptions(partSize: 0),
       );
@@ -59,7 +60,7 @@ void main() {
 
     try {
       await storage.putFileByPart(
-        File('test_resource/test_for_put_parts.mp4'),
+        file,
         token,
         options: PutByPartOptions(partSize: 1025),
       );
