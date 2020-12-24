@@ -24,13 +24,10 @@ class PutByPartTask extends RequestTask<PutResponse> {
 
   final String key;
 
-  HostProvider hostProvider;
-
   PutByPartTask({
     @required this.file,
     @required this.token,
     @required this.partSize,
-    @required this.hostProvider,
     @required this.maxPartsRequestNumber,
     this.key,
     PutController controller,

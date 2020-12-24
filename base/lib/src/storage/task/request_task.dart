@@ -5,6 +5,7 @@ import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
 import 'task.dart';
 
 part 'request_task_controller.dart';
+part 'request_task_manager.dart';
 
 abstract class RequestTask<T> extends Task<T> {
   // 准备阶段占总任务的百分比
@@ -18,6 +19,9 @@ abstract class RequestTask<T> extends Task<T> {
 
   /// [RequestTaskManager.addRequestTask] 会初始化这个
   Config config;
+  @override
+  // ignore: overridden_fields
+  covariant RequestTaskManager manager;
   RequestTaskController controller;
 
   /// 重试次数

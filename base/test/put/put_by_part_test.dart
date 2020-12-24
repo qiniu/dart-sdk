@@ -45,6 +45,29 @@ void main() {
     expect(responseNoOps, isA<PutResponse>());
   }, skip: !isSensitiveDataDefined);
 
+  test('putFileByPart should throw error with incorrect partSize.', () async {
+    final storage = Storage();
+    try {
+      await storage.putFileByPart(
+        File('test_resource/test_for_put_parts.mp4'),
+        token,
+        options: PutByPartOptions(partSize: 0),
+      );
+    } catch (e) {
+      expect(e, isA<RangeError>());
+    }
+
+    try {
+      await storage.putFileByPart(
+        File('test_resource/test_for_put_parts.mp4'),
+        token,
+        options: PutByPartOptions(partSize: 1025),
+      );
+    } catch (e) {
+      expect(e, isA<RangeError>());
+    }
+  });
+
   test('putFileByPart should works well while response 612.', () async {
     final httpAdapterTest = HttpAdapterTestWith612();
     final storage = Storage(config: Config(httpClientAdapter: httpAdapterTest));

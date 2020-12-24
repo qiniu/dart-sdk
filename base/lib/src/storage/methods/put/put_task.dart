@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:meta/meta.dart';
 
-import '../../config/config.dart';
 import '../../task/request_task.dart';
 import '../../task/task.dart';
 import 'by_part/put_parts_task.dart';
@@ -21,12 +20,12 @@ class PutTask extends Task<PutResponse> {
 
   final String key;
   final PutController controller;
-  final HostProvider hostProvider;
+  final RequestTaskManager requestTaskmanager;
 
   PutTask({
     @required this.file,
     @required this.token,
-    @required this.hostProvider,
+    @required this.requestTaskmanager,
     this.forceBySingle,
     this.partSize,
     this.maxPartsRequestNumber,
@@ -53,7 +52,6 @@ class PutTask extends Task<PutResponse> {
         maxPartsRequestNumber: maxPartsRequestNumber,
         partSize: partSize,
         controller: controller,
-        hostProvider: hostProvider,
       );
     } else {
       task = PutBySingleTask(
@@ -64,7 +62,7 @@ class PutTask extends Task<PutResponse> {
       );
     }
 
-    manager.addRequestTask(task);
+    requestTaskmanager.addRequestTask(task);
 
     return task.future;
   }
