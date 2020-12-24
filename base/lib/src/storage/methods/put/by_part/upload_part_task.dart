@@ -35,6 +35,12 @@ class UploadPartTask extends RequestTask<UploadPart> {
   }
 
   @override
+  void postReceive(data) {
+    controller?.notifyProgressListeners(1);
+    super.postReceive(data);
+  }
+
+  @override
   Future<UploadPart> createTask() async {
     final headers = <String, dynamic>{
       'Authorization': 'UpToken $token',
@@ -60,6 +66,16 @@ class UploadPartTask extends RequestTask<UploadPart> {
     );
 
     return UploadPart.fromJson(response.data);
+  }
+
+  // 分片上传是手动从 File 拿一段数据大概 4m(直穿是直接从 File 里面读取)
+  // 如果文件是 21m，假设切片是 4 * 5
+  // 外部进度的话会导致一下长到 90% 多，然后变成 100%
+  // 解决方法是覆盖父类的 onSendProgress，让 onSendProgress 不处理 Progress 的进度
+  // 改为发送成功后通知(见 postReceive)
+  @override
+  void onSendProgress(double percent) {
+    controller?.notifySendProgressListeners(percent);
   }
 
   // 根据 partNumber 获取要上传的文件片段

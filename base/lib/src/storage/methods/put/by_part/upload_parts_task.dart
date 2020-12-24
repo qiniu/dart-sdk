@@ -31,8 +31,11 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   // 处理分片上传任务的 UploadPartTask 的控制器
   final List<RequestTaskController> _workingUploadPartTaskControllers = [];
 
-  // 已发送的数据记录，key 是 partNumber, value 是 已发送的百分比
-  final Map<int, double> _sentMap = {};
+  // 已发送分片数量
+  int _sentPartCount = 0;
+
+  // 已发送到服务器的数量
+  int _sentPartToServerCount = 0;
 
   // 剩余多少被允许的请求数
   int _idleRequestNumber;
@@ -79,6 +82,10 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     _totalPartCount = (_fileByteLength / _partByteLength).ceil();
     _cacheKey = getCacheKey(file.path, _fileByteLength, partSize, key);
     recoverUploadedPart();
+    // 子任务 UploadPartTask 从 file 去 open 的话虽然上传精度会颗粒更细但是会导致可能读不出文件的问题
+    // 可能 close 没办法立即关闭 file stream，而延迟 close 了，导致某次 open 的 stream 被立即关闭
+    // 所以读不出内容了
+    // 这里改成这里读取一次，子任务从中读取 bytes
     _raf = file.openSync();
     super.preStart();
   }
@@ -158,7 +165,9 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
 
       final _uploadedPart = _uploadedPartMap[partNumber];
       if (_uploadedPart != null) {
-        _sentMap[partNumber] = 1;
+        _sentPartCount++;
+        _sentPartToServerCount++;
+        notifySendProgress();
         notifyProgress();
         continue;
       }
@@ -189,10 +198,15 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
       controller: _controller,
     );
 
-    _controller.addSendProgressListener((percent) {
-      _sentMap[partNumber] = percent;
-      notifyProgress();
-    });
+    _controller
+      ..addSendProgressListener((percent) {
+        _sentPartCount++;
+        notifySendProgress();
+      })
+      ..addProgressListener((percent) {
+        _sentPartToServerCount++;
+        notifyProgress();
+      });
 
     manager.addRequestTask(task);
 
@@ -221,8 +235,17 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     return _partByteLength;
   }
 
-  void notifyProgress() {
-    final _sent = _sentMap.values.where((element) => element == 1).length;
-    onSendProgress(_sent / _totalPartCount);
+  void notifySendProgress() {
+    controller?.notifySendProgressListeners(_sentPartCount / _totalPartCount);
   }
+
+  void notifyProgress() {
+    controller?.notifyProgressListeners(_sentPartToServerCount /
+        _totalPartCount *
+        RequestTask.onSendProgressTakePercentOfTotal);
+  }
+
+  // UploadPartsTask 自身不包含进度，在其他地方处理
+  @override
+  void onSendProgress(double percent) {}
 }
