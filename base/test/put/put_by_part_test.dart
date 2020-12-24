@@ -67,7 +67,7 @@ void main() {
     } catch (e) {
       expect(e, isA<RangeError>());
     }
-  });
+  }, skip: !isSensitiveDataDefined);
 
   test('putFileByPart should works well while response 612.', () async {
     final httpAdapterTest = HttpAdapterTestWith612();
