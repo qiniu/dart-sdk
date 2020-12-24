@@ -4,8 +4,6 @@ import 'package:qiniu_sdk_base/src/auth/auth.dart';
 import 'package:test/test.dart';
 import 'package:qiniu_sdk_base/src/auth/put_policy.dart';
 
-import '../config.dart';
-
 class UploadTokenTestData {
   final PutPolicy putPolicy;
   final String expectedToken;
@@ -41,7 +39,6 @@ class AccessTokenTestData {
 }
 
 void main() {
-  configEnv();
   group('Auth', () {
     var auth = Auth(
       accessKey: 'iN7NgwM31j4-BZacMjPrOQBs34UG1maYCAQmhdCV',
@@ -165,16 +162,23 @@ void main() {
         expect(tokenInfo.putPolicy, equals(null));
       }
     });
-  });
 
-  test('parseUpToken should works well.', () async {
-    try {
-      Auth.parseUpToken('123');
-    } catch (e) {
-      expect(e, isA<ArgumentError>());
-    }
+    test('parseUpToken should works well.', () async {
+      try {
+        Auth.parseUpToken('123');
+      } catch (e) {
+        expect(e, isA<ArgumentError>());
+      }
 
-    final tokenInfo = Auth.parseUpToken(token);
-    expect(tokenInfo.putPolicy != null, true);
+      final token = auth.generateUploadToken(
+        putPolicy: PutPolicy(
+          scope: 'testBucket',
+          deadline: 1600000000,
+        ),
+      );
+
+      final tokenInfo = Auth.parseUpToken(token);
+      expect(tokenInfo.putPolicy != null, true);
+    });
   });
 }
