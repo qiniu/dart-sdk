@@ -16,10 +16,10 @@ class PutByPartOptions {
   /// 控制器
   final PutController controller;
 
-  PutByPartOptions({
+  const PutByPartOptions({
     this.key,
-    this.partSize,
-    this.maxPartsRequestNumber,
+    this.partSize = 4,
+    this.maxPartsRequestNumber = 5,
     this.controller,
   });
 }

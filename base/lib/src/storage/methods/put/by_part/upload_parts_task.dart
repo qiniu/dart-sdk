@@ -208,7 +208,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
         notifyProgress();
       });
 
-    manager.addRequestTask(task);
+    manager.addTask(task);
 
     final data = await task.future;
 

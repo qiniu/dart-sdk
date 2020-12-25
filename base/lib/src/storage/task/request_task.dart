@@ -17,7 +17,7 @@ abstract class RequestTask<T> extends Task<T> {
 
   final Dio client = Dio();
 
-  /// [RequestTaskManager.addRequestTask] 会初始化这个
+  /// [RequestTaskManager.addTask] 会初始化这个
   Config config;
   @override
   // ignore: overridden_fields
