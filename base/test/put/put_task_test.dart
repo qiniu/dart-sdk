@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:qiniu_sdk_base/src/storage/methods/put/by_single/put_by_single_task.dart';
 import 'package:qiniu_sdk_base/src/storage/methods/put/put_response.dart';
 import 'package:test/test.dart';
 import 'package:dotenv/dotenv.dart' show env;
@@ -10,9 +11,8 @@ import 'put_controller_builder.dart';
 void main() {
   configEnv();
 
-  final storage = Storage();
-
   test('put should works well.', () async {
+    final storage = Storage();
     var pcb = PutControllerBuilder();
     final response = await storage.putFile(
       File('test_resource/test_for_put.txt'),
@@ -44,6 +44,8 @@ void main() {
   }, skip: !isSensitiveDataDefined);
 
   test('put with returnBody should works well.', () async {
+    final storage = Storage();
+
     final auth = Auth(
       accessKey: env['QINIU_DART_SDK_ACCESS_KEY'],
       secretKey: env['QINIU_DART_SDK_SECRET_KEY'],
@@ -65,5 +67,31 @@ void main() {
     );
 
     expect(response.rawData, {'ext': '.txt'});
+  }, skip: !isSensitiveDataDefined);
+
+  test('put with forceBySingle should works well.', () async {
+    final storage = Storage();
+    var occured = false;
+
+    final response = await storage.putFile(
+      File('test_resource/test_for_put.txt'),
+      token,
+      options: PutOptions(
+          key: 'test_for_put.txt',
+          partSize: 1,
+          forceBySingle: true,
+          controller: PutController()
+            ..addStatusListener((status) {
+              if (status == StorageStatus.Request) {
+                occured = true;
+                final target =
+                    storage.taskManager.getTasksByType<PutBySingleTask>();
+                expect(target.isNotEmpty, true);
+              }
+            })),
+    );
+
+    expect(occured, true);
+    expect(response, isA<PutResponse>());
   }, skip: !isSensitiveDataDefined);
 }

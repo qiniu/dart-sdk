@@ -6,7 +6,7 @@ class PutOptions {
   /// 如果不传则后端自动生成
   final String key;
 
-  /// 强制使用直传，不使用分片
+  /// 强制使用单文件上传，不使用分片
   final bool forceBySingle;
 
   /// 使用分片上传时的分片大小，默认值 4，单位为 MB
