@@ -16,18 +16,7 @@
 
 Qiniu-Flutter-SDK 基于七牛云存储官方 [API](https://developer.qiniu.com/kodo) 构建，提供抽象的接口用于快速使用七牛的对象存储功能。
 
-Qiniu-Flutter-SDK 为客户端 SDK，没有包含 `token` 生成实现，为了安全，`token` 建议通过网络从服务端获取，具体生成代码可以参考以下服务端 SDK 的文档。
-
-* [Android](https://developer.qiniu.com/kodo/sdk/android)
-* [Java](https://developer.qiniu.com/kodo/sdk/java)
-* [PHP](https://developer.qiniu.com/kodo/sdk/php)
-* [Python](https://developer.qiniu.com/kodo/sdk/python)
-* [Ruby](https://developer.qiniu.com/kodo/sdk/ruby)
-* [Go](https://developer.qiniu.com/kodo/sdk/go)
-* [Node.js](https://developer.qiniu.com/kodo/sdk/nodejs)
-* [C#](https://developer.qiniu.com/kodo/sdk/csharp)
-* [C/C++](https://developer.qiniu.com/kodo/sdk/cpp)
-* [Objective-C](https://developer.qiniu.com/kodo/sdk/objc)
+Qiniu-Flutter-SDK 为客户端 SDK，没有包含 `token` 生成实现，为了安全，`token` 建议通过网络从服务端获取，具体生成代码可以参考官方[文档](https://developer.qiniu.com/kodo/manual/1208/upload-token)，我们的很多服务端 SDK 已经实现了生成 Token 的功能，推荐直接使用，[查看其他 SDK](https://developer.qiniu.com/sdk#official-sdk)
 
 ## 示例
 
@@ -158,8 +147,6 @@ import 'package:qiniu_flutter_sdk/qiniu_flutter_sdk.dart';
 ### 其他说明
 
 1. 如果您想了解更多七牛的上传策略，建议您仔细阅读 [七牛官方文档-上传](https://developer.qiniu.com/kodo/manual/upload-types)。另外，七牛的上传策略是在后端服务指定的.
-
-2. 如果您想了解更多七牛的图片处理，建议您仔细阅读 [七牛官方文档-图片处理](https://developer.qiniu.com/dora/api/3683/img-directions-for-use)
 
 ## 贡献代码
 
