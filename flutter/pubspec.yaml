@@ -1,8 +1,8 @@
 name: qiniu_flutter_sdk
-description: A new Flutter package project.
+description: Qiniu Flutter sdk
 version: 0.0.1
 author: qiniu
-homepage: TODO
+homepage: https://github.com/qiniu/dart-sdk/tree/master/flutter
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
