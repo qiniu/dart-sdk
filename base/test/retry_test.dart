@@ -11,7 +11,7 @@ void main() {
   configEnv();
 
   test(
-      'putBySingle\'s retry mechanism should shrow error directly while cannot connect to host.',
+      'putBySingle\'s retry mechanism should throw error directly while cannot connect to host.',
       () async {
     final httpAdapter = HttpAdapterTestWithConnectFailedToHost(0);
     final config = Config(
@@ -50,7 +50,7 @@ void main() {
   }, skip: !isSensitiveDataDefined);
 
   test(
-      'putFileByPart\'s retry mechanism should shrow error directly while cannot connect to host.',
+      'putFileByPart\'s retry mechanism should throw error directly while cannot connect to host.',
       () async {
     final httpAdapter = HttpAdapterTestWithConnectFailedToHost(1);
     final cacheProvider = DefaultCacheProvider();
