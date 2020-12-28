@@ -9,5 +9,5 @@ class PutBySingleOptions {
   /// 控制器
   final PutController controller;
 
-  PutBySingleOptions({this.key, this.controller});
+  const PutBySingleOptions({this.key, this.controller});
 }

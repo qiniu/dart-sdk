@@ -57,7 +57,7 @@ void main() {
         key: key,
         controller: PutController()
           ..addStatusListener(initPartsTaskStatusList.add));
-    storage.taskManager.addRequestTask(task);
+    storage.taskManager.addTask(task);
 
     // 接下来是正常流程
     final putController = PutController();

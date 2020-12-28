@@ -24,13 +24,10 @@ class PutByPartTask extends RequestTask<PutResponse> {
 
   final String key;
 
-  HostProvider hostProvider;
-
   PutByPartTask({
     @required this.file,
     @required this.token,
     @required this.partSize,
-    @required this.hostProvider,
     @required this.maxPartsRequestNumber,
     this.key,
     PutController controller,
@@ -140,7 +137,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
       controller: _controller,
     );
 
-    manager.addRequestTask(task);
+    manager.addTask(task);
     _currentWorkingTaskController = _controller;
     return task;
   }
@@ -160,7 +157,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
 
     _controller.addSendProgressListener(onSendProgress);
 
-    manager.addRequestTask(task);
+    manager.addTask(task);
     _currentWorkingTaskController = _controller;
     return task;
   }
@@ -179,7 +176,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
       controller: _controller,
     );
 
-    manager.addRequestTask(task);
+    manager.addTask(task);
     _currentWorkingTaskController = _controller;
     return task;
   }

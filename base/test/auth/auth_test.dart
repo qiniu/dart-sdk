@@ -162,5 +162,23 @@ void main() {
         expect(tokenInfo.putPolicy, equals(null));
       }
     });
+
+    test('parseUpToken should works well.', () async {
+      try {
+        Auth.parseUpToken('123');
+      } catch (e) {
+        expect(e, isA<ArgumentError>());
+      }
+
+      final token = auth.generateUploadToken(
+        putPolicy: PutPolicy(
+          scope: 'testBucket',
+          deadline: 1600000000,
+        ),
+      );
+
+      final tokenInfo = Auth.parseUpToken(token);
+      expect(tokenInfo.putPolicy != null, true);
+    });
   });
 }

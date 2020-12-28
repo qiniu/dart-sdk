@@ -57,9 +57,7 @@ void main() {
     expect(statusList[2], StorageStatus.Cancel);
 
     try {
-      // 预期同步发生
-      // ignore: unawaited_futures
-      storage.putFileBySingle(
+      await storage.putFileBySingle(
         file,
         token,
         options: PutBySingleOptions(key: key, controller: putController),

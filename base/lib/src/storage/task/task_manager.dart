@@ -1,18 +1,9 @@
 import 'package:meta/meta.dart';
 
-import '../config/config.dart';
-
-import 'request_task.dart';
 import 'task.dart';
 
 class TaskManager {
   final List<Task> workingTasks = [];
-
-  final Config config;
-
-  TaskManager({
-    @required this.config,
-  });
 
   /// 添加一个 [Task]
   ///
@@ -24,25 +15,19 @@ class TaskManager {
         ..manager = this
         ..preStart();
     } catch (e) {
-      rethrow;
+      task.postError(e);
+      return;
     }
 
-    // 把同步的任务改成异步，防止 [RequestTask.addStatusListener] 没有被触发
-    Future.delayed(Duration(milliseconds: 0), () {
-      workingTasks.add(task);
-      task.createTask().then(task.postReceive).catchError(task.postError);
-      try {
-        task.postStart();
-      } catch (e) {
-        removeTask(task);
-        rethrow;
-      }
-    });
-  }
+    workingTasks.add(task);
+    task.createTask().then(task.postReceive).catchError(task.postError);
 
-  void addRequestTask(RequestTask task) {
-    task.config = config;
-    addTask(task);
+    try {
+      task.postStart();
+    } catch (e) {
+      task.postError(e);
+      return;
+    }
   }
 
   @mustCallSuper
@@ -55,18 +40,18 @@ class TaskManager {
     try {
       task.preRestart();
     } catch (e) {
-      removeTask(task);
-      rethrow;
+      task.postError(e);
+      return;
     }
-    Future.delayed(Duration(milliseconds: 0), () {
-      task.createTask().then(task.postReceive).catchError(task.postError);
-      try {
-        task.postRestart();
-      } catch (e) {
-        removeTask(task);
-        rethrow;
-      }
-    });
+
+    task.createTask().then(task.postReceive).catchError(task.postError);
+
+    try {
+      task.postRestart();
+    } catch (e) {
+      task.postError(e);
+      return;
+    }
   }
 
   /// 返回当前运行中的 [Task]
@@ -77,16 +62,5 @@ class TaskManager {
   /// 查找类型符合 [T] 的 [Task]
   List<T> getTasksByType<T extends Task<dynamic>>() {
     return workingTasks.whereType<T>().toList();
-  }
-
-  /// 某个任务是不是运行中
-  bool isAlive(Task task) {
-    final found = workingTasks.firstWhere(
-        (element) => element.runtimeType == task.runtimeType,
-        orElse: () => null);
-    if (found != null) {
-      return true;
-    }
-    return false;
   }
 }

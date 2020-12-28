@@ -4,8 +4,7 @@ import 'config/config.dart';
 import 'methods/put/by_part/put_parts_task.dart';
 import 'methods/put/by_single/put_by_single_task.dart';
 import 'methods/put/put.dart';
-import 'methods/put/put_task.dart';
-import 'task/task_manager.dart';
+import 'task/task.dart';
 
 export 'package:dio/dio.dart' show HttpClientAdapter;
 export 'config/config.dart';
@@ -18,11 +17,11 @@ export 'task/task.dart';
 /// 客户端
 class Storage {
   Config config;
-  TaskManager taskManager;
+  RequestTaskManager taskManager;
 
   Storage({Config config}) {
     this.config = config ?? Config();
-    taskManager = TaskManager(config: this.config);
+    taskManager = RequestTaskManager(config: this.config);
   }
 
   Future<PutResponse> putFile(
@@ -30,18 +29,31 @@ class Storage {
     String token, {
     PutOptions options,
   }) {
-    final task = PutTask(
-      file: file,
-      token: token,
-      forceBySingle: options?.forceBySingle ?? false,
-      partSize: options?.partSize ?? 4,
-      maxPartsRequestNumber: options?.maxPartsRequestNumber ?? 5,
-      key: options?.key,
-      controller: options?.controller,
-      hostProvider: config.hostProvider,
-    );
+    options ??= PutOptions();
+    RequestTask<PutResponse> task;
+    final useSingle = options.forceBySingle == true ||
+        file.lengthSync() < (options.partSize * 1024 * 1024);
+
+    if (useSingle) {
+      task = PutBySingleTask(
+        file: file,
+        token: token,
+        key: options.key,
+        controller: options.controller,
+      );
+    } else {
+      task = PutByPartTask(
+        file: file,
+        token: token,
+        key: options.key,
+        maxPartsRequestNumber: options.maxPartsRequestNumber,
+        partSize: options.partSize,
+        controller: options.controller,
+      );
+    }
 
     taskManager.addTask(task);
+
     return task.future;
   }
 
@@ -51,14 +63,15 @@ class Storage {
     String token, {
     PutBySingleOptions options,
   }) {
+    options ??= PutBySingleOptions();
     final task = PutBySingleTask(
       file: file,
       token: token,
-      key: options?.key,
-      controller: options?.controller,
+      key: options.key,
+      controller: options.controller,
     );
 
-    taskManager.addRequestTask(task);
+    taskManager.addTask(task);
 
     return task.future;
   }
@@ -69,17 +82,17 @@ class Storage {
     String token, {
     PutByPartOptions options,
   }) {
+    options ??= PutByPartOptions();
     final task = PutByPartTask(
       file: file,
       token: token,
-      key: options?.key,
-      partSize: options?.partSize ?? 4,
-      maxPartsRequestNumber: options?.maxPartsRequestNumber ?? 5,
-      controller: options?.controller,
-      hostProvider: config.hostProvider,
+      key: options.key,
+      partSize: options.partSize,
+      maxPartsRequestNumber: options.maxPartsRequestNumber,
+      controller: options.controller,
     );
 
-    taskManager.addRequestTask(task);
+    taskManager.addTask(task);
 
     return task.future;
   }

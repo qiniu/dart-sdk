@@ -45,6 +45,30 @@ void main() {
     expect(responseNoOps, isA<PutResponse>());
   }, skip: !isSensitiveDataDefined);
 
+  test('putFileByPart should throw error with incorrect partSize.', () async {
+    final storage = Storage();
+    final file = File('test_resource/test_for_put_parts.mp4');
+    try {
+      await storage.putFileByPart(
+        file,
+        token,
+        options: PutByPartOptions(partSize: 0),
+      );
+    } catch (e) {
+      expect(e, isA<RangeError>());
+    }
+
+    try {
+      await storage.putFileByPart(
+        file,
+        token,
+        options: PutByPartOptions(partSize: 1025),
+      );
+    } catch (e) {
+      expect(e, isA<RangeError>());
+    }
+  }, skip: !isSensitiveDataDefined);
+
   test('putFileByPart should works well while response 612.', () async {
     final httpAdapterTest = HttpAdapterTestWith612();
     final storage = Storage(config: Config(httpClientAdapter: httpAdapterTest));
@@ -95,9 +119,7 @@ void main() {
     ]);
 
     try {
-      // 预期出错是同步发生的
-      // ignore: unawaited_futures
-      storage.putFileByPart(
+      await storage.putFileByPart(
         file,
         token,
         options: PutByPartOptions(
@@ -171,7 +193,7 @@ void main() {
     /// 手动初始化一个初始化文件的任务，确定分片上传的第一步会被缓存
     final task = InitPartsTask(token: token, file: file, key: key);
 
-    storage.taskManager.addRequestTask(task);
+    storage.taskManager.addTask(task);
 
     await task.future;
 
