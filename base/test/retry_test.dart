@@ -177,7 +177,7 @@ void main() {
   }, skip: !isSensitiveDataDefined);
 }
 
-// 会扔出 DioError，错误类型是 DioErrorType.DEFAULT，调用了 3 次
+// 会扔出 DioError，错误类型是 DioErrorType.DEFAULT，每个请求调用了 3 次
 class HttpAdapterTestWithConnectFailedToHost extends HttpClientAdapter {
   int callTimes = 0;
   final DefaultHttpClientAdapter _adapter = DefaultHttpClientAdapter();
