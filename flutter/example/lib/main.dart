@@ -3,11 +3,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:qiniu_flutter_sdk/qiniu_flutter_sdk.dart';
-import 'package:qiniu_flutter_sdk_example/widgets/console.dart';
 
 import 'token.dart';
 import 'utils/uint.dart';
 import 'widgets/app.dart';
+import 'widgets/console.dart';
 import 'widgets/dispose.dart';
 import 'widgets/progress.dart';
 import 'widgets/select_file.dart';
