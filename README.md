@@ -2,6 +2,8 @@
 
 [![codecov](https://codecov.io/gh/qiniu/dart-sdk/branch/master/graph/badge.svg?token=5VOX6NJTKF)](https://codecov.io/gh/qiniu/dart-sdk)
 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 ## 目录说明
 
 - base 封装了七牛各业务的基础实现
