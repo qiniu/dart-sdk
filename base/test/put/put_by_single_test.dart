@@ -1,3 +1,5 @@
+@Timeout(Duration(seconds: 60))
+
 import 'dart:io';
 import 'package:qiniu_sdk_base/src/storage/error/error.dart';
 import 'package:qiniu_sdk_base/src/storage/methods/put/put_response.dart';
