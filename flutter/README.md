@@ -1,4 +1,4 @@
-# 七牛云存储 Flutter SDK
+# 七牛云存储 Flutter SDK [![qiniu_flutter_sdk](https://img.shields.io/pub/v/qiniu_flutter_sdk.svg?label=qiniu_flutter_sdk)](https://pub.dev/packages/qiniu_flutter_sdk)
 
 七牛云存储的 Flutter SDK。
 基于七牛云 API 实现，封装了七牛云存储系统的的客户端操作。

@@ -119,10 +119,10 @@ packages:
   qiniu_sdk_base:
     dependency: "direct main"
     description:
-      path: "../base"
-      relative: true
-    source: path
-    version: "0.0.1"
+      name: qiniu_sdk_base
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.1.0"
   sky_engine:
     dependency: transitive
     description: flutter
