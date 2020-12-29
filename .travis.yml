@@ -1,0 +1,58 @@
+language: dart
+
+dart:
+  - stable
+
+install:
+  - cd $TRAVIS_BUILD_DIR/base && pub get
+  # - cd $$TRAVIS_BUILD_DIR/flutter && pub get
+
+before_script:
+  - cd $TRAVIS_BUILD_DIR/base && rm -rf .env
+
+jobs:
+  include:
+    #######################################
+    #########  jobs for base  #############
+    #######################################
+    # 检查 lint 并在 warnings、infos 时报错退出
+    - stage: base(analyze,format,test)
+      name: "Analyze"
+      os: linux
+      script: cd $TRAVIS_BUILD_DIR/base && dartanalyzer --fatal-warnings --fatal-infos .
+    # 检查格式并在异常时退出
+    - stage: base(analyze,format,test)
+      name: "Format"
+      os: linux
+      script: cd $TRAVIS_BUILD_DIR/base && dartfmt -n --set-exit-if-changed .
+    # 执行测试（已开启 null safe）
+    - stage: base(analyze,format,test)
+      name: "Vm Tests"
+      os: linux
+      script: cd $TRAVIS_BUILD_DIR/base && pub run test_coverage --print-test-output && bash <(curl -s https://codecov.io/bash)
+
+    #######################################
+    ####### jobs for flutter_sdk ##########
+    #######################################
+    - stage: flutter_sdk(analyze,format,test)
+      name: "Analyze"
+      os: linux
+      script: cd $TRAVIS_BUILD_DIR/flutter
+    - stage: flutter_sdk(analyze,format,test)
+      name: "Format"
+      os: linux
+      script: cd $TRAVIS_BUILD_DIR/flutter
+
+    - stage: flutter_sdk(analyze,format,test)
+      name: "Vm Tests"
+      os: linux
+      script: cd $TRAVIS_BUILD_DIR/flutter
+
+stages:
+  - base(analyze,format,test)
+  - flutter_sdk(analyze,format,test)
+  # - flutter_sdk_example(analyze,format,test)
+
+cache:
+  directories:
+    - $HOME/.pub-cache
