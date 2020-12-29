@@ -58,9 +58,14 @@ import 'package:qiniu_flutter_sdk/qiniu_flutter_sdk.dart';
   // 创建 Controller 对象
   putController = PutController();
 
-  // 添加进度监听
-  putController.addProgressListener((int sent, int total) {
-    print('进度变化：已发送：$sent, 总计：$total');
+  // 添加整体进度监听
+  putController.onProgress((double percent) {
+    print('任务进度变化：已发送：$percent');
+  });
+
+  // 添加发送进度监听
+  putController.onSendProgress((double percent) {
+    print('已上传进度变化：已发送：$percent');
   });
 
   // 添加状态监听
@@ -150,12 +155,12 @@ import 'package:qiniu_flutter_sdk/qiniu_flutter_sdk.dart';
 
 ## 功能列表
 
-+ 单文件上传
-+ 分片上传
-+ 任务状态
-+ 任务进度
-+ 上传进度
-+ 失败重试
+* 单文件上传
+* 分片上传
+* 任务状态
+* 任务进度
+* 上传进度
+* 失败重试
 
 ## 贡献代码
 

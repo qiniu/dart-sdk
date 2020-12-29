@@ -1,3 +1,5 @@
+@Timeout(Duration(seconds: 60))
+
 import 'dart:io';
 import 'package:meta/meta.dart';
 import 'package:qiniu_sdk_base/src/storage/error/error.dart';

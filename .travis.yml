@@ -34,23 +34,23 @@ jobs:
     #######################################
     ####### jobs for flutter_sdk ##########
     #######################################
-    - stage: flutter_sdk(analyze,format,test)
-      name: "Analyze"
-      os: linux
-      script: cd $TRAVIS_BUILD_DIR/flutter
-    - stage: flutter_sdk(analyze,format,test)
-      name: "Format"
-      os: linux
-      script: cd $TRAVIS_BUILD_DIR/flutter
+    # - stage: flutter_sdk(analyze,format,test)
+    #   name: "Analyze"
+    #   os: linux
+    #   script: cd $TRAVIS_BUILD_DIR/flutter
+    # - stage: flutter_sdk(analyze,format,test)
+    #   name: "Format"
+    #   os: linux
+    #   script: cd $TRAVIS_BUILD_DIR/flutter
 
-    - stage: flutter_sdk(analyze,format,test)
-      name: "Vm Tests"
-      os: linux
-      script: cd $TRAVIS_BUILD_DIR/flutter
+    # - stage: flutter_sdk(analyze,format,test)
+    #   name: "Vm Tests"
+    #   os: linux
+    #   script: cd $TRAVIS_BUILD_DIR/flutter
 
 stages:
   - base(analyze,format,test)
-  - flutter_sdk(analyze,format,test)
+  # - flutter_sdk(analyze,format,test)
   # - flutter_sdk_example(analyze,format,test)
 
 cache:
