@@ -40,84 +40,84 @@ import 'package:qiniu_flutter_sdk/qiniu_flutter_sdk.dart';
 
 ### 快速使用
 
-  ```dart
-    // 创建 storage 对象
-    storage = Storage();
-    // 使用 storage 的 putFile 对象进行文件上传
-    storage.putFile(File('./file.txt'), 'TOKEN')
-      ..then(/* 上传成功 */)
-      ..catchError(/* 上传失败 */);
-  ```
+```dart
+  // 创建 storage 对象
+  storage = Storage();
+  // 使用 storage 的 putFile 对象进行文件上传
+  storage.putFile(File('./file.txt'), 'TOKEN')
+    ..then(/* 上传成功 */)
+    ..catchError(/* 上传失败 */);
+```
 
 ### 监听进度/状态
 
-  ```dart
-    // 创建 storage 对象
-    storage = Storage();
+```dart
+  // 创建 storage 对象
+  storage = Storage();
 
-    // 创建 Controller 对象
-    putController = PutController();
+  // 创建 Controller 对象
+  putController = PutController();
 
-    // 添加进度监听
-    putController.addProgressListener((int sent, int total) {
-      print('进度变化：已发送：$sent, 总计：$total');
-    });
+  // 添加进度监听
+  putController.addProgressListener((int sent, int total) {
+    print('进度变化：已发送：$sent, 总计：$total');
+  });
 
-    // 添加状态监听
-    putController.addStatusListener((StorageStatus status) {
-      print('状态变化: 当前任务状态：$status');
-    });
+  // 添加状态监听
+  putController.addStatusListener((StorageStatus status) {
+    print('状态变化: 当前任务状态：$status');
+  });
 
-    // 使用 storage 的 putFile 对象进行文件上传
-    storage.putFile(File('./file.txt'), 'TOKEN', PutOptions(
-      controller: putController,
-    ))
-  ```
+  // 使用 storage 的 putFile 对象进行文件上传
+  storage.putFile(File('./file.txt'), 'TOKEN', PutOptions(
+    controller: putController,
+  ))
+```
 
 ### 取消正在上传的任务
 
-  ```dart
-    // 创建 storage 对象
-    storage = Storage();
+```dart
+  // 创建 storage 对象
+  storage = Storage();
 
-    // 创建 Controller 对象
-    putController = PutController();
+  // 创建 Controller 对象
+  putController = PutController();
 
-    // 使用 storage 的 putFile 对象进行文件上传
-    storage.putFile(File('./file.txt'), 'TOKEN', PutOptions(
-        controller: putController,
-    ))
+  // 使用 storage 的 putFile 对象进行文件上传
+  storage.putFile(File('./file.txt'), 'TOKEN', PutOptions(
+      controller: putController,
+  ))
 
-    // 取消当前任务
-    putController.cancel()
-  ```
+  // 取消当前任务
+  putController.cancel()
+```
 
 ## API 说明
 
 ### `storage`
   
-  使用前必须创建一个 `Storage`  实例
+使用前必须创建一个 `Storage`  实例
 
-  ```dart
-    // 创建 storage 对象
-    storage = Storage();
-  ```
+```dart
+  // 创建 storage 对象
+  storage = Storage();
+```
 
 同时，在构造 `Storage` 时可以传入一个 `Config` 控制内部的一些行为，如下：
 
-  ```dart
-    // 创建 storage 对象
-    storage = Storage(Config(
-      // 通过自己的 hostProvider 来使用自己的 host 进行上传
-      hostProvider: HostProvider,
-      // 可以通过实现 cacheProvider 来自己实现缓存系统支持分片断点续传
-      cacheProvider: CacheProvider,
-      // 如果你需要对网络请求进行更基础的一些操作，你可以实现自己的 HttpClientAdapter 处理相关行为
-      httpClientAdapter: HttpClientAdapter,
-      // 设定网络请求重试次数
-      retryLimit: 3,
-    ));
-  ```
+```dart
+  // 创建 storage 对象
+  storage = Storage(Config(
+    // 通过自己的 hostProvider 来使用自己的 host 进行上传
+    hostProvider: HostProvider,
+    // 可以通过实现 cacheProvider 来自己实现缓存系统支持分片断点续传
+    cacheProvider: CacheProvider,
+    // 如果你需要对网络请求进行更基础的一些操作，你可以实现自己的 HttpClientAdapter 处理相关行为
+    httpClientAdapter: HttpClientAdapter,
+    // 设定网络请求重试次数
+    retryLimit: 3,
+  ));
+```
 
 #### `HostProvider`
 
