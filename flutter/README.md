@@ -148,6 +148,15 @@ import 'package:qiniu_flutter_sdk/qiniu_flutter_sdk.dart';
 
 1. 如果您想了解更多七牛的上传策略，建议您仔细阅读 [七牛官方文档-上传](https://developer.qiniu.com/kodo/manual/upload-types)。另外，七牛的上传策略是在后端服务指定的.
 
+## 功能列表
+
++ 单文件上传
++ 分片上传
++ 任务状态
++ 任务进度
++ 上传进度
++ 失败重试
+
 ## 贡献代码
 
 1. 登录 https://github.com
