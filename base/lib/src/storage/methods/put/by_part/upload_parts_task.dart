@@ -14,6 +14,10 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   @override
   String _cacheKey;
 
+  /// 设置为 0，避免子任务重试失败后 [UploadPartsTask] 继续重试
+  @override
+  int get retryLimit => 0;
+
   // 文件 bytes 长度
   int _fileByteLength;
 

@@ -34,6 +34,13 @@ class StorageError extends QiniuError {
 
   StorageError({this.type, this.code, String message}) : super(message);
 
+  factory StorageError.fromError(Object error) {
+    return StorageError(
+      type: StorageErrorType.UNKNOWN,
+      message: error.toString(),
+    );
+  }
+
   factory StorageError.fromDioError(DioError error) {
     return StorageError(
       type: _mapDioErrorType(error.type),

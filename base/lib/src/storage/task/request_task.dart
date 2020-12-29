@@ -24,8 +24,11 @@ abstract class RequestTask<T> extends Task<T> {
   covariant RequestTaskManager manager;
   RequestTaskController controller;
 
-  /// 重试次数
+  // 重试次数
   int _retryCount = 0;
+
+  // 最大重试次数
+  int retryLimit;
 
   RequestTask({this.controller});
 
@@ -38,6 +41,7 @@ abstract class RequestTask<T> extends Task<T> {
     }
     controller?.notifyStatusListeners(StorageStatus.Init);
     controller?.notifyProgressListeners(preStartTakePercentOfTotal);
+    retryLimit = config.retryLimit;
     client.httpClientAdapter = config.httpClientAdapter;
     client.interceptors.add(InterceptorsWrapper(onRequest: (options) {
       controller?.notifyStatusListeners(StorageStatus.Request);
@@ -74,7 +78,7 @@ abstract class RequestTask<T> extends Task<T> {
   @override
   @mustCallSuper
   void postError(Object error) async {
-    // 重试和冻结
+    // 处理 Dio 异常
     if (error is DioError) {
       if (!_canConnectToHost(error)) {
         // host 连不上，判断是否 host 不可用造成的, 比如 tls error(没做还)
@@ -83,7 +87,7 @@ abstract class RequestTask<T> extends Task<T> {
         }
 
         // 继续尝试当前 host，如果是服务器坏了则切换到其他 host
-        if (_retryCount < config.retryLimit) {
+        if (_retryCount < retryLimit) {
           _retryCount++;
           manager.restartTask(this);
           return;
@@ -95,37 +99,42 @@ abstract class RequestTask<T> extends Task<T> {
         config.hostProvider.freezeHost(error.request.path);
 
         // 切换到其他 host
-        if (_retryCount < config.retryLimit) {
+        if (_retryCount < retryLimit) {
           _retryCount++;
           manager.restartTask(this);
           return;
         }
       }
 
-      if (error.type != DioErrorType.DEFAULT) {
-        final storageError = StorageError.fromDioError(error);
+      final storageError = StorageError.fromDioError(error);
 
-        // 通知状态
-        if (error.type == DioErrorType.CANCEL) {
-          postCancel(storageError);
-        } else {
-          controller?.notifyStatusListeners(StorageStatus.Error);
-        }
-
-        super.postError(storageError);
-        return;
+      // 通知状态
+      if (error.type == DioErrorType.CANCEL) {
+        postCancel(storageError);
+      } else {
+        controller?.notifyStatusListeners(StorageStatus.Error);
       }
+
+      super.postError(storageError);
+      return;
     }
-    // 如果有子任务，错误可能被子任务加工成 StorageError
+
+    // 处理 Storage 异常。如果有子任务，错误可能被子任务加工成 StorageError
     if (error is StorageError) {
       if (error.type == StorageErrorType.CANCEL) {
         postCancel(error);
       } else {
         controller?.notifyStatusListeners(StorageStatus.Error);
       }
+
+      super.postError(error);
+      return;
     }
 
-    super.postError(error);
+    // 不能处理的异常
+    controller?.notifyStatusListeners(StorageStatus.Error);
+    final storageError = StorageError.fromError(error);
+    super.postError(storageError);
   }
 
   // 自定义发送进度处理逻辑
