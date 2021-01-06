@@ -32,13 +32,11 @@ class StorageError extends QiniuError {
   final int code;
   final StorageErrorType type;
 
-  StorageError({this.type, this.code, String message}) : super(message);
+  StorageError({this.type, this.code, Error rawError, String message})
+      : super(rawError, message);
 
-  factory StorageError.fromError(Object error) {
-    return StorageError(
-      type: StorageErrorType.UNKNOWN,
-      message: error.toString(),
-    );
+  factory StorageError.fromError(Error error) {
+    return StorageError(type: StorageErrorType.UNKNOWN, rawError: error);
   }
 
   factory StorageError.fromDioError(DioError error) {
@@ -46,13 +44,14 @@ class StorageError extends QiniuError {
       type: _mapDioErrorType(error.type),
       code: error.response?.statusCode,
       message: error.response?.data.toString(),
+      rawError: error.error is Error ? (error.error as Error) : null,
     );
   }
 
   @override
   String toString() {
     var msg = 'StorageError [$type, $code]: $message';
-    msg += '\n${StackTrace.current}';
+    msg += '\n$stackTrace';
     return msg;
   }
 }

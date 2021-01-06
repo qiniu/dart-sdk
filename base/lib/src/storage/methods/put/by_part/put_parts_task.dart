@@ -103,8 +103,8 @@ class PutByPartTask extends RequestTask<PutResponse> {
         /// 1、如果服务端文件被删除了，清除本地缓存
         /// 2、如果 uploadId 等参数不对原因会导致 400
         if (error.code == 612 || error.code == 400) {
-          initPartsTask.clearCache();
-          uploadParts.clearCache();
+          await initPartsTask.clearCache();
+          await uploadParts.clearCache();
         }
 
         /// 如果服务端文件被删除了，重新上传
@@ -118,8 +118,8 @@ class PutByPartTask extends RequestTask<PutResponse> {
     }
 
     /// 上传完成，清除缓存
-    initPartsTask.clearCache();
-    uploadParts.clearCache();
+    await initPartsTask.clearCache();
+    await uploadParts.clearCache();
 
     return putResponse;
   }

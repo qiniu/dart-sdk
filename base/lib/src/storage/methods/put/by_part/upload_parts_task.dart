@@ -85,7 +85,6 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     _idleRequestNumber = maxPartsRequestNumber;
     _totalPartCount = (_fileByteLength / _partByteLength).ceil();
     _cacheKey = getCacheKey(file.path, _fileByteLength, partSize, key);
-    recoverUploadedPart();
     // 子任务 UploadPartTask 从 file 去 open 的话虽然上传精度会颗粒更细但是会导致可能读不出文件的问题
     // 可能 close 没办法立即关闭 file stream，而延迟 close 了，导致某次 open 的 stream 被立即关闭
     // 所以读不出内容了
@@ -95,32 +94,32 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   }
 
   @override
-  void postReceive(data) {
-    _raf.close();
-    storeUploadedPart();
+  void postReceive(data) async {
+    await _raf.close();
+    await storeUploadedPart();
     super.postReceive(data);
   }
 
   @override
-  void postError(Object error) {
-    _raf.close();
+  void postError(Object error) async {
+    await _raf.close();
     // 取消，网络问题等可能导致上传中断，缓存已上传的分片信息
-    storeUploadedPart();
+    await storeUploadedPart();
     super.postError(error);
   }
 
-  void storeUploadedPart() {
+  Future storeUploadedPart() async {
     if (_uploadedPartMap.isEmpty) {
       return;
     }
 
-    setCache(jsonEncode(_uploadedPartMap.values.toList()));
+    await setCache(jsonEncode(_uploadedPartMap.values.toList()));
   }
 
   // 从缓存恢复已经上传的 part
-  void recoverUploadedPart() {
+  Future recoverUploadedPart() async {
     // 获取缓存
-    final cachedData = getCache();
+    final cachedData = await getCache();
     // 尝试从缓存恢复
     if (cachedData != null) {
       var cachedList = <Part>[];
@@ -149,6 +148,9 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     }
 
     controller.notifyStatusListeners(StorageStatus.Request);
+    // 尝试恢复缓存，如果有
+    await recoverUploadedPart();
+
     // 上传分片
     await _uploadParts();
     return _uploadedPartMap.values.toList();

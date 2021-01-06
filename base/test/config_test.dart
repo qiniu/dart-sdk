@@ -25,12 +25,12 @@ void main() {
     final cacheProvider = DefaultCacheProvider();
 
     final cacheKey = 'init_parts';
-    cacheProvider.setItem(cacheKey, 'anything');
+    await cacheProvider.setItem(cacheKey, 'anything');
 
     expect(cacheProvider.value.length, 1);
-    expect(cacheProvider.getItem(cacheKey), 'anything');
+    expect(await cacheProvider.getItem(cacheKey), 'anything');
 
-    cacheProvider.removeItem(cacheKey);
+    await cacheProvider.removeItem(cacheKey);
 
     expect(cacheProvider.value.length, 0);
   });

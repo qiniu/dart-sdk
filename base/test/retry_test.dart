@@ -63,7 +63,7 @@ void main() {
     final file = File('test_resource/test_for_put_parts.mp4');
     final statusList = <StorageStatus>[];
     // 设置一个假的初始化缓存，让分片上传跳过初始化文件，便于测试后面的上传文件流程
-    cacheProvider.setItem(
+    await cacheProvider.setItem(
         InitPartsTask.getCacheKey(file.path, file.lengthSync(), null), '{}');
     final future = storage.putFileByPart(file, token,
         options: PutByPartOptions(
