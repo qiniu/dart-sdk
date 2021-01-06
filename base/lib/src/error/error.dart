@@ -8,5 +8,5 @@ class QiniuError extends Error {
   @override
   StackTrace get stackTrace => rawError?.stackTrace ?? super.stackTrace;
 
-  QiniuError(this.rawError, this._message);
+  QiniuError({this.rawError, String message}) : _message = message;
 }

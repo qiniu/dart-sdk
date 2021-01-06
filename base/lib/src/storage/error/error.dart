@@ -33,7 +33,7 @@ class StorageError extends QiniuError {
   final StorageErrorType type;
 
   StorageError({this.type, this.code, Error rawError, String message})
-      : super(rawError, message);
+      : super(rawError: rawError, message: message);
 
   factory StorageError.fromError(Error error) {
     return StorageError(type: StorageErrorType.UNKNOWN, rawError: error);
