@@ -6,15 +6,15 @@ part of 'put_parts_task.dart';
 mixin CacheMixin<T> on RequestTask<T> {
   String get _cacheKey;
 
-  void clearCache() {
-    config.cacheProvider.removeItem(_cacheKey);
+  Future clearCache() async {
+    await config.cacheProvider.removeItem(_cacheKey);
   }
 
-  void setCache(String data) {
-    config.cacheProvider.setItem(_cacheKey, data);
+  Future setCache(String data) async {
+    await config.cacheProvider.setItem(_cacheKey, data);
   }
 
-  String getCache() {
-    return config.cacheProvider.getItem(_cacheKey);
+  Future<String> getCache() async {
+    return await config.cacheProvider.getItem(_cacheKey);
   }
 }

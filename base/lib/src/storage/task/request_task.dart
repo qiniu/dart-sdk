@@ -132,9 +132,15 @@ abstract class RequestTask<T> extends Task<T> {
     }
 
     // 不能处理的异常
+    if (error is Error) {
+      controller?.notifyStatusListeners(StorageStatus.Error);
+      final storageError = StorageError.fromError(error);
+      super.postError(storageError);
+      return;
+    }
+
     controller?.notifyStatusListeners(StorageStatus.Error);
-    final storageError = StorageError.fromError(error);
-    super.postError(storageError);
+    super.postError(error);
   }
 
   // 自定义发送进度处理逻辑

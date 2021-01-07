@@ -57,7 +57,7 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
   Future<InitParts> createTask() async {
     final headers = {'Authorization': 'UpToken $token'};
 
-    final initPartsCache = getCache();
+    final initPartsCache = await getCache();
     if (initPartsCache != null) {
       return InitParts.fromJson(
           json.decode(initPartsCache) as Map<String, dynamic>);
@@ -85,8 +85,8 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
   }
 
   @override
-  void postReceive(data) {
-    setCache(json.encode(data.toJson()));
+  void postReceive(data) async {
+    await setCache(json.encode(data.toJson()));
     super.postReceive(data);
   }
 }

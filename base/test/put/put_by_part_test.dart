@@ -224,8 +224,8 @@ void main() {
       key,
     );
 
-    expect(cacheProvider.getItem(cacheKey), isA<String>());
-    cacheProvider.clear();
+    expect(await cacheProvider.getItem(cacheKey), isA<String>());
+    await cacheProvider.clear();
 
     try {
       await future;
@@ -234,7 +234,7 @@ void main() {
       expect((error as StorageError).type, StorageErrorType.CANCEL);
     }
 
-    cacheProvider.clear();
+    await cacheProvider.clear();
 
     final response = await storage.putFileByPart(
       file,
