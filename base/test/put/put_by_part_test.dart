@@ -352,7 +352,8 @@ class HostProviderTest extends HostProvider {
     @required String accessKey,
     @required String bucket,
   }) async {
-    return 'https://upload-z2.qiniup.com';
+    // token 中 bucket 对应的地区
+    return 'https://upload-na0.qiniup.com';
   }
 
   @override
