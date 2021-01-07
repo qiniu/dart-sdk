@@ -1,0 +1,12 @@
+coverage:
+  status:
+    project:
+      default:
+        # basic
+        target: 80%
+        threshold: 0%
+       # advanced settings
+        branches: 
+          - master
+        # if_ci_failed: failure #success, failure, error, ignore
+        informational: true
