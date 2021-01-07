@@ -1,5 +1,7 @@
 coverage:
   status:
+    # 提 pr 的时候不让 codecov 评论哪里没覆盖到
+    patch: off
     project:
       default:
         # pr 里面很多测试用例都被跳过了，所以这个 target 没有意义。如果能让需要 token 的测试在 pr 跑起来可以修改这个 target
