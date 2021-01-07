@@ -2,11 +2,8 @@ coverage:
   status:
     project:
       default:
-        # basic
-        target: 80%
-        threshold: 0%
-       # advanced settings
+        # pr 里面很多测试用例都被跳过了，所以这个 target 没有意义。如果能让需要 token 的测试在 pr 跑起来可以修改这个 target
+        target: 0%
         branches: 
           - master
-        # if_ci_failed: failure #success, failure, error, ignore
         informational: true
