@@ -186,7 +186,7 @@ void main() {
   }, skip: !isSensitiveDataDefined);
 
   test('putFileByPart should works well with cacheProvider.', () async {
-    final cacheProvider = DefaultCacheProvider();
+    final cacheProvider = CacheProviderForTest();
     final config = Config(cacheProvider: cacheProvider);
     final storage = Storage(config: config);
     final file = File('test_resource/test_for_put_parts.mp4');
@@ -202,6 +202,7 @@ void main() {
     final putController = PutController();
 
     putController.addSendProgressListener((percent) {
+      // 因为一共 2 个分片，取 0.5 一个完成后就取消
       if (percent > 0.5) {
         putController.cancel();
       }
@@ -232,9 +233,13 @@ void main() {
     } catch (error) {
       expect(error, isA<StorageError>());
       expect((error as StorageError).type, StorageErrorType.CANCEL);
+      // 每个分片完成后会保存一次
+      // init 一次，仅有的一个分片完成后一次共 2 次
+      expect(cacheProvider.callNumber, 2);
     }
 
     await cacheProvider.clear();
+    cacheProvider.callNumber = 0;
 
     final response = await storage.putFileByPart(
       file,
@@ -246,6 +251,8 @@ void main() {
 
     /// 上传完成后缓存应该被清理
     expect(cacheProvider.value.length, 0);
+    // init + 2 个分片 2 次 = 3 次
+    expect(cacheProvider.callNumber, 3);
   }, skip: !isSensitiveDataDefined);
 
   test(
@@ -362,5 +369,15 @@ class HostProviderTest extends HostProvider {
   @override
   bool isFrozen(String host) {
     return false;
+  }
+}
+
+class CacheProviderForTest extends DefaultCacheProvider {
+  int callNumber = 0;
+  @override
+  // ignore: unnecessary_overrides
+  Future setItem(String key, String item) {
+    callNumber++;
+    return super.setItem(key, item);
   }
 }

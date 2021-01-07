@@ -96,7 +96,6 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   @override
   void postReceive(data) async {
     await _raf.close();
-    await storeUploadedPart();
     super.postReceive(data);
   }
 
@@ -205,10 +204,12 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     );
 
     _controller
+      // UploadPartTask 一次上传一个 chunk，通知一次进度
       ..addSendProgressListener((percent) {
         _sentPartCount++;
         notifySendProgress();
       })
+      // UploadPartTask 上传完成后触发
       ..addProgressListener((percent) {
         _sentPartToServerCount++;
         notifyProgress();
@@ -222,6 +223,8 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     _uploadedPartMap[partNumber] =
         Part(partNumber: partNumber, etag: data.etag);
     _workingUploadPartTaskControllers.remove(_controller);
+
+    await storeUploadedPart();
 
     // 检查任务是否已经完成
     if (_uploadedPartMap.length != _totalPartCount) {
