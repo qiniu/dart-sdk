@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
 import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
@@ -6,6 +7,13 @@ import 'task.dart';
 
 part 'request_task_controller.dart';
 part 'request_task_manager.dart';
+
+String _getUserAgent() {
+  return [
+    '${Platform.operatingSystem}/${Platform.operatingSystemVersion}',
+    'Dart/${Platform.version}'
+  ].join(' ');
+}
 
 abstract class RequestTask<T> extends Task<T> {
   // 准备阶段占总任务的百分比
@@ -51,6 +59,12 @@ abstract class RequestTask<T> extends Task<T> {
 
       return options;
     }));
+
+    client.interceptors.add(InterceptorsWrapper(onRequest: (options) {
+      options.headers['User-Agent'] = _getUserAgent();
+      return options;
+    }));
+
     super.preStart();
   }
 
