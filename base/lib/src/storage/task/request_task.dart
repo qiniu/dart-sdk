@@ -8,7 +8,7 @@ import 'task.dart';
 part 'request_task_controller.dart';
 part 'request_task_manager.dart';
 
-String getUserAgent() {
+String _getUserAgent() {
   return [
     '${Platform.operatingSystem}/${Platform.operatingSystemVersion}',
     'Dart/${Platform.version}'
@@ -61,7 +61,8 @@ abstract class RequestTask<T> extends Task<T> {
     }));
 
     client.interceptors.add(InterceptorsWrapper(onRequest: (options) {
-      options.headers['User-Agent'] = getUserAgent();
+      options.headers['User-Agent'] = _getUserAgent();
+      return options;
     }));
 
     super.preStart();
