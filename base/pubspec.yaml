@@ -8,7 +8,7 @@ environment:
 
 dependencies:
   dio: ^4.0.0
-  crypto: ^2.1.5
+  crypto: ^3.0.0
   meta: ^1.2.3
 
 dev_dependencies:
