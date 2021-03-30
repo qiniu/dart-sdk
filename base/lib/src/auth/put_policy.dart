@@ -182,28 +182,47 @@ class PutPolicy {
   }
 
   factory PutPolicy.fromJson(Map<String, dynamic> json) {
+    var isPrefixalScope = json['isPrefixalScope'] as int?;
+    var insertOnly = json['insertOnly'] as int?;
+    var endUser = json['endUser'] as String?;
+    var returnUrl = json['returnUrl'] as String?;
+    var returnBody = json['returnBody'] as String?;
+    var callBackUrl = json['callbackUrl'] as String?;
+    var callBackHost = json['callbackHost'] as String?;
+    var callbackBody = json['callbackBody'] as String?;
+    var callbackBodyType = json['callbackBodyType'] as String?;
+    var persistentOps = json['persistentOps'] as String?;
+    var persistentNotifyUrl = json['persistentNotifyUrl'] as String?;
+    var persistentPipeline = json['persistentPipeline'] as String?;
+    var forceSaveKey = json['forceSaveKey'] as String?;
+    var saveKey = json['saveKey'] as String?;
+    var fsizeMin = json['fsizeMin'] as int?;
+    var fsizeLimit = json['fsizeLimit'] as int?;
+    var detectMime = json['detectMime'] as int?;
+    var imeLimit = json['mimeLimit'] as String?;
+    var fileType = json['fileType'] as int?;
     return PutPolicy(
       scope: json['scope'] as String,
       deadline: json['deadline'] as int,
-      isPrefixalScope: json['isPrefixalScope'] as int,
-      insertOnly: json['insertOnly'] as int,
-      endUser: json['endUser'] as String,
-      returnUrl: json['returnUrl'] as String,
-      returnBody: json['returnBody'] as String,
-      callbackUrl: json['callbackUrl'] as String,
-      callbackHost: json['callbackHost'] as String,
-      callbackBody: json['callbackBody'] as String,
-      callbackBodyType: json['callbackBodyType'] as String,
-      persistentOps: json['persistentOps'] as String,
-      persistentNotifyUrl: json['persistentNotifyUrl'] as String,
-      persistentPipeline: json['persistentPipeline'] as String,
-      forceSaveKey: json['forceSaveKey'] as String,
-      saveKey: json['saveKey'] as String,
-      fsizeMin: json['fsizeMin'] as int,
-      fsizeLimit: json['fsizeLimit'] as int,
-      detectMime: json['detectMime'] as int,
-      mimeLimit: json['mimeLimit'] as String,
-      fileType: json['fileType'] as int,
+      isPrefixalScope: isPrefixalScope,
+      insertOnly: insertOnly,
+      endUser: endUser,
+      returnUrl: returnUrl,
+      returnBody: returnBody,
+      callbackUrl: callBackUrl,
+      callbackHost: callBackHost,
+      callbackBody: callbackBody,
+      callbackBodyType: callbackBodyType,
+      persistentOps: persistentOps,
+      persistentNotifyUrl: persistentNotifyUrl,
+      persistentPipeline: persistentPipeline,
+      forceSaveKey: forceSaveKey,
+      saveKey: saveKey,
+      fsizeMin: fsizeMin,
+      fsizeLimit: fsizeLimit,
+      detectMime: detectMime,
+      mimeLimit: imeLimit,
+      fileType: fileType,
     );
   }
 }
