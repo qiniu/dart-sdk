@@ -155,14 +155,14 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.2.0"
+    version: "0.2.1"
   qiniu_sdk_base:
     dependency: transitive
     description:
       path: "../../base"
       relative: true
     source: path
-    version: "0.2.2"
+    version: "0.2.3"
   sky_engine:
     dependency: transitive
     description: flutter

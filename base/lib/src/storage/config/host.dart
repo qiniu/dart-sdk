@@ -18,7 +18,7 @@ class DefaultHostProvider extends HostProvider {
   // 缓存的上传区域
   final _stashedUpDomains = <_Domain>[];
   // accessKey:bucket 用此 key 判断是否 up host 需要走缓存
-  late String _cacheKey;
+  String? _cacheKey;
   // 冻结的上传区域
   final List<_Domain> _frozenUpDomains = [];
 
