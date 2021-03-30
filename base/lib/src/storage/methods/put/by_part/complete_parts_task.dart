@@ -5,16 +5,16 @@ class CompletePartsTask extends RequestTask<PutResponse> {
   final String token;
   final String uploadId;
   final List<Part> parts;
-  final String key;
+  final String? key;
 
-  TokenInfo _tokenInfo;
+  late TokenInfo _tokenInfo;
 
   CompletePartsTask({
-    @required this.token,
-    @required this.uploadId,
-    @required this.parts,
+    required this.token,
+    required this.uploadId,
+    required this.parts,
     this.key,
-    PutController controller,
+    PutController? controller,
   }) : super(controller: controller);
 
   @override
@@ -32,7 +32,7 @@ class CompletePartsTask extends RequestTask<PutResponse> {
       accessKey: _tokenInfo.accessKey,
     );
     final headers = <String, dynamic>{'Authorization': 'UpToken $token'};
-    final encodedKey = key != null ? base64Url.encode(utf8.encode(key)) : '~';
+    final encodedKey = key != null ? base64Url.encode(utf8.encode(key!)) : '~';
     final paramUrl =
         '$host/buckets/$bucket/objects/$encodedKey/uploads/$uploadId';
 

@@ -27,8 +27,8 @@ class Auth {
   final String secretKey;
 
   const Auth({
-    @required this.accessKey,
-    @required this.secretKey,
+    required this.accessKey,
+    required this.secretKey,
   })  : assert(accessKey != null),
         assert(secretKey != null);
 
@@ -36,7 +36,7 @@ class Auth {
   ///
   /// 具体的上传策略说明请参考 [PutPolicy] 模块
   String generateUploadToken({
-    @required PutPolicy putPolicy,
+    required PutPolicy putPolicy,
   }) {
     assert(putPolicy != null);
 
@@ -52,9 +52,9 @@ class Auth {
   /// [deadline] 有效时间，单位为秒，例如 1451491200
   /// [bucketDomain] 空间绑定的域名，例如 http://test.bucket.com
   String generateDownloadToken({
-    @required String key,
-    @required int deadline,
-    @required String bucketDomain,
+    required String key,
+    required int deadline,
+    required String bucketDomain,
   }) {
     assert(key != null);
     assert(deadline != null);
@@ -67,7 +67,7 @@ class Auth {
   /// 根据数据签名，生成 Token（用于接口的访问鉴权）。
   ///
   /// 访问七牛的接口需要对请求进行签名, 该方法提供 Token 签发服务
-  String generateAccessToken({@required List<int> bytes}) {
+  String generateAccessToken({required List<int> bytes}) {
     assert(bytes != null);
 
     var hmacEncoder = Hmac(sha1, utf8.encode(secretKey));
@@ -88,7 +88,7 @@ class Auth {
       throw ArgumentError('invalid token');
     }
 
-    PutPolicy putPolicy;
+    late PutPolicy putPolicy;
     var accessKey = segments.first;
 
     /// 具体的 token 信息可以参考这里。

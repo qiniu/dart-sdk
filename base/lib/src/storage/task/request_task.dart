@@ -26,17 +26,17 @@ abstract class RequestTask<T> extends Task<T> {
   final Dio client = Dio();
 
   /// [RequestTaskManager.addTask] 会初始化这个
-  Config config;
+  late Config config;
   @override
   // ignore: overridden_fields
-  covariant RequestTaskManager manager;
-  RequestTaskController controller;
+  covariant late RequestTaskManager manager;
+  RequestTaskController? controller;
 
   // 重试次数
   int _retryCount = 0;
 
   // 最大重试次数
-  int retryLimit;
+  late int retryLimit;
 
   RequestTask({this.controller});
 
@@ -44,25 +44,24 @@ abstract class RequestTask<T> extends Task<T> {
   @mustCallSuper
   void preStart() {
     // 如果已经取消了，直接报错
-    if (controller != null && controller.cancelToken.isCancelled) {
+    if (controller != null && controller!.cancelToken.isCancelled) {
       throw StorageError(type: StorageErrorType.CANCEL);
     }
     controller?.notifyStatusListeners(StorageStatus.Init);
     controller?.notifyProgressListeners(preStartTakePercentOfTotal);
     retryLimit = config.retryLimit;
     client.httpClientAdapter = config.httpClientAdapter;
-    client.interceptors.add(InterceptorsWrapper(onRequest: (options) {
+    client.interceptors.add(InterceptorsWrapper(onRequest: (options, _) {
       controller?.notifyStatusListeners(StorageStatus.Request);
       options
         ..cancelToken = controller?.cancelToken
         ..onSendProgress = (sent, total) => onSendProgress(sent / total);
-
-      return options;
+      // return options;
     }));
 
-    client.interceptors.add(InterceptorsWrapper(onRequest: (options) {
+    client.interceptors.add(InterceptorsWrapper(onRequest: (options, _) {
       options.headers['User-Agent'] = _getUserAgent();
-      return options;
+      // return options;
     }));
 
     super.preStart();
@@ -94,10 +93,11 @@ abstract class RequestTask<T> extends Task<T> {
   void postError(Object error) async {
     // 处理 Dio 异常
     if (error is DioError) {
+      var err = error;
       if (!_canConnectToHost(error)) {
         // host 连不上，判断是否 host 不可用造成的, 比如 tls error(没做还)
         if (_isHostUnavailable(error)) {
-          config.hostProvider.freezeHost(error.request.path);
+          config.hostProvider.freezeHost(err.requestOptions.path);// error.request.path
         }
 
         // 继续尝试当前 host，如果是服务器坏了则切换到其他 host
@@ -110,7 +110,7 @@ abstract class RequestTask<T> extends Task<T> {
 
       // 能连上但是服务器不可用，比如 502
       if (_isHostUnavailable(error)) {
-        config.hostProvider.freezeHost(error.request.path);
+        config.hostProvider.freezeHost(err.requestOptions.path);
 
         // 切换到其他 host
         if (_retryCount < retryLimit) {
@@ -123,7 +123,7 @@ abstract class RequestTask<T> extends Task<T> {
       final storageError = StorageError.fromDioError(error);
 
       // 通知状态
-      if (error.type == DioErrorType.CANCEL) {
+      if (error.type == DioErrorType.cancel) {
         postCancel(storageError);
       } else {
         controller?.notifyStatusListeners(StorageStatus.Error);
@@ -167,12 +167,12 @@ abstract class RequestTask<T> extends Task<T> {
   // host 是否可以连接上
   bool _canConnectToHost(Object error) {
     if (error is DioError) {
-      if (error.type == DioErrorType.RESPONSE &&
-          error.response.statusCode > 99) {
+      if (error.type == DioErrorType.response &&
+          (error.response?.statusCode ?? 0) > 99) {
         return true;
       }
 
-      if (error.type == DioErrorType.CANCEL) {
+      if (error.type == DioErrorType.cancel) {
         return true;
       }
     }
@@ -183,8 +183,8 @@ abstract class RequestTask<T> extends Task<T> {
   // host 是否不可用
   bool _isHostUnavailable(Object error) {
     if (error is DioError) {
-      if (error.type == DioErrorType.RESPONSE) {
-        final statusCode = error.response.statusCode;
+      if (error.type == DioErrorType.response) {
+        final statusCode = error.response?.statusCode;
         if (statusCode == 502) {
           return true;
         }

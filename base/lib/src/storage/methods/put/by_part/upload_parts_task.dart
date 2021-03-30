@@ -9,25 +9,25 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   final int partSize;
   final int maxPartsRequestNumber;
 
-  final String key;
+  final String? key;
 
   @override
-  String _cacheKey;
+  late String _cacheKey;
 
   /// 设置为 0，避免子任务重试失败后 [UploadPartsTask] 继续重试
   @override
   int get retryLimit => 0;
 
   // 文件 bytes 长度
-  int _fileByteLength;
+  late int _fileByteLength;
 
   // 每个上传分片的字节长度
   //
   // 文件会按照此长度切片
-  int _partByteLength;
+  late int _partByteLength;
 
   // 文件总共被拆分的分片数
-  int _totalPartCount;
+  late int _totalPartCount;
 
   // 上传成功后把 part 信息存起来
   final Map<int, Part> _uploadedPartMap = {};
@@ -42,18 +42,18 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   int _sentPartToServerCount = 0;
 
   // 剩余多少被允许的请求数
-  int _idleRequestNumber;
+  late int _idleRequestNumber;
 
-  RandomAccessFile _raf;
+  late RandomAccessFile _raf;
 
   UploadPartsTask({
-    @required this.file,
-    @required this.token,
-    @required this.uploadId,
-    @required this.partSize,
-    @required this.maxPartsRequestNumber,
+    required this.file,
+    required this.token,
+    required this.uploadId,
+    required this.partSize,
+    required this.maxPartsRequestNumber,
     this.key,
-    PutController controller,
+    PutController? controller,
   }) : super(controller: controller);
 
   static String getCacheKey(
@@ -75,7 +75,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   @override
   void preStart() {
     // 当前 controller 被取消后，所有运行中的子任务都需要被取消
-    controller?.cancelToken?.whenCancel?.then((_) {
+    controller?.cancelToken.whenCancel?.then((_) {
       for (final controller in _workingUploadPartTaskControllers) {
         controller.cancel();
       }
@@ -84,7 +84,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     _partByteLength = partSize * 1024 * 1024;
     _idleRequestNumber = maxPartsRequestNumber;
     _totalPartCount = (_fileByteLength / _partByteLength).ceil();
-    _cacheKey = getCacheKey(file.path, _fileByteLength, partSize, key);
+    _cacheKey = getCacheKey(file.path, _fileByteLength, partSize, key!);
     // 子任务 UploadPartTask 从 file 去 open 的话虽然上传精度会颗粒更细但是会导致可能读不出文件的问题
     // 可能 close 没办法立即关闭 file stream，而延迟 close 了，导致某次 open 的 stream 被立即关闭
     // 所以读不出内容了
@@ -142,11 +142,11 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   Future<List<Part>> createTask() async {
     /// 如果已经取消了，直接报错
     // ignore: null_aware_in_condition
-    if (controller != null && controller.cancelToken.isCancelled) {
+    if (controller != null && controller!.cancelToken.isCancelled) {
       throw StorageError(type: StorageErrorType.CANCEL);
     }
 
-    controller.notifyStatusListeners(StorageStatus.Request);
+    controller?.notifyStatusListeners(StorageStatus.Request);
     // 尝试恢复缓存，如果有
     await recoverUploadedPart();
 

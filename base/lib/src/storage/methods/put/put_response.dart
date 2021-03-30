@@ -9,16 +9,19 @@ class PutResponse {
   final Map<String, dynamic> rawData;
 
   PutResponse({
-    @required this.key,
-    @required this.hash,
-    @required this.rawData,
+    required this.key,
+    required this.hash,
+    required this.rawData,
   });
 
-  factory PutResponse.fromJson(Map<String, dynamic> json) {
-    return PutResponse(
-      key: json['key'] as String,
-      hash: json['hash'] as String,
-      rawData: json,
-    );
+  factory PutResponse.fromJson(Map<String, dynamic>? json) {
+    if (json != null) {
+      return PutResponse(
+        key: json['key'] as String,
+        hash: json['hash'] as String,
+        rawData: json
+      );
+    }
+    return PutResponse(key: '~', hash: '~', rawData: <String, dynamic>{});
   }
 }

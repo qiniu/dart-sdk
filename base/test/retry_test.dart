@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:qiniu_sdk_base/src/storage/methods/put/by_part/put_parts_task.dart';
 import 'package:test/test.dart';
 import 'package:dio/adapter.dart';
@@ -139,7 +140,7 @@ void main() {
     // 接下来是正常流程
     final putController = PutController();
     final statusList = <StorageStatus>[];
-    double _sendPercent, _totalPercent;
+    late double _sendPercent, _totalPercent;
     putController
       ..addStatusListener(statusList.add)
       ..addProgressListener((percent) {
@@ -190,18 +191,19 @@ class HttpAdapterTestWithConnectFailedToHost extends HttpClientAdapter {
   }
 
   @override
-  Future<ResponseBody> fetch(RequestOptions options,
-      Stream<List<int>> requestStream, Future cancelFuture) async {
+  Future<ResponseBody> fetch(RequestOptions options, Stream<Uint8List>? requestStream, Future? cancelFuture) {
+    // TODO: implement fetch
     if (options.path.contains('test.com')) {
       if ((type == 0 && options.method == 'POST') ||
           (type == 1 && options.method == 'PUT')) {
         callTimes++;
         // 尝试扔出一个会触发连不上 host 的 错误
-        throw DioError();
+        throw DioError(requestOptions: options);
       }
     }
     return _adapter.fetch(options, requestStream, cancelFuture);
   }
+
 }
 
 // 502 会触发服务不可用逻辑导致该 host 被冻结，并重试其他 host
@@ -213,10 +215,10 @@ class HttpAdapterTestWith502 extends HttpClientAdapter {
   }
 
   @override
-  Future<ResponseBody> fetch(RequestOptions options,
-      Stream<List<int>> requestStream, Future cancelFuture) async {
+  Future<ResponseBody> fetch(RequestOptions options, Stream<Uint8List>? requestStream, Future? cancelFuture) {
+    // TODO: implement fetch
     if (options.path.contains('test.com') && options.method == 'POST') {
-      return ResponseBody.fromString('', 502);
+      return Future.value(ResponseBody.fromString('', 502));
     }
     return _adapter.fetch(options, requestStream, cancelFuture);
   }
@@ -229,16 +231,19 @@ class HostProviderTest extends HostProvider {
     _hostProvider.freezeHost(host);
   }
 
-  @override
-  Future<String> getUpHost({String accessKey, String bucket}) async {
-    if (isFrozen('https://test.com')) {
-      return _hostProvider.getUpHost(accessKey: accessKey, bucket: bucket);
-    }
-    return 'https://test.com';
-  }
+
 
   @override
   bool isFrozen(String host) {
     return _hostProvider.isFrozen(host);
+  }
+
+  @override
+  Future<String> getUpHost({required String accessKey, required String bucket}) {
+    // TODO: implement getUpHost
+    if (isFrozen('https://test.com')) {
+      return _hostProvider.getUpHost(accessKey: accessKey, bucket: bucket);
+    }
+    return Future.value('https://test.com');
   }
 }

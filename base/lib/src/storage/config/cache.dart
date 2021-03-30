@@ -5,7 +5,7 @@ abstract class CacheProvider {
   Future setItem(String key, String item);
 
   /// 根据 key 获取缓存
-  Future<String> getItem(String key);
+  Future<String?> getItem(String key);
 
   /// 删除指定 key 的缓存
   Future removeItem(String key);
@@ -23,7 +23,7 @@ class DefaultCacheProvider extends CacheProvider {
   }
 
   @override
-  Future<String> getItem(String key) async {
+  Future<String?> getItem(String key) async {
     return value[key];
   }
 

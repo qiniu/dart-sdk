@@ -1,6 +1,7 @@
 @Timeout(Duration(seconds: 60))
 
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:meta/meta.dart';
 import 'package:qiniu_sdk_base/src/storage/error/error.dart';
 import 'package:qiniu_sdk_base/src/storage/methods/put/by_part/put_parts_task.dart';
@@ -340,24 +341,30 @@ class HttpAdapterTestWith612 extends HttpClientAdapter {
   }
 
   @override
-  Future<ResponseBody> fetch(RequestOptions options,
-      Stream<List<int>> requestStream, Future cancelFuture) async {
-    /// 如果是 CompletePartsTask 发出去的请求，则返回 612
+  Future<ResponseBody> fetch(RequestOptions options, Stream<Uint8List>? requestStream, Future? cancelFuture) {
+    // TODO: implement fetch
     if (options.path.contains('uploads/') &&
         options.method == 'POST' &&
         !completePartsTaskResponse612) {
       completePartsTaskResponse612 = true;
-      return ResponseBody.fromString('', 612);
+      return Future.value(ResponseBody.fromString('', 612));
     }
     return _adapter.fetch(options, requestStream, cancelFuture);
   }
+
+  // @override
+  // Future<ResponseBody> fetch(RequestOptions options,
+  //     Stream<List<int>> requestStream, Future cancelFuture) async {
+    /// 如果是 CompletePartsTask 发出去的请求，则返回 612
+
+  // }
 }
 
 class HostProviderTest extends HostProvider {
   @override
   Future<String> getUpHost({
-    @required String accessKey,
-    @required String bucket,
+    required String accessKey,
+    required String bucket,
   }) async {
     // token 中 bucket 对应的地区
     return 'https://upload-na0.qiniup.com';

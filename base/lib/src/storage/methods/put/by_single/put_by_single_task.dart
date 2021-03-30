@@ -17,15 +17,15 @@ class PutBySingleTask extends RequestTask<PutResponse> {
 
   /// 资源名
   /// 如果不传则后端自动生成
-  final String key;
+  final String? key;
 
-  TokenInfo _tokenInfo;
+  late TokenInfo _tokenInfo;
 
   PutBySingleTask({
-    @required this.file,
-    @required this.token,
+    required this.file,
+    required this.token,
     this.key,
-    RequestTaskController controller,
+    RequestTaskController? controller,
   })  : assert(file != null),
         assert(token != null),
         super(controller: controller);

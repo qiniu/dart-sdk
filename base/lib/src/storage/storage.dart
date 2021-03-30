@@ -16,10 +16,10 @@ export 'task/task.dart';
 
 /// 客户端
 class Storage {
-  Config config;
-  RequestTaskManager taskManager;
+  late Config config;
+  late RequestTaskManager taskManager;
 
-  Storage({Config config}) {
+  Storage({Config? config}) {
     this.config = config ?? Config();
     taskManager = RequestTaskManager(config: this.config);
   }
@@ -27,7 +27,7 @@ class Storage {
   Future<PutResponse> putFile(
     File file,
     String token, {
-    PutOptions options,
+    PutOptions? options,
   }) {
     options ??= PutOptions();
     RequestTask<PutResponse> task;
@@ -61,7 +61,7 @@ class Storage {
   Future<PutResponse> putFileBySingle(
     File file,
     String token, {
-    PutBySingleOptions options,
+    PutBySingleOptions? options,
   }) {
     options ??= PutBySingleOptions();
     final task = PutBySingleTask(
@@ -80,7 +80,7 @@ class Storage {
   Future<PutResponse> putFileByPart(
     File file,
     String token, {
-    PutByPartOptions options,
+    PutByPartOptions? options,
   }) {
     options ??= PutByPartOptions();
     final task = PutByPartTask(

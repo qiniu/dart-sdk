@@ -2,8 +2,8 @@ part of 'config.dart';
 
 abstract class HostProvider {
   Future<String> getUpHost({
-    @required String accessKey,
-    @required String bucket,
+    required String accessKey,
+    required String bucket,
   });
 
   bool isFrozen(String host);
@@ -18,14 +18,14 @@ class DefaultHostProvider extends HostProvider {
   // 缓存的上传区域
   final _stashedUpDomains = <_Domain>[];
   // accessKey:bucket 用此 key 判断是否 up host 需要走缓存
-  String _cacheKey;
+  late String _cacheKey;
   // 冻结的上传区域
   final List<_Domain> _frozenUpDomains = [];
 
   @override
   Future<String> getUpHost({
-    @required String accessKey,
-    @required String bucket,
+    required String accessKey,
+    required String bucket,
   }) async {
     // 解冻需要被解冻的 host
     _frozenUpDomains.removeWhere((domain) => !domain.isFrozen());
@@ -39,7 +39,7 @@ class DefaultHostProvider extends HostProvider {
 
       final res = await _http.get<Map>(url);
 
-      final hosts = res.data['hosts']
+      final hosts = res.data!['hosts']
           .map((dynamic json) => _Host.fromJson(json as Map))
           .cast<_Host>()
           .toList() as List<_Host>;
@@ -74,10 +74,12 @@ class DefaultHostProvider extends HostProvider {
   @override
   bool isFrozen(String host) {
     final uri = Uri.parse(host);
-    final frozenDomain = _frozenUpDomains.firstWhere(
-        (domain) => domain.isFrozen() && domain.value == uri.host,
-        orElse: () => null);
-    return frozenDomain != null;
+    var lst = _frozenUpDomains.where((domain) => domain.isFrozen() && domain.value == uri.host).toList();
+    return lst.isNotEmpty;
+    // final frozenDomain = _frozenUpDomains.firstWhere(
+    //     (domain) => domain.isFrozen() && domain.value == uri.host,
+    //     orElse: () => null);
+    // return frozenDomain != null;
   }
 
   @override
@@ -96,7 +98,7 @@ class _Host {
   // domains: []
   Map<String, dynamic> up;
 
-  _Host({this.region, this.ttl, this.up});
+  _Host({required this.region, required this.ttl, required this.up});
 
   factory _Host.fromJson(Map json) {
     return _Host(

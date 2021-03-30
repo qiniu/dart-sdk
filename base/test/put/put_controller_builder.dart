@@ -5,7 +5,7 @@ class PutControllerBuilder {
   final putController = PutController();
   final statusList = <StorageStatus>[];
   final progressList = <double>[];
-  double _sendPercent, _totalPercent;
+  late double _sendPercent, _totalPercent;
 
   PutControllerBuilder() {
     putController
@@ -33,8 +33,8 @@ class PutControllerBuilder {
 
   // 任务执行完成后执行此方法
   void testStatus({
-    List<StorageStatus> targetStatusList,
-    List<double> targetProgressList,
+    List<StorageStatus>? targetStatusList,
+    List<double>? targetProgressList,
   }) {
     targetStatusList ??= [
       StorageStatus.Init,

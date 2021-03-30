@@ -47,15 +47,15 @@ void main() {
     final storage = Storage();
 
     final auth = Auth(
-      accessKey: env['QINIU_DART_SDK_ACCESS_KEY'],
-      secretKey: env['QINIU_DART_SDK_SECRET_KEY'],
+      accessKey: env['QINIU_DART_SDK_ACCESS_KEY']!,
+      secretKey: env['QINIU_DART_SDK_SECRET_KEY']!,
     );
 
     final token = auth.generateUploadToken(
       putPolicy: PutPolicy(
         insertOnly: 0,
         returnBody: '{"ext": \$(ext)}',
-        scope: env['QINIU_DART_SDK_TOKEN_SCOPE'],
+        scope: env['QINIU_DART_SDK_TOKEN_SCOPE']!,
         deadline: DateTime.now().millisecondsSinceEpoch + 3600,
       ),
     );

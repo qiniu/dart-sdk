@@ -4,7 +4,7 @@ class RequestTaskManager extends TaskManager {
   final Config config;
 
   RequestTaskManager({
-    @required this.config,
+    required this.config,
   }) : assert(config != null);
 
   @override

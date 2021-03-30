@@ -6,11 +6,14 @@ class InitParts {
   final String uploadId;
 
   InitParts({
-    @required this.expireAt,
-    @required this.uploadId,
+    required this.expireAt,
+    required this.uploadId,
   });
 
-  factory InitParts.fromJson(Map json) {
+  factory InitParts.fromJson(Map? json) {
+    if (json == null) {
+      return InitParts(uploadId: '~', expireAt: -1);
+    }
     return InitParts(
       uploadId: json['uploadId'] as String,
       expireAt: json['expireAt'] as int,
@@ -29,20 +32,20 @@ class InitParts {
 class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
   final File file;
   final String token;
-  final String key;
+  final String? key;
 
   @override
-  String _cacheKey;
-  TokenInfo _tokenInfo;
+  late String _cacheKey;
+  late TokenInfo _tokenInfo;
 
   InitPartsTask({
-    @required this.file,
-    @required this.token,
+    required this.file,
+    required this.token,
     this.key,
-    PutController controller,
+    PutController? controller,
   }) : super(controller: controller);
 
-  static String getCacheKey(String path, int length, String key) {
+  static String getCacheKey(String path, int length, String? key) {
     return 'qiniu_dart_sdk_init_parts_task_${path}_key_${key}_size_$length';
   }
 
@@ -70,7 +73,7 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
       accessKey: _tokenInfo.accessKey,
     );
 
-    final encodedKey = key != null ? base64Url.encode(utf8.encode(key)) : '~';
+    final encodedKey = key != null ? base64Url.encode(utf8.encode(key!)) : '~';
     final paramUrl = '$host/buckets/$bucket/objects/$encodedKey/uploads';
 
     final response = await client.post<Map<String, dynamic>>(

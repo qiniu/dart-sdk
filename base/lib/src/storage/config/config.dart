@@ -18,9 +18,9 @@ class Config {
   final int retryLimit;
 
   Config({
-    HostProvider hostProvider,
-    CacheProvider cacheProvider,
-    HttpClientAdapter httpClientAdapter,
+    HostProvider? hostProvider,
+    CacheProvider? cacheProvider,
+    HttpClientAdapter? httpClientAdapter,
     this.retryLimit = 3,
   })  : hostProvider = hostProvider ?? DefaultHostProvider(),
         cacheProvider = cacheProvider ?? DefaultCacheProvider(),

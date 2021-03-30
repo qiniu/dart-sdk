@@ -29,10 +29,10 @@ enum StorageErrorType {
 
 class StorageError extends QiniuError {
   /// [type] 不是 [StorageErrorType.RESPONSE] 的时候为 null
-  final int code;
+  final int? code;
   final StorageErrorType type;
 
-  StorageError({this.type, this.code, Error rawError, String message})
+  StorageError({required this.type, this.code, Error? rawError, String? message})
       : super(rawError: rawError, message: message);
 
   factory StorageError.fromError(Error error) {
@@ -58,17 +58,17 @@ class StorageError extends QiniuError {
 
 StorageErrorType _mapDioErrorType(DioErrorType type) {
   switch (type) {
-    case DioErrorType.CONNECT_TIMEOUT:
+    case DioErrorType.connectTimeout:
       return StorageErrorType.CONNECT_TIMEOUT;
-    case DioErrorType.SEND_TIMEOUT:
+    case DioErrorType.sendTimeout:
       return StorageErrorType.SEND_TIMEOUT;
-    case DioErrorType.RECEIVE_TIMEOUT:
+    case DioErrorType.receiveTimeout:
       return StorageErrorType.RECEIVE_TIMEOUT;
-    case DioErrorType.RESPONSE:
+    case DioErrorType.response:
       return StorageErrorType.RESPONSE;
-    case DioErrorType.CANCEL:
+    case DioErrorType.cancel:
       return StorageErrorType.CANCEL;
-    case DioErrorType.DEFAULT:
+    case DioErrorType.other:
     default:
       return StorageErrorType.UNKNOWN;
   }

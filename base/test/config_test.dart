@@ -39,13 +39,13 @@ void main() {
       () async {
     final config = Config();
     final hostA = await config.hostProvider.getUpHost(
-      accessKey: env['QINIU_DART_SDK_ACCESS_KEY'],
-      bucket: env['QINIU_DART_SDK_TOKEN_SCOPE'],
+      accessKey: env['QINIU_DART_SDK_ACCESS_KEY']!,
+      bucket: env['QINIU_DART_SDK_TOKEN_SCOPE']!,
     );
     config.hostProvider.freezeHost(hostA);
     final hostB = await config.hostProvider.getUpHost(
-      accessKey: env['QINIU_DART_SDK_ACCESS_KEY'],
-      bucket: env['QINIU_DART_SDK_TOKEN_SCOPE'],
+      accessKey: env['QINIU_DART_SDK_ACCESS_KEY']!,
+      bucket: env['QINIU_DART_SDK_TOKEN_SCOPE']!,
     );
 
     // getUpHost 会返回至少2个host，不用担心会少于两个
