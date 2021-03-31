@@ -51,16 +51,18 @@ abstract class RequestTask<T> extends Task<T> {
     controller?.notifyProgressListeners(preStartTakePercentOfTotal);
     retryLimit = config.retryLimit;
     client.httpClientAdapter = config.httpClientAdapter;
-    client.interceptors.add(InterceptorsWrapper(onRequest: (options, _) {
+    client.interceptors.add(InterceptorsWrapper(onRequest: (options, handler) {
       controller?.notifyStatusListeners(StorageStatus.Request);
       options
         ..cancelToken = controller?.cancelToken
         ..onSendProgress = (sent, total) => onSendProgress(sent / total);
       // return options;
+      handler.next(options);
     }));
 
-    client.interceptors.add(InterceptorsWrapper(onRequest: (options, _) {
+    client.interceptors.add(InterceptorsWrapper(onRequest: (options, handler) {
       options.headers['User-Agent'] = _getUserAgent();
+      handler.next(options);
       // return options;
     }));
 
