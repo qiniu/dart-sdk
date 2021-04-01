@@ -14,7 +14,7 @@ mixin CacheMixin<T> on RequestTask<T> {
     await config.cacheProvider.setItem(_cacheKey, data);
   }
 
-  Future<String> getCache() async {
+  Future<String?> getCache() async {
     return await config.cacheProvider.getItem(_cacheKey);
   }
 }

@@ -1,12 +1,19 @@
 class QiniuError extends Error {
-  final Error rawError;
+  /// error or exception
+  final dynamic rawError;
 
-  final String _message;
+  final String? _message;
 
   String get message => _message ?? rawError?.toString() ?? '';
 
   @override
-  StackTrace get stackTrace => rawError?.stackTrace ?? super.stackTrace;
+  StackTrace? get stackTrace {
+    if (rawError is Error) {
+      return (rawError as Error).stackTrace;
+    }
 
-  QiniuError({this.rawError, String message}) : _message = message;
+    return super.stackTrace;
+  }
+
+  QiniuError({this.rawError, String? message}) : _message = message;
 }

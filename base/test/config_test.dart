@@ -1,3 +1,4 @@
+// ignore: import_of_legacy_library_into_null_safe
 import 'package:dotenv/dotenv.dart';
 import 'package:qiniu_sdk_base/src/storage/storage.dart';
 import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
@@ -39,13 +40,13 @@ void main() {
       () async {
     final config = Config();
     final hostA = await config.hostProvider.getUpHost(
-      accessKey: env['QINIU_DART_SDK_ACCESS_KEY'],
-      bucket: env['QINIU_DART_SDK_TOKEN_SCOPE'],
+      accessKey: env['QINIU_DART_SDK_ACCESS_KEY']!,
+      bucket: env['QINIU_DART_SDK_TOKEN_SCOPE']!,
     );
     config.hostProvider.freezeHost(hostA);
     final hostB = await config.hostProvider.getUpHost(
-      accessKey: env['QINIU_DART_SDK_ACCESS_KEY'],
-      bucket: env['QINIU_DART_SDK_TOKEN_SCOPE'],
+      accessKey: env['QINIU_DART_SDK_ACCESS_KEY']!,
+      bucket: env['QINIU_DART_SDK_TOKEN_SCOPE']!,
     );
 
     // getUpHost 会返回至少2个host，不用担心会少于两个

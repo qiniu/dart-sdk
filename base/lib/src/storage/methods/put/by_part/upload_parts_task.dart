@@ -9,25 +9,25 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   final int partSize;
   final int maxPartsRequestNumber;
 
-  final String key;
+  final String? key;
 
   @override
-  String _cacheKey;
+  late final String _cacheKey;
 
   /// 设置为 0，避免子任务重试失败后 [UploadPartsTask] 继续重试
   @override
   int get retryLimit => 0;
 
   // 文件 bytes 长度
-  int _fileByteLength;
+  late final int _fileByteLength;
 
   // 每个上传分片的字节长度
   //
   // 文件会按照此长度切片
-  int _partByteLength;
+  late final int _partByteLength;
 
   // 文件总共被拆分的分片数
-  int _totalPartCount;
+  late final int _totalPartCount;
 
   // 上传成功后把 part 信息存起来
   final Map<int, Part> _uploadedPartMap = {};
@@ -42,25 +42,25 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   int _sentPartToServerCount = 0;
 
   // 剩余多少被允许的请求数
-  int _idleRequestNumber;
+  late int _idleRequestNumber;
 
-  RandomAccessFile _raf;
+  late final RandomAccessFile _raf;
 
   UploadPartsTask({
-    @required this.file,
-    @required this.token,
-    @required this.uploadId,
-    @required this.partSize,
-    @required this.maxPartsRequestNumber,
+    required this.file,
+    required this.token,
+    required this.uploadId,
+    required this.partSize,
+    required this.maxPartsRequestNumber,
     this.key,
-    PutController controller,
+    PutController? controller,
   }) : super(controller: controller);
 
   static String getCacheKey(
     String path,
     int length,
     int partSize,
-    String key,
+    String? key,
   ) {
     final keyList = [
       'key/$key',
@@ -75,7 +75,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   @override
   void preStart() {
     // 当前 controller 被取消后，所有运行中的子任务都需要被取消
-    controller?.cancelToken?.whenCancel?.then((_) {
+    controller?.cancelToken.whenCancel.then((_) {
       for (final controller in _workingUploadPartTaskControllers) {
         controller.cancel();
       }
@@ -142,11 +142,11 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   Future<List<Part>> createTask() async {
     /// 如果已经取消了，直接报错
     // ignore: null_aware_in_condition
-    if (controller != null && controller.cancelToken.isCancelled) {
+    if (controller != null && controller!.isCancelled) {
       throw StorageError(type: StorageErrorType.CANCEL);
     }
 
-    controller.notifyStatusListeners(StorageStatus.Request);
+    controller?.notifyStatusListeners(StorageStatus.Request);
     // 尝试恢复缓存，如果有
     await recoverUploadedPart();
 

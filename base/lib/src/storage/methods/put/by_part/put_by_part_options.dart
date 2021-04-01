@@ -3,7 +3,7 @@ import '../put_controller.dart';
 class PutByPartOptions {
   /// 资源名
   /// 如果不传则后端自动生成
-  final String key;
+  final String? key;
 
   /// 切片大小，单位 MB
   ///
@@ -14,7 +14,7 @@ class PutByPartOptions {
   final int maxPartsRequestNumber;
 
   /// 控制器
-  final PutController controller;
+  final PutController? controller;
 
   const PutByPartOptions({
     this.key,

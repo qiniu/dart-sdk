@@ -4,8 +4,8 @@ class RequestTaskManager extends TaskManager {
   final Config config;
 
   RequestTaskManager({
-    @required this.config,
-  }) : assert(config != null);
+    required this.config,
+  });
 
   @override
   void addTask(covariant RequestTask task) {

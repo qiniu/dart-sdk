@@ -178,7 +178,7 @@ void main() {
       );
 
       final tokenInfo = Auth.parseUpToken(token);
-      expect(tokenInfo.putPolicy != null, true);
+      expect(tokenInfo.putPolicy.scope, 'testBucket');
     });
   });
 }

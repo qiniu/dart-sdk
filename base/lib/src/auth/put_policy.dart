@@ -1,5 +1,3 @@
-import 'package:meta/meta.dart';
-
 /// 上传策略
 ///
 /// 更多信息请查看[官方文档-上传策略](https://developer.qiniu.com/kodo/manual/1206/put-policy)
@@ -21,7 +19,7 @@ class PutPolicy {
   }
 
   /// 若为 1，表示允许用户上传以 [scope] 的 KeyPrefix 为前缀的文件。
-  final int isPrefixalScope;
+  final int? isPrefixalScope;
 
   /// 上传凭证有效截止时间。
   ///
@@ -33,46 +31,46 @@ class PutPolicy {
   /// 限制为新增文件。
   ///
   /// 如果设置为非 0 值，则无论 [scope] 设置为什么形式，仅能以新增模式上传文件。
-  final int insertOnly;
+  final int? insertOnly;
 
   /// 唯一属主标识。
   ///
   /// 特殊场景下非常有用，例如根据 App-Client 标识给图片或视频打水印。
-  final String endUser;
+  final String? endUser;
 
   /// Web 端文件上传成功后，浏览器执行 303 跳转的 URL。
   ///
   /// 文件上传成功后会跳转到 <[returnUrl]>?upload_ret=<QueryString>
   /// 其中 <QueryString> 包含 [returnBody] 内容。
   /// 如不设置 [returnUrl]，则直接将 [returnBody] 的内容返回给客户端。
-  final String returnUrl;
+  final String? returnUrl;
 
   /// [returnBody] 声明服务端的响应格式。
   ///
   /// 可以使用 <魔法变量> 和 <自定义变量>，必须是合法的 JSON 格式，
   /// 关于 <魔法变量> 请参阅：[官方文档-魔法变量](https://developer.qiniu.com/kodo/manual/1235/vars#magicvar)
   /// 关于 <自定义变量> 请参阅：[官方文档-自定义变量](https://developer.qiniu.com/kodo/manual/1235/vars#xvar)
-  final String returnBody;
+  final String? returnBody;
 
   /// 上传成功后，七牛云向业务服务器发送 POST 请求的 URL。
-  final String callbackUrl;
+  final String? callbackUrl;
 
   /// 上传成功后，七牛云向业务服务器发送回调通知时的 Host 值。
   ///
   /// 与 [callbackUrl] 配合使用，仅当设置了 [callbackUrl] 时才有效。
-  final String callbackHost;
+  final String? callbackHost;
 
   /// 上传成功后发起的回调请求。
   ///
   /// 七牛云向业务服务器发送 Content-Type: application/x-www-form-urlencoded 的 POST 请求，
   /// 例如:{"key":"$(key)","hash":"$(etag)","w":"$(imageInfo.width)","h":"$(imageInfo.height)"}，
   /// 可以使用 <魔法变量> 和 <自定义变量>。
-  final String callbackBody;
+  final String? callbackBody;
 
   /// 上传成功后发起的回调请求的 Content-Type。
   ///
   /// 默认为 application/x-www-form-urlencoded，也可设置为 application/json。
-  final String callbackBodyType;
+  final String? callbackBodyType;
 
   /// 资源上传成功后触发执行的预转持久化处理指令列表。
   ///
@@ -80,7 +78,7 @@ class PutPolicy {
   /// 每个指令是一个 API 规格字符串，多个指令用 ; 分隔，
   /// 可以使用 <魔法变量> 和 <自定义变量>，
   /// 改字段的具体使用信息可以查看：[官方文档-#persistentOps](https://developer.qiniu.com/kodo/manual/1206/put-policy#persistentOps)
-  final String persistentOps;
+  final String? persistentOps;
 
   /// 接收持久化处理结果通知的 URL。
   ///
@@ -88,51 +86,51 @@ class PutPolicy {
   /// 该 URL 获取的内容和持久化处理状态查询的处理结果一致，
   /// 发送 body 格式是 Content-Type 为 application/json 的 POST 请求，
   /// 需要按照读取流的形式读取请求的 body 才能获取。
-  final String persistentNotifyUrl;
+  final String? persistentNotifyUrl;
 
   /// 转码队列名。
   ///
   /// 资源上传成功后，触发转码时指定独立的队列进行转码，
   /// 为空则表示使用公用队列，处理速度比较慢。建议使用专用队列。
-  final String persistentPipeline;
+  final String? persistentPipeline;
 
   /// [saveKey] 的优先级设置。
   ///
   /// 该设置为 true 时，[saveKey] 不能为空，会忽略客户端指定的 Key，强制使用 [saveKey] 进行文件命名。
   /// 参数不设置时，默认值为 false。
-  final String forceSaveKey;
+  final String? forceSaveKey;
 
   ///	自定义资源名。
   ///
   /// 支持<魔法变量>和<自定义变量>, [forceSaveKey] 为 false 时，
   /// 这个字段仅当用户上传的时候没有主动指定 key 时起作用，
   /// [forceSaveKey] 为 true 时，将强制按这个字段的格式命名。
-  final String saveKey;
+  final String? saveKey;
 
   /// 限定上传文件大小最小值，单位 Byte。
-  final int fsizeMin;
+  final int? fsizeMin;
 
   /// 限定上传文件大小最大值，单位 Byte。
   ///
   /// 超过限制上传文件大小的最大值会被判为上传失败，返回 413 状态码。
-  final int fsizeLimit;
+  final int? fsizeLimit;
 
   /// 开启 MimeType 侦测功能。
-  final int detectMime;
+  final int? detectMime;
 
   /// 限定用户上传的文件类型。
-  final String mimeLimit;
+  final String? mimeLimit;
 
   /// 文件存储类型
   ///
   /// 0 为标准存储（默认），
   /// 1 为低频存储，
   /// 2 为归档存储。
-  final int fileType;
+  final int? fileType;
 
   const PutPolicy({
-    @required this.scope,
-    @required this.deadline,
+    required this.scope,
+    required this.deadline,
     this.isPrefixalScope,
     this.insertOnly,
     this.endUser,
@@ -152,8 +150,7 @@ class PutPolicy {
     this.detectMime,
     this.mimeLimit,
     this.fileType,
-  })  : assert(scope != null),
-        assert(deadline != null);
+  });
 
   Map<String, dynamic> toJson() {
     return <String, dynamic>{
@@ -185,25 +182,25 @@ class PutPolicy {
     return PutPolicy(
       scope: json['scope'] as String,
       deadline: json['deadline'] as int,
-      isPrefixalScope: json['isPrefixalScope'] as int,
-      insertOnly: json['insertOnly'] as int,
-      endUser: json['endUser'] as String,
-      returnUrl: json['returnUrl'] as String,
-      returnBody: json['returnBody'] as String,
-      callbackUrl: json['callbackUrl'] as String,
-      callbackHost: json['callbackHost'] as String,
-      callbackBody: json['callbackBody'] as String,
-      callbackBodyType: json['callbackBodyType'] as String,
-      persistentOps: json['persistentOps'] as String,
-      persistentNotifyUrl: json['persistentNotifyUrl'] as String,
-      persistentPipeline: json['persistentPipeline'] as String,
-      forceSaveKey: json['forceSaveKey'] as String,
-      saveKey: json['saveKey'] as String,
-      fsizeMin: json['fsizeMin'] as int,
-      fsizeLimit: json['fsizeLimit'] as int,
-      detectMime: json['detectMime'] as int,
-      mimeLimit: json['mimeLimit'] as String,
-      fileType: json['fileType'] as int,
+      isPrefixalScope: json['isPrefixalScope'] as int?,
+      insertOnly: json['insertOnly'] as int?,
+      endUser: json['endUser'] as String?,
+      returnUrl: json['returnUrl'] as String?,
+      returnBody: json['returnBody'] as String?,
+      callbackUrl: json['callbackUrl'] as String?,
+      callbackHost: json['callbackHost'] as String?,
+      callbackBody: json['callbackBody'] as String?,
+      callbackBodyType: json['callbackBodyType'] as String?,
+      persistentOps: json['persistentOps'] as String?,
+      persistentNotifyUrl: json['persistentNotifyUrl'] as String?,
+      persistentPipeline: json['persistentPipeline'] as String?,
+      forceSaveKey: json['forceSaveKey'] as String?,
+      saveKey: json['saveKey'] as String?,
+      fsizeMin: json['fsizeMin'] as int?,
+      fsizeLimit: json['fsizeLimit'] as int?,
+      detectMime: json['detectMime'] as int?,
+      mimeLimit: json['mimeLimit'] as String?,
+      fileType: json['fileType'] as int?,
     );
   }
 }

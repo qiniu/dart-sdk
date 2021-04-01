@@ -4,7 +4,7 @@ class PutOptions {
   /// 资源名
   ///
   /// 如果不传则后端自动生成
-  final String key;
+  final String? key;
 
   /// 强制使用单文件上传，不使用分片，默认值 false
   final bool forceBySingle;
@@ -16,7 +16,7 @@ class PutOptions {
   final int maxPartsRequestNumber;
 
   /// 控制器
-  final PutController controller;
+  final PutController? controller;
 
   const PutOptions({
     this.key,
