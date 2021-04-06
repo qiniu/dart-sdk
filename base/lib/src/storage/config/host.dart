@@ -74,8 +74,8 @@ class DefaultHostProvider extends HostProvider {
   @override
   bool isFrozen(String host) {
     final uri = Uri.parse(host);
-    final frozenDomain = _frozenUpDomains.where(
-        (domain) => domain.isFrozen() && domain.value == uri.host);
+    final frozenDomain = _frozenUpDomains
+        .where((domain) => domain.isFrozen() && domain.value == uri.host);
     return frozenDomain.isNotEmpty;
   }
 

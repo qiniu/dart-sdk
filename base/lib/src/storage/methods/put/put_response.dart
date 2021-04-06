@@ -1,11 +1,11 @@
 class PutResponse {
   /// 文件名
-  /// 
+  ///
   /// 如果在上传策略自定义了 [returnBody]，这里会是空
   final String? key;
 
   /// 文件哈希
-  /// 
+  ///
   /// 如果在上传策略自定义了 [returnBody]，这里会是空
   final String? hash;
 
