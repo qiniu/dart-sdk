@@ -39,7 +39,7 @@ class DefaultHostProvider extends HostProvider {
 
       final res = await _http.get<Map>(url);
 
-      final hosts = res.data?['hosts']
+      final hosts = res.data!['hosts']
           .map((dynamic json) => _Host.fromJson(json as Map))
           .cast<_Host>()
           .toList() as List<_Host>;
