@@ -74,6 +74,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
 
   @override
   void preStart() {
+    super.preStart();
     // 当前 controller 被取消后，所有运行中的子任务都需要被取消
     controller?.cancelToken.whenCancel.then((_) {
       for (final controller in _workingUploadPartTaskControllers) {
@@ -90,7 +91,6 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     // 所以读不出内容了
     // 这里改成这里读取一次，子任务从中读取 bytes
     _raf = file.openSync();
-    super.preStart();
   }
 
   @override
@@ -253,8 +253,4 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
         _totalPartCount *
         RequestTask.onSendProgressTakePercentOfTotal);
   }
-
-  // UploadPartsTask 自身不包含进度，在其他地方处理
-  @override
-  void onSendProgress(double percent) {}
 }
