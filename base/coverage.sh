@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# from mobx.dart TODO 用 test_coverage 代替
+
 # Fast fail the script on failures.
 set -e
 
