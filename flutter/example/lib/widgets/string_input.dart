@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class StringInput extends StatelessWidget {
   final String label;
   final void Function(String token) onChange;
-  const StringInput(this.onChange, {Key key, this.label}) : super(key: key);
+  const StringInput(this.onChange, {Key? key, required this.label}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

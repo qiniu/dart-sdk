@@ -10,7 +10,7 @@ abstract class Example implements Widget {
 class App extends StatelessWidget {
   final Example child;
 
-  const App({Key key, this.child}) : super(key: key);
+  const App({Key? key, required this.child}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

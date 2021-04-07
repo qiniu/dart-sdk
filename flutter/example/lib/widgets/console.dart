@@ -6,7 +6,7 @@ class ConsoleController extends ChangeNotifier {
   List<String> messageList = [];
 
   void print(String message) {
-    messageList.add(message ?? '--');
+    messageList.add(message);
     notifyListeners();
   }
 }
@@ -14,13 +14,13 @@ class ConsoleController extends ChangeNotifier {
 class ConsoleControllerProvider extends InheritedWidget {
   final ConsoleController controller;
 
-  ConsoleControllerProvider({Key key, @required Widget child})
+  ConsoleControllerProvider({Key? key, required Widget child})
       : controller = ConsoleController(),
         super(key: key, child: child);
 
   static ConsoleController of(BuildContext context) {
     return context
-        .dependOnInheritedWidgetOfExactType<ConsoleControllerProvider>()
+        .dependOnInheritedWidgetOfExactType<ConsoleControllerProvider>()!
         .controller;
   }
 
@@ -31,7 +31,7 @@ class ConsoleControllerProvider extends InheritedWidget {
 }
 
 class Console extends StatefulWidget {
-  const Console({Key key}) : super(key: key);
+  const Console({Key? key}) : super(key: key);
 
   static ConsoleController of(BuildContext context) {
     return ConsoleControllerProvider.of(context);
@@ -44,7 +44,7 @@ class Console extends StatefulWidget {
 }
 
 class ConsoleState extends DisposableState<Console> {
-  ConsoleController controller;
+  late final ConsoleController controller;
   List<String> messageList = [];
 
   @override
@@ -55,7 +55,7 @@ class ConsoleState extends DisposableState<Console> {
   @override
   void didChangeDependencies() {
     controller = ConsoleControllerProvider.of(context);
-    controller?.addListener(onMessageChange);
+    controller.addListener(onMessageChange);
 
     addDisposer(() {
       controller?.removeListener(onMessageChange);

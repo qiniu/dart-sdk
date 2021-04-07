@@ -29,33 +29,34 @@ class Base extends StatefulWidget implements Example {
 }
 
 class BaseState extends DisposableState<Base> {
+  BaseState(): storage = Storage();
+
   // 用户输入的文件名
-  String key;
+  String? key;
 
   // 用户输入的 partSize
   int partSize = 4;
 
   // 用户输入的 token
-  String token;
+  String? token;
 
   /// storage 实例
-  Storage storage;
+  final Storage storage;
 
   /// 当前选择的文件
-  File selectedFile;
+  File? selectedFile;
 
   // 当前的进度
   double progressValue = 1;
 
   // 当前的任务状态
-  StorageStatus statusValue;
+  StorageStatus? statusValue;
 
   // 控制器，可以用于取消任务、获取上述的状态，进度等信息
-  PutController putController;
+  PutController? putController;
 
   @override
   void initState() {
-    storage = Storage();
     super.initState();
   }
 
@@ -79,7 +80,7 @@ class BaseState extends DisposableState<Base> {
     printToConsole('实际发送变化：进度：${percent.toStringAsFixed(4)}');
   }
 
-  void printToConsole(String message) {
+  void printToConsole(String? message) {
     if (message == null || message == '') {
       return;
     }
@@ -93,13 +94,13 @@ class BaseState extends DisposableState<Base> {
     putController = PutController();
 
     printToConsole('添加实际发送进度订阅');
-    addDisposer(putController.addSendProgressListener(onSendProgress));
+    addDisposer(putController!.addSendProgressListener(onSendProgress));
 
     printToConsole('添加任务进度订阅');
-    addDisposer(putController.addProgressListener(onProgress));
+    addDisposer(putController!.addProgressListener(onProgress));
 
     printToConsole('添加状态订阅');
-    addDisposer(putController.addStatusListener(onStatus));
+    addDisposer(putController!.addStatusListener(onStatus));
 
     var usedToken = token;
 
@@ -115,9 +116,14 @@ class BaseState extends DisposableState<Base> {
       return;
     }
 
+    if (selectedFile == null) {
+      printToConsole('请选择文件');
+      return;
+    }
+
     printToConsole('开始上传文件');
     storage.putFile(
-      selectedFile,
+      selectedFile!,
       usedToken,
       options: PutOptions(
         key: key,
@@ -178,7 +184,7 @@ class BaseState extends DisposableState<Base> {
   }
 
   void onPartSizeChange(String partSize) {
-    if (partSize == '' || partSize == null) {
+    if (partSize == '') {
       printToConsole('设置默认 partSize');
       this.partSize = 4;
       return;
@@ -189,7 +195,7 @@ class BaseState extends DisposableState<Base> {
   }
 
   void onTokenChange(String token) {
-    if (token == '' || token == null) {
+    if (token == '') {
       printToConsole('清除 token');
       this.token = null;
       return;
@@ -200,7 +206,7 @@ class BaseState extends DisposableState<Base> {
   }
 
   void onKeyChange(String key) {
-    if (key == '' || key == null) {
+    if (key == '') {
       printToConsole('清除 key');
       this.key = null;
       return;
@@ -223,7 +229,7 @@ class BaseState extends DisposableState<Base> {
         ),
       );
     }
-    return null;
+    return SizedBox.shrink();
   }
 
   @override
@@ -266,7 +272,7 @@ class BaseState extends DisposableState<Base> {
           child: const Console(),
           padding: EdgeInsets.all(8.0),
         ),
-      ]..removeWhere((widget) => widget == null),
+      ]
     );
   }
 }
