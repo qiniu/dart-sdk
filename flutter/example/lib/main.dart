@@ -117,7 +117,7 @@ class BaseState extends DisposableState<Base> {
     }
 
     if (selectedFile == null) {
-        printToConsole('请选择文件');
+      printToConsole('请选择文件');
       return;
     }
 
