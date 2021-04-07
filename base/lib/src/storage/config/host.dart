@@ -90,10 +90,10 @@ class DefaultHostProvider extends HostProvider {
 }
 
 class _Host {
-  String region;
-  int ttl;
+  late final String region;
+  late final int ttl;
   // domains: []
-  Map<String, dynamic> up;
+  late final Map<String, dynamic> up;
 
   _Host({required this.region, required this.ttl, required this.up});
 
@@ -109,6 +109,7 @@ class _Host {
 class _Domain {
   int frozenTime = 0;
   final _lockTime = 1000 * 60 * 10;
+  final String value;
 
   bool isFrozen() {
     return frozenTime + _lockTime > DateTime.now().millisecondsSinceEpoch;
@@ -118,6 +119,5 @@ class _Domain {
     frozenTime = DateTime.now().millisecondsSinceEpoch;
   }
 
-  String value;
   _Domain(this.value);
 }
