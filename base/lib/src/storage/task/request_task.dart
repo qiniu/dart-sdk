@@ -10,6 +10,8 @@ part 'request_task_manager.dart';
 
 String _getUserAgent() {
   return [
+    // TODO version
+    'Vendor/qiniu',
     '${Platform.operatingSystem}/${Platform.operatingSystemVersion}',
     'Dart/${Platform.version}'
   ].join(' ');
@@ -30,7 +32,7 @@ abstract class RequestTask<T> extends Task<T> {
   @override
   // ignore: overridden_fields
   covariant late final RequestTaskManager manager;
-  RequestTaskController? controller;
+  final RequestTaskController? controller;
 
   // 重试次数
   int _retryCount = 0;
