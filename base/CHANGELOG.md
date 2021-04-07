@@ -15,6 +15,6 @@
 
 - 增加 User-Agent(#39)
 
-## 0.3.0-beta
+## 0.3.0
 
 - 增加 null-safety(#43)
