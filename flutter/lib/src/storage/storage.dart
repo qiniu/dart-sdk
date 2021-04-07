@@ -21,12 +21,12 @@ export './controller.dart';
 
 class Storage {
   final base.Storage _baseStorage;
-  Storage({base.Config config}) : _baseStorage = base.Storage(config: config);
+  Storage({base.Config? config}) : _baseStorage = base.Storage(config: config);
 
   Future<base.PutResponse> putFile(
     File file,
     String token, {
-    base.PutOptions options,
+    base.PutOptions? options,
   }) {
     return _baseStorage.putFile(file, token, options: options);
   }

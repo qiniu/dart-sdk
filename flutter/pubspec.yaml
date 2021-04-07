@@ -1,17 +1,17 @@
 name: qiniu_flutter_sdk
 description: Qiniu Flutter sdk
-version: 0.2.0
+version: 0.3.0
 author: qiniu
 homepage: https://github.com/qiniu/dart-sdk/tree/master/flutter
 
 environment:
-  sdk: ">=2.7.0 <3.0.0"
+  sdk: ">=2.12.0 <3.0.0"
   flutter: ">=1.17.0 <2.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  qiniu_sdk_base: ^0.2.0
+  qiniu_sdk_base: ^0.3.0
 
 dev_dependencies:
   pedantic: ^1.9.0
