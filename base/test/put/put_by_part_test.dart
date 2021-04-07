@@ -1,7 +1,7 @@
 @Timeout(Duration(seconds: 60))
 
 import 'dart:io';
-import 'package:meta/meta.dart';
+import 'dart:typed_data';
 import 'package:qiniu_sdk_base/src/storage/error/error.dart';
 import 'package:qiniu_sdk_base/src/storage/methods/put/by_part/put_parts_task.dart';
 import 'package:qiniu_sdk_base/src/storage/methods/put/put_response.dart';
@@ -156,7 +156,6 @@ void main() {
       }
     });
 
-    Future.delayed(Duration(milliseconds: 1), putController.cancel);
     final future = storage.putFileByPart(
       File('test_resource/test_for_put_parts.mp4'),
       token,
@@ -276,7 +275,7 @@ void main() {
     final putController = PutController()
       ..addSendProgressListener((_) async {
         try {
-          if (cacheProvider.getItem(cacheKey) != null) {
+          if (await cacheProvider.getItem(cacheKey) != null) {
             await storage.putFileByPart(
               file,
               token,
@@ -341,7 +340,7 @@ class HttpAdapterTestWith612 extends HttpClientAdapter {
 
   @override
   Future<ResponseBody> fetch(RequestOptions options,
-      Stream<List<int>> requestStream, Future cancelFuture) async {
+      Stream<Uint8List>? requestStream, Future? cancelFuture) async {
     /// 如果是 CompletePartsTask 发出去的请求，则返回 612
     if (options.path.contains('uploads/') &&
         options.method == 'POST' &&
@@ -356,8 +355,8 @@ class HttpAdapterTestWith612 extends HttpClientAdapter {
 class HostProviderTest extends HostProvider {
   @override
   Future<String> getUpHost({
-    @required String accessKey,
-    @required String bucket,
+    required String accessKey,
+    required String bucket,
   }) async {
     // token 中 bucket 对应的地区
     return 'https://upload-na0.qiniup.com';

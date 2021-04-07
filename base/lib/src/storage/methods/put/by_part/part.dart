@@ -6,8 +6,8 @@ class Part {
   final int partNumber;
 
   Part({
-    @required this.etag,
-    @required this.partNumber,
+    required this.etag,
+    required this.partNumber,
   });
 
   factory Part.fromJson(Map<String, dynamic> json) {

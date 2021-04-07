@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:meta/meta.dart';
 import 'package:qiniu_sdk_base/src/storage/task/task.dart';
 
 import '../../../../auth/auth.dart';
@@ -17,18 +16,16 @@ class PutBySingleTask extends RequestTask<PutResponse> {
 
   /// 资源名
   /// 如果不传则后端自动生成
-  final String key;
+  final String? key;
 
-  TokenInfo _tokenInfo;
+  late UpTokenInfo _tokenInfo;
 
   PutBySingleTask({
-    @required this.file,
-    @required this.token,
+    required this.file,
+    required this.token,
     this.key,
-    RequestTaskController controller,
-  })  : assert(file != null),
-        assert(token != null),
-        super(controller: controller);
+    RequestTaskController? controller,
+  }) : super(controller: controller);
 
   @override
   void preStart() {
@@ -55,6 +52,7 @@ class PutBySingleTask extends RequestTask<PutResponse> {
       cancelToken: controller?.cancelToken,
     );
 
-    return PutResponse.fromJson(response.data);
+    // response.data 应该是 none-nullable 而不是 nullable，如果 dio 修复了可以去掉 !
+    return PutResponse.fromJson(response.data!);
   }
 }

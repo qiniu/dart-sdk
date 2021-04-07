@@ -4,7 +4,6 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:dio/dio.dart';
-import 'package:meta/meta.dart';
 import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
 
 part 'cache_mixin.dart';
@@ -22,24 +21,20 @@ class PutByPartTask extends RequestTask<PutResponse> {
   final int partSize;
   final int maxPartsRequestNumber;
 
-  final String key;
+  final String? key;
 
   /// 设置为 0，避免子任务重试失败后 [PutByPartTask] 继续重试
   @override
   int get retryLimit => 0;
 
   PutByPartTask({
-    @required this.file,
-    @required this.token,
-    @required this.partSize,
-    @required this.maxPartsRequestNumber,
+    required this.file,
+    required this.token,
+    required this.partSize,
+    required this.maxPartsRequestNumber,
     this.key,
-    PutController controller,
-  })  : assert(file != null),
-        assert(token != null),
-        assert(partSize != null),
-        assert(maxPartsRequestNumber != null),
-        assert(() {
+    PutController? controller,
+  })  : assert(() {
           if (partSize < 1 || partSize > 1024) {
             throw RangeError.range(partSize, 1, 1024, 'partSize',
                 'partSize must be greater than 1 and less than 1024');
@@ -48,19 +43,19 @@ class PutByPartTask extends RequestTask<PutResponse> {
         }()),
         super(controller: controller);
 
-  RequestTaskController _currentWorkingTaskController;
+  RequestTaskController? _currentWorkingTaskController;
 
   @override
   void preStart() {
     super.preStart();
 
     // 处理相同任务
-    final sameTaskExsist = manager.getTasks().firstWhere(
-          (element) => element is PutByPartTask && isEquals(element),
-          orElse: () => null,
-        );
+    final sameTaskExist = manager
+        .getTasks()
+        .where((element) => element is PutByPartTask && isEquals(element))
+        .isNotEmpty;
 
-    if (sameTaskExsist != null) {
+    if (sameTaskExist) {
       throw StorageError(
         type: StorageErrorType.IN_PROGRESS,
         message: '$file 已在上传队列中',
@@ -68,7 +63,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
     }
 
     // controller 被取消后取消当前运行的子任务
-    controller?.cancelToken?.whenCancel?.then((_) {
+    controller?.cancelToken.whenCancel.then((_) {
       _currentWorkingTaskController?.cancel();
     });
   }

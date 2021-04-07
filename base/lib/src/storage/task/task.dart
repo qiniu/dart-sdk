@@ -10,7 +10,8 @@ export 'task_manager.dart';
 ///
 /// 异步的任务，比如请求，批处理都可以继承这个类实现一个 Task
 abstract class Task<T> {
-  TaskManager manager;
+  /// 被添加到 [TaskManager] 后初始化
+  late final TaskManager manager;
 
   @protected
   Completer<T> completer = Completer();

@@ -13,19 +13,19 @@ class UploadPartTask extends RequestTask<UploadPart> {
 
   final int partNumber;
 
-  final String key;
+  final String? key;
 
-  TokenInfo _tokenInfo;
+  late final UpTokenInfo _tokenInfo;
 
   UploadPartTask({
-    @required this.token,
-    @required this.raf,
-    @required this.uploadId,
-    @required this.byteLength,
-    @required this.partNumber,
-    @required this.partSize,
+    required this.token,
+    required this.raf,
+    required this.uploadId,
+    required this.byteLength,
+    required this.partNumber,
+    required this.partSize,
     this.key,
-    PutController controller,
+    PutController? controller,
   }) : super(controller: controller);
 
   @override
@@ -54,18 +54,18 @@ class UploadPartTask extends RequestTask<UploadPart> {
       accessKey: _tokenInfo.accessKey,
     );
 
-    final encodedKey = key != null ? base64Url.encode(utf8.encode(key)) : '~';
+    final encodedKey = key != null ? base64Url.encode(utf8.encode(key!)) : '~';
     final paramUrl = 'buckets/$bucket/objects/$encodedKey';
 
     final response = await client.put<Map<String, dynamic>>(
       '$host/$paramUrl/uploads/$uploadId/$partNumber',
       data: Stream.fromIterable([_readFileByPartNumber(partNumber)]),
       // 在 data 是 stream 的场景下， interceptor 传入 cancelToken 这里不传会有 bug
-      cancelToken: controller.cancelToken,
+      cancelToken: controller?.cancelToken,
       options: Options(headers: headers),
     );
 
-    return UploadPart.fromJson(response.data);
+    return UploadPart.fromJson(response.data!);
   }
 
   // 分片上传是手动从 File 拿一段数据大概 4m(直穿是直接从 File 里面读取)
@@ -92,8 +92,8 @@ class UploadPart {
   final String etag;
 
   UploadPart({
-    @required this.md5,
-    @required this.etag,
+    required this.md5,
+    required this.etag,
   });
 
   factory UploadPart.fromJson(Map json) {

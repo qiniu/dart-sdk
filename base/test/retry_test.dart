@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:qiniu_sdk_base/src/storage/methods/put/by_part/put_parts_task.dart';
 import 'package:test/test.dart';
 import 'package:dio/adapter.dart';
@@ -64,7 +66,8 @@ void main() {
     final statusList = <StorageStatus>[];
     // 设置一个假的初始化缓存，让分片上传跳过初始化文件，便于测试后面的上传文件流程
     await cacheProvider.setItem(
-        InitPartsTask.getCacheKey(file.path, file.lengthSync(), null), '{}');
+        InitPartsTask.getCacheKey(file.path, file.lengthSync(), null),
+        json.encode({'expireAt': 0, 'uploadId': '0'}));
     final future = storage.putFileByPart(file, token,
         options: PutByPartOptions(
           partSize: 1,
@@ -139,7 +142,7 @@ void main() {
     // 接下来是正常流程
     final putController = PutController();
     final statusList = <StorageStatus>[];
-    double _sendPercent, _totalPercent;
+    late double _sendPercent, _totalPercent;
     putController
       ..addStatusListener(statusList.add)
       ..addProgressListener((percent) {
@@ -177,7 +180,7 @@ void main() {
   }, skip: !isSensitiveDataDefined);
 }
 
-// 会扔出 DioError，错误类型是 DioErrorType.DEFAULT，每个请求调用了 3 次
+// 会扔出 DioError，错误类型是 DioErrorType.othen，每个请求调用了 3 次
 class HttpAdapterTestWithConnectFailedToHost extends HttpClientAdapter {
   int callTimes = 0;
   final DefaultHttpClientAdapter _adapter = DefaultHttpClientAdapter();
@@ -191,13 +194,13 @@ class HttpAdapterTestWithConnectFailedToHost extends HttpClientAdapter {
 
   @override
   Future<ResponseBody> fetch(RequestOptions options,
-      Stream<List<int>> requestStream, Future cancelFuture) async {
+      Stream<Uint8List>? requestStream, Future? cancelFuture) async {
     if (options.path.contains('test.com')) {
       if ((type == 0 && options.method == 'POST') ||
           (type == 1 && options.method == 'PUT')) {
         callTimes++;
         // 尝试扔出一个会触发连不上 host 的 错误
-        throw DioError();
+        throw DioError(requestOptions: options);
       }
     }
     return _adapter.fetch(options, requestStream, cancelFuture);
@@ -214,7 +217,7 @@ class HttpAdapterTestWith502 extends HttpClientAdapter {
 
   @override
   Future<ResponseBody> fetch(RequestOptions options,
-      Stream<List<int>> requestStream, Future cancelFuture) async {
+      Stream<Uint8List>? requestStream, Future? cancelFuture) async {
     if (options.path.contains('test.com') && options.method == 'POST') {
       return ResponseBody.fromString('', 502);
     }
@@ -230,7 +233,8 @@ class HostProviderTest extends HostProvider {
   }
 
   @override
-  Future<String> getUpHost({String accessKey, String bucket}) async {
+  Future<String> getUpHost(
+      {required String accessKey, required String bucket}) async {
     if (isFrozen('https://test.com')) {
       return _hostProvider.getUpHost(accessKey: accessKey, bucket: bucket);
     }
