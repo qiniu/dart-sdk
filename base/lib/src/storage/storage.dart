@@ -40,6 +40,7 @@ class Storage {
         token: token,
         key: options.key,
         controller: options.controller,
+        params: options.params,
       );
     } else {
       task = PutByPartTask(
@@ -49,6 +50,7 @@ class Storage {
         maxPartsRequestNumber: options.maxPartsRequestNumber,
         partSize: options.partSize,
         controller: options.controller,
+        params: options.params,
       );
     }
 

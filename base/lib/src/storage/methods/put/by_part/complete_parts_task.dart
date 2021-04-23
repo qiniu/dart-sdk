@@ -9,12 +9,16 @@ class CompletePartsTask extends RequestTask<PutResponse> {
 
   late final UpTokenInfo _tokenInfo;
 
+  ///自定义变量，key 必须以 x: 开始
+  final Map<String, String>? params;
+
   CompletePartsTask({
     required this.token,
     required this.uploadId,
     required this.parts,
     this.key,
     PutController? controller,
+    this.params,
   }) : super(controller: controller);
 
   @override
@@ -41,7 +45,8 @@ class CompletePartsTask extends RequestTask<PutResponse> {
       data: {
         'parts': parts
           ..sort((a, b) => a.partNumber - b.partNumber)
-          ..map((part) => part.toJson()).toList()
+          ..map((part) => part.toJson()).toList(),
+        'customVars':params,
       },
       options: Options(headers: headers),
     );
