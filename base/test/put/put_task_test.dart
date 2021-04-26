@@ -9,8 +9,48 @@ import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
 import '../config.dart';
 import 'put_controller_builder.dart';
 
+
 void main() {
   configEnv();
+
+  test('put params should works well.',() async {
+    final storage = Storage();
+    var pcb = PutControllerBuilder();
+    var params = <String,String>{
+      "x:type":"testXType",
+      "x:ext":"testXExt",
+    };
+    final response = await storage.putFile(
+      File('test_resource/test_for_put.txt'),
+      token,
+      options: PutOptions(
+        key: 'test_for_put.txt',
+        controller: pcb.putController,
+        params: params
+      ),
+    );
+    expect(response.key, 'test_for_put.txt');
+    expect(response.rawData!['type'], 'testXType');
+    expect(response.rawData!['ext'], 'testXExt');
+
+    //分片
+    pcb = PutControllerBuilder();
+    final file = File('test_resource/test_for_put_parts.mp4');
+    final putResponseByPart = await storage.putFile(
+      file,
+      token,
+      options: PutOptions(
+        key: 'test_for_put_parts.mp4',
+        partSize: 1,
+        controller: pcb.putController,
+        params: params
+      ),
+    );
+    expect(putResponseByPart.key, 'test_for_put_parts.mp4');
+    expect(putResponseByPart.rawData!['type'], 'testXType');
+    expect(putResponseByPart.rawData!['ext'], 'testXExt');
+  }, skip: !isSensitiveDataDefined);
+
 
   test('put should works well.', () async {
     final storage = Storage();
