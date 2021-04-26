@@ -33,7 +33,7 @@ void main() {
     expect(response.rawData!['type'], 'testXType');
     expect(response.rawData!['ext'], 'testXExt');
 
-    //分片
+    /// 分片
     pcb = PutControllerBuilder();
     final file = File('test_resource/test_for_put_parts.mp4');
     final putResponseByPart = await storage.putFile(
