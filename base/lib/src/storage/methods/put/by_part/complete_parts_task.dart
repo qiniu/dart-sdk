@@ -9,16 +9,16 @@ class CompletePartsTask extends RequestTask<PutResponse> {
 
   late final UpTokenInfo _tokenInfo;
 
-  ///自定义变量，key 必须以 x: 开始
-  final Map<String, String>? params;
+  /// 自定义变量，key 必须以 x: 开始
+  final Map<String, String>? customVars;
 
   CompletePartsTask({
     required this.token,
     required this.uploadId,
     required this.parts,
     this.key,
+    this.customVars,
     PutController? controller,
-    this.params,
   }) : super(controller: controller);
 
   @override
@@ -40,14 +40,19 @@ class CompletePartsTask extends RequestTask<PutResponse> {
     final paramUrl =
         '$host/buckets/$bucket/objects/$encodedKey/uploads/$uploadId';
 
+    final data = <String, dynamic>{
+      'parts': parts
+        ..sort((a, b) => a.partNumber - b.partNumber)
+        ..map((part) => part.toJson()).toList(),
+    };
+
+    if (customVars != null) {
+      data['customVars'] = customVars;
+    }
+
     final response = await client.post<Map<String, dynamic>>(
       paramUrl,
-      data: {
-        'parts': parts
-          ..sort((a, b) => a.partNumber - b.partNumber)
-          ..map((part) => part.toJson()).toList(),
-        'customVars':params,
-      },
+      data: data,
       options: Options(headers: headers),
     );
 

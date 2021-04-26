@@ -16,7 +16,7 @@ void main() {
   test('put params should works well.',() async {
     final storage = Storage();
     var pcb = PutControllerBuilder();
-    var params = <String,String>{
+    var customVars = <String,String>{
       "x:type":"testXType",
       "x:ext":"testXExt",
     };
@@ -25,8 +25,8 @@ void main() {
       token,
       options: PutOptions(
         key: 'test_for_put.txt',
+        customVars: customVars,
         controller: pcb.putController,
-        params: params
       ),
     );
     expect(response.key, 'test_for_put.txt');
@@ -42,8 +42,8 @@ void main() {
       options: PutOptions(
         key: 'test_for_put_parts.mp4',
         partSize: 1,
+        customVars: customVars,
         controller: pcb.putController,
-        params: params
       ),
     );
     expect(putResponseByPart.key, 'test_for_put_parts.mp4');

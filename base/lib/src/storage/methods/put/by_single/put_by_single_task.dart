@@ -18,8 +18,8 @@ class PutBySingleTask extends RequestTask<PutResponse> {
   /// 如果不传则后端自动生成
   final String? key;
 
-  ///自定义变量，key 必须以 x: 开始
-  final Map<String, String>? params;
+  /// 自定义变量，key 必须以 x: 开始
+  final Map<String, String>? customVars;
 
   late UpTokenInfo _tokenInfo;
 
@@ -27,8 +27,8 @@ class PutBySingleTask extends RequestTask<PutResponse> {
     required this.file,
     required this.token,
     this.key,
+    this.customVars,
     RequestTaskController? controller,
-    this.params,
   }) : super(controller: controller);
 
   @override
@@ -45,8 +45,8 @@ class PutBySingleTask extends RequestTask<PutResponse> {
     'key': key,
     };
 
-    if(params!=null){
-      formDataMap.addAll(params!);
+    if (customVars != null) {
+      formDataMap.addAll(customVars!);
     }
 
     final formData = FormData.fromMap(formDataMap);

@@ -39,8 +39,8 @@ class Storage {
         file: file,
         token: token,
         key: options.key,
+        customVars: options.customVars,
         controller: options.controller,
-        params: options.params,
       );
     } else {
       task = PutByPartTask(
@@ -49,8 +49,8 @@ class Storage {
         key: options.key,
         maxPartsRequestNumber: options.maxPartsRequestNumber,
         partSize: options.partSize,
+        customVars: options.customVars,
         controller: options.controller,
-        params: options.params,
       );
     }
 
