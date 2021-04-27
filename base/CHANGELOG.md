@@ -18,3 +18,8 @@
 ## 0.3.0
 
 - 增加 null-safety(#43)
+
+## 0.3.1
+
+- 在 `PutOptions` 中增加 customVars 参数，为用户配置自定义变量提供入口
+- 对 `PutResponse` 中 rawData 参数变更为 required

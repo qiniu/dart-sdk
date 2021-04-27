@@ -21,7 +21,6 @@ class PutOptions {
   /// 控制器
   final PutController? controller;
 
-
   const PutOptions({
     this.key,
     this.forceBySingle = false,

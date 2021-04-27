@@ -9,16 +9,15 @@ import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
 import '../config.dart';
 import 'put_controller_builder.dart';
 
-
 void main() {
   configEnv();
 
-  test('put params should works well.',() async {
+  test('put customVars should works well.', () async {
     final storage = Storage();
-    var pcb = PutControllerBuilder();
-    var customVars = <String,String>{
-      "x:type":"testXType",
-      "x:ext":"testXExt",
+    var putController = PutController();
+    var customVars = <String, String>{
+      'x:type': 'testXType',
+      'x:ext': 'testXExt',
     };
     final response = await storage.putFile(
       File('test_resource/test_for_put.txt'),
@@ -26,15 +25,15 @@ void main() {
       options: PutOptions(
         key: 'test_for_put.txt',
         customVars: customVars,
-        controller: pcb.putController,
+        controller: putController,
       ),
     );
     expect(response.key, 'test_for_put.txt');
-    expect(response.rawData!['type'], 'testXType');
-    expect(response.rawData!['ext'], 'testXExt');
+    expect(response.rawData['type'], 'testXType');
+    expect(response.rawData['ext'], 'testXExt');
 
     /// 分片
-    pcb = PutControllerBuilder();
+    putController = PutController();
     final file = File('test_resource/test_for_put_parts.mp4');
     final putResponseByPart = await storage.putFile(
       file,
@@ -43,14 +42,13 @@ void main() {
         key: 'test_for_put_parts.mp4',
         partSize: 1,
         customVars: customVars,
-        controller: pcb.putController,
+        controller: putController,
       ),
     );
     expect(putResponseByPart.key, 'test_for_put_parts.mp4');
-    expect(putResponseByPart.rawData!['type'], 'testXType');
-    expect(putResponseByPart.rawData!['ext'], 'testXExt');
+    expect(putResponseByPart.rawData['type'], 'testXType');
+    expect(putResponseByPart.rawData['ext'], 'testXExt');
   }, skip: !isSensitiveDataDefined);
-
 
   test('put should works well.', () async {
     final storage = Storage();
