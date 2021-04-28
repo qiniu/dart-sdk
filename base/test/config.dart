@@ -28,8 +28,6 @@ void configEnv() {
         putPolicy: PutPolicy(
             insertOnly: 0,
             scope: env['QINIU_DART_SDK_TOKEN_SCOPE']!,
-            callbackBody: env['QINIU_DART_SDK_CALLBACK_BODY']!,
-            callbackUrl: env['QINIU_DART_SDK_CALLBACK_URL']!,
             deadline: DateTime.now().millisecondsSinceEpoch + 3600),
       );
     } else {
