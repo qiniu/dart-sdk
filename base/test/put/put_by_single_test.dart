@@ -5,6 +5,7 @@ import 'package:qiniu_sdk_base/src/storage/error/error.dart';
 import 'package:qiniu_sdk_base/src/storage/methods/put/put_response.dart';
 import 'package:test/test.dart';
 import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
+import 'package:dotenv/dotenv.dart' show env;
 
 import '../config.dart';
 import 'put_controller_builder.dart';
@@ -13,6 +14,45 @@ void main() {
   configEnv();
 
   final storage = Storage();
+
+  test('putFileBySingle customVars should works well.', () async {
+    final auth = Auth(
+      accessKey: env['QINIU_DART_SDK_ACCESS_KEY']!,
+      secretKey: env['QINIU_DART_SDK_SECRET_KEY']!,
+    );
+
+    final token = auth.generateUploadToken(
+      putPolicy: PutPolicy(
+        insertOnly: 0,
+        scope: env['QINIU_DART_SDK_TOKEN_SCOPE']!,
+        callbackBody: env['QINIU_DART_SDK_CALLBACK_BODY']!,
+        callbackUrl: env['QINIU_DART_SDK_CALLBACK_URL']!,
+        deadline: DateTime.now().millisecondsSinceEpoch + 3600,
+      ),
+    );
+
+    var customVars = <String, String>{
+      'x:type': 'testXType',
+      'x:ext': 'testXExt',
+    };
+
+    final file = File('test_resource/test_for_put.txt');
+    var pcb = PutControllerBuilder();
+    final response = await storage.putFileBySingle(
+      file,
+      token,
+      options: PutBySingleOptions(
+        key: 'test_for_put.txt',
+        customVars: customVars,
+        controller: pcb.putController,
+      ),
+    );
+
+    pcb.testAll();
+    expect(response.key, 'test_for_put.txt');
+    expect(response.rawData['type'], 'testXType');
+    expect(response.rawData['ext'], 'testXExt');
+  }, skip: !isSensitiveDataDefined);
 
   test('putFileBySingle should works well.', () async {
     final file = File('test_resource/test_for_put.txt');
