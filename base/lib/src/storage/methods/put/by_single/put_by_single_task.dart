@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:qiniu_sdk_base/src/storage/task/task.dart';
@@ -9,7 +9,7 @@ import '../put_response.dart';
 // 直传任务
 class PutBySingleTask extends RequestTask<PutResponse> {
   /// 上传文件
-  final File file;
+  final Uint8List input;
 
   /// 上传凭证
   final String token;
@@ -21,7 +21,7 @@ class PutBySingleTask extends RequestTask<PutResponse> {
   late UpTokenInfo _tokenInfo;
 
   PutBySingleTask({
-    required this.file,
+    required this.input,
     required this.token,
     this.key,
     RequestTaskController? controller,
@@ -36,7 +36,7 @@ class PutBySingleTask extends RequestTask<PutResponse> {
   @override
   Future<PutResponse> createTask() async {
     final formData = FormData.fromMap(<String, dynamic>{
-      'file': await MultipartFile.fromFile(file.path),
+      'file': MultipartFile.fromBytes(input),
       'token': token,
       'key': key,
     });

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'config/config.dart';
 import 'methods/put/by_part/put_parts_task.dart';
@@ -28,15 +29,16 @@ class Storage {
     File file,
     String token, {
     PutOptions? options,
-  }) {
+  }) async {
     options ??= PutOptions();
     RequestTask<PutResponse> task;
     final useSingle = options.forceBySingle == true ||
         file.lengthSync() < (options.partSize * 1024 * 1024);
+    final fileBytes = await file.readAsBytes();
 
     if (useSingle) {
       task = PutBySingleTask(
-        file: file,
+        input: fileBytes,
         token: token,
         key: options.key,
         controller: options.controller,
@@ -62,10 +64,11 @@ class Storage {
     File file,
     String token, {
     PutBySingleOptions? options,
-  }) {
+  }) async {
     options ??= PutBySingleOptions();
+    final fileBytes = await file.readAsBytes();
     final task = PutBySingleTask(
-      file: file,
+      input: fileBytes,
       token: token,
       key: options.key,
       controller: options.controller,
@@ -89,6 +92,28 @@ class Storage {
       key: options.key,
       partSize: options.partSize,
       maxPartsRequestNumber: options.maxPartsRequestNumber,
+      controller: options.controller,
+    );
+
+    taskManager.addTask(task);
+
+    return task.future;
+  }
+
+  /// 上传 stream
+  ///
+  /// 该方法采用直传方式上传
+  Future<PutResponse> putBytes(
+    Uint8List bytes,
+    String token, {
+    PutBySingleOptions? options,
+  }) async {
+    options ??= PutBySingleOptions();
+
+    final task = PutBySingleTask(
+      input: bytes,
+      token: token,
+      key: options.key,
       controller: options.controller,
     );
 

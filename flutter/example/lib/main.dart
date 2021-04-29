@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:qiniu_flutter_sdk/qiniu_flutter_sdk.dart';
@@ -29,7 +30,7 @@ class Base extends StatefulWidget implements Example {
 }
 
 class BaseState extends DisposableState<Base> {
-  BaseState(): storage = Storage();
+  BaseState() : storage = Storage();
 
   // 用户输入的文件名
   String? key;
@@ -44,7 +45,7 @@ class BaseState extends DisposableState<Base> {
   final Storage storage;
 
   /// 当前选择的文件
-  File? selectedFile;
+  Uint8List? selectedFile;
 
   // 当前的进度
   double progressValue = 1;
@@ -120,14 +121,14 @@ class BaseState extends DisposableState<Base> {
       printToConsole('请选择文件');
       return;
     }
-
+    print(selectedFile);
     printToConsole('开始上传文件');
-    storage.putFile(
+    storage.putBytes(
       selectedFile!,
       usedToken,
-      options: PutOptions(
+      options: PutBySingleOptions(
         key: key,
-        partSize: partSize,
+        // partSize: partSize,
         controller: putController,
       ),
     )
@@ -171,9 +172,9 @@ class BaseState extends DisposableState<Base> {
       });
   }
 
-  void onSelectedFile(File file) {
-    printToConsole('选中文件: ${file.path}');
-    printToConsole('文件尺寸：${humanizeFileSize(file.lengthSync().toDouble())}');
+  void onSelectedFile(Uint8List file) {
+    // printToConsole('选中文件: ${file.path}');
+    // printToConsole('文件尺寸：${humanizeFileSize(file.lengthSync().toDouble())}');
 
     setState(() {
       printToConsole('设置 selectedFile');
@@ -234,45 +235,43 @@ class BaseState extends DisposableState<Base> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      children: [
-        Padding(
-          padding: EdgeInsets.all(20),
-          child: Progress(progressValue),
+    return ListView(children: [
+      Padding(
+        padding: EdgeInsets.all(20),
+        child: Progress(progressValue),
+      ),
+      Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: StringInput(
+          onKeyChange,
+          label: '请输入 Key（可选）',
         ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: StringInput(
-            onKeyChange,
-            label: '请输入 Key（可选）',
-          ),
+      ),
+      Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: StringInput(
+          onPartSizeChange,
+          label: '请输入分片尺寸，单位 M（默认 4，可选）',
         ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: StringInput(
-            onPartSizeChange,
-            label: '请输入分片尺寸，单位 M（默认 4，可选）',
-          ),
+      ),
+      Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: StringInput(
+          onTokenChange,
+          label: '请输入 Token（可选）',
         ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: StringInput(
-            onTokenChange,
-            label: '请输入 Token（可选）',
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: SelectFile(onSelectedFile),
-        ),
-        // 取消按钮
-        cancelButton,
-        Padding(
-          key: Key('console'),
-          child: const Console(),
-          padding: EdgeInsets.all(8.0),
-        ),
-      ]
-    );
+      ),
+      Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: SelectFile(onSelectedFile),
+      ),
+      // 取消按钮
+      cancelButton,
+      Padding(
+        key: Key('console'),
+        child: const Console(),
+        padding: EdgeInsets.all(8.0),
+      ),
+    ]);
   }
 }
