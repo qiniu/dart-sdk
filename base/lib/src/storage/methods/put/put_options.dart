@@ -15,6 +15,9 @@ class PutOptions {
   /// 并发上传的队列长度，默认值为 5
   final int maxPartsRequestNumber;
 
+  /// 自定义变量，key 必须以 x: 开始
+  final Map<String, String>? customVars;
+
   /// 控制器
   final PutController? controller;
 
@@ -23,6 +26,7 @@ class PutOptions {
     this.forceBySingle = false,
     this.partSize = 4,
     this.maxPartsRequestNumber = 5,
+    this.customVars,
     this.controller,
   });
 }

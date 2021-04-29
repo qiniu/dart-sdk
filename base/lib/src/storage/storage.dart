@@ -39,6 +39,7 @@ class Storage {
         file: file,
         token: token,
         key: options.key,
+        customVars: options.customVars,
         controller: options.controller,
       );
     } else {
@@ -48,6 +49,7 @@ class Storage {
         key: options.key,
         maxPartsRequestNumber: options.maxPartsRequestNumber,
         partSize: options.partSize,
+        customVars: options.customVars,
         controller: options.controller,
       );
     }
@@ -68,6 +70,7 @@ class Storage {
       file: file,
       token: token,
       key: options.key,
+      customVars: options.customVars,
       controller: options.controller,
     );
 
@@ -89,6 +92,7 @@ class Storage {
       key: options.key,
       partSize: options.partSize,
       maxPartsRequestNumber: options.maxPartsRequestNumber,
+      customVars: options.customVars,
       controller: options.controller,
     );
 

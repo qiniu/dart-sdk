@@ -11,12 +11,12 @@ class PutResponse {
 
   /// 如果在上传策略自定义了 [returnBody]，
   /// 你可以读取并解析这个字段提取你自定义的响应信息
-  final Map<String, dynamic>? rawData;
+  final Map<String, dynamic> rawData;
 
   PutResponse({
     this.key,
     this.hash,
-    this.rawData,
+    required this.rawData,
   });
 
   factory PutResponse.fromJson(Map<String, dynamic> json) {

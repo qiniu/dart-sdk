@@ -12,6 +12,59 @@ import 'put_controller_builder.dart';
 void main() {
   configEnv();
 
+  test('put customVars should works well.', () async {
+    final storage = Storage();
+
+    final auth = Auth(
+      accessKey: env['QINIU_DART_SDK_ACCESS_KEY']!,
+      secretKey: env['QINIU_DART_SDK_SECRET_KEY']!,
+    );
+
+    final token = auth.generateUploadToken(
+      putPolicy: PutPolicy(
+        insertOnly: 0,
+        scope: env['QINIU_DART_SDK_TOKEN_SCOPE']!,
+        returnBody: '{"key":"\$(key)","type":"\$(x:type)","ext":"\$(x:ext)"}',
+        deadline: DateTime.now().millisecondsSinceEpoch + 3600,
+      ),
+    );
+
+    var putController = PutController();
+    var customVars = <String, String>{
+      'x:type': 'testXType',
+      'x:ext': 'testXExt',
+    };
+    final response = await storage.putFile(
+      File('test_resource/test_for_put.txt'),
+      token,
+      options: PutOptions(
+        key: 'test_for_put.txt',
+        customVars: customVars,
+        controller: putController,
+      ),
+    );
+    expect(response.key, 'test_for_put.txt');
+    expect(response.rawData['type'], 'testXType');
+    expect(response.rawData['ext'], 'testXExt');
+
+    /// 分片
+    putController = PutController();
+    final file = File('test_resource/test_for_put_parts.mp4');
+    final putResponseByPart = await storage.putFile(
+      file,
+      token,
+      options: PutOptions(
+        key: 'test_for_put_parts.mp4',
+        partSize: 1,
+        customVars: customVars,
+        controller: putController,
+      ),
+    );
+    expect(putResponseByPart.key, 'test_for_put_parts.mp4');
+    expect(putResponseByPart.rawData['type'], 'testXType');
+    expect(putResponseByPart.rawData['ext'], 'testXExt');
+  }, skip: !isSensitiveDataDefined);
+
   test('put should works well.', () async {
     final storage = Storage();
     var pcb = PutControllerBuilder();
