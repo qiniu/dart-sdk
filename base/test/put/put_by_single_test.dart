@@ -25,8 +25,7 @@ void main() {
       putPolicy: PutPolicy(
         insertOnly: 0,
         scope: env['QINIU_DART_SDK_TOKEN_SCOPE']!,
-        callbackBody: env['QINIU_DART_SDK_CALLBACK_BODY']!,
-        callbackUrl: env['QINIU_DART_SDK_CALLBACK_URL']!,
+        returnBody: '{"key":"\$(key)","type":"\$(x:type)","ext":"\$(x:ext)"}',
         deadline: DateTime.now().millisecondsSinceEpoch + 3600,
       ),
     );
@@ -37,18 +36,17 @@ void main() {
     };
 
     final file = File('test_resource/test_for_put.txt');
-    var pcb = PutControllerBuilder();
+    var putController = PutController();
     final response = await storage.putFileBySingle(
       file,
       token,
       options: PutBySingleOptions(
         key: 'test_for_put.txt',
         customVars: customVars,
-        controller: pcb.putController,
+        controller: putController,
       ),
     );
 
-    pcb.testAll();
     expect(response.key, 'test_for_put.txt');
     expect(response.rawData['type'], 'testXType');
     expect(response.rawData['ext'], 'testXExt');

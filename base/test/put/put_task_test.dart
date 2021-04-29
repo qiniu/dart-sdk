@@ -24,8 +24,7 @@ void main() {
       putPolicy: PutPolicy(
         insertOnly: 0,
         scope: env['QINIU_DART_SDK_TOKEN_SCOPE']!,
-        callbackBody: env['QINIU_DART_SDK_CALLBACK_BODY']!,
-        callbackUrl: env['QINIU_DART_SDK_CALLBACK_URL']!,
+        returnBody: '{"key":"\$(key)","type":"\$(x:type)","ext":"\$(x:ext)"}',
         deadline: DateTime.now().millisecondsSinceEpoch + 3600,
       ),
     );

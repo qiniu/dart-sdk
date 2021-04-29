@@ -29,8 +29,7 @@ void main() {
       putPolicy: PutPolicy(
         insertOnly: 0,
         scope: env['QINIU_DART_SDK_TOKEN_SCOPE']!,
-        callbackBody: env['QINIU_DART_SDK_CALLBACK_BODY']!,
-        callbackUrl: env['QINIU_DART_SDK_CALLBACK_URL']!,
+        returnBody: '{"key":"\$(key)","type":"\$(x:type)","ext":"\$(x:ext)"}',
         deadline: DateTime.now().millisecondsSinceEpoch + 3600,
       ),
     );
@@ -40,11 +39,7 @@ void main() {
       'x:ext': 'testXExt',
     };
 
-    final pcb = PutControllerBuilder();
-    var callnumber = 0;
-    pcb.putController.addSendProgressListener((percent) {
-      callnumber++;
-    });
+    var putController = PutController();
     final file = File('test_resource/test_for_put_parts.mp4');
     final response = await storage.putFileByPart(
       file,
@@ -53,17 +48,13 @@ void main() {
         key: 'test_for_put_parts.mp4',
         partSize: 1,
         customVars: customVars,
-        controller: pcb.putController,
+        controller: putController,
       ),
     );
-    expect(response, isA<PutResponse>());
+
     expect(response.key, 'test_for_put_parts.mp4');
     expect(response.rawData['type'], 'testXType');
     expect(response.rawData['ext'], 'testXExt');
-    // 2 片分片所以 2 次
-    expect(callnumber, 2);
-
-    pcb.testAll();
   }, skip: !isSensitiveDataDefined);
 
   test('putFileByPart should works well.', () async {
