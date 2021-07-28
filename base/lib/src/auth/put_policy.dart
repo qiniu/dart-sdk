@@ -98,7 +98,7 @@ class PutPolicy {
   ///
   /// 该设置为 true 时，[saveKey] 不能为空，会忽略客户端指定的 Key，强制使用 [saveKey] 进行文件命名。
   /// 参数不设置时，默认值为 false。
-  final String? forceSaveKey;
+  final bool? forceSaveKey;
 
   ///	自定义资源名。
   ///
@@ -194,7 +194,7 @@ class PutPolicy {
       persistentOps: json['persistentOps'] as String?,
       persistentNotifyUrl: json['persistentNotifyUrl'] as String?,
       persistentPipeline: json['persistentPipeline'] as String?,
-      forceSaveKey: json['forceSaveKey'] as String?,
+      forceSaveKey: json['forceSaveKey'] as bool?,
       saveKey: json['saveKey'] as String?,
       fsizeMin: json['fsizeMin'] as int?,
       fsizeLimit: json['fsizeLimit'] as int?,

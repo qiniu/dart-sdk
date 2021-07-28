@@ -23,3 +23,7 @@
 
 - 在 `PutOptions` 中增加 customVars 参数，为用户配置自定义变量提供入口
 - 对 `PutResponse` 中 rawData 参数变更为 required
+
+## 0.3.2
+
+- 修复 `PutPolicy` 的 forceSaveKey 类型
