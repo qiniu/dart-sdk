@@ -24,7 +24,7 @@ abstract class Resource {
   String get id;
   void open();
   void close();
-  Uint8List read(int start, int end);
+  Uint8List read(int start, int count);
   Uint8List readAsBytes();
   int length();
 }

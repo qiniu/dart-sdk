@@ -14,8 +14,8 @@ class BytesResource extends Resource {
   void open() {}
 
   @override
-  Uint8List read([int start = 0, int end = 1]) {
-    return bytes.sublist(start, end);
+  Uint8List read(int start, int count) {
+    return bytes.sublist(start, count);
   }
 
   @override

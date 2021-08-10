@@ -23,7 +23,7 @@ class FileResource extends Resource {
   }
 
   @override
-  Uint8List read([int start = 0, int count = 1]) {
+  Uint8List read(int start, int count) {
     raf.setPositionSync(start);
     return raf.readSync(count);
   }
