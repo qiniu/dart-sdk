@@ -16,12 +16,16 @@ class PutBySingleTask extends RequestTask<PutResponse> {
   /// 如果不传则后端自动生成
   final String? key;
 
+  /// 自定义变量，key 必须以 x: 开始
+  final Map<String, String>? customVars;
+
   late UpTokenInfo _tokenInfo;
 
   PutBySingleTask({
     required dynamic resource,
     required this.token,
     this.key,
+    this.customVars,
     RequestTaskController? controller,
   }) : super(controller: controller) {
     _resource = Resource.create(resource);
@@ -35,11 +39,17 @@ class PutBySingleTask extends RequestTask<PutResponse> {
 
   @override
   Future<PutResponse> createTask() async {
-    final formData = FormData.fromMap(<String, dynamic>{
+    final formDataMap = <String, dynamic>{
       'file': MultipartFile.fromBytes(_resource.readAsBytes()),
       'token': token,
       'key': key,
-    });
+    };
+
+    if (customVars != null) {
+      formDataMap.addAll(customVars!);
+    }
+
+    final formData = FormData.fromMap(formDataMap);
 
     final host = await config.hostProvider.getUpHost(
       accessKey: _tokenInfo.accessKey,

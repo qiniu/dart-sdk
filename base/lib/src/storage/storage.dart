@@ -40,6 +40,7 @@ class Storage {
         resource: file,
         token: token,
         key: options.key,
+        customVars: options.customVars,
         controller: options.controller,
       );
     } else {
@@ -49,6 +50,7 @@ class Storage {
         maxPartsRequestNumber: options.maxPartsRequestNumber,
         partSize: options.partSize,
         resource: file,
+        customVars: options.customVars,
         controller: options.controller,
       );
     }
@@ -69,6 +71,7 @@ class Storage {
       resource: file,
       token: token,
       key: options.key,
+      customVars: options.customVars,
       controller: options.controller,
     );
 
@@ -90,6 +93,7 @@ class Storage {
       partSize: options.partSize,
       maxPartsRequestNumber: options.maxPartsRequestNumber,
       resource: file,
+      customVars: options.customVars,
       controller: options.controller,
     );
 

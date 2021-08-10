@@ -23,6 +23,9 @@ class PutByPartTask extends RequestTask<PutResponse> {
 
   final String? key;
 
+  /// 自定义变量，key 必须以 x: 开始
+  final Map<String, String>? customVars;
+
   /// 设置为 0，避免子任务重试失败后 [PutByPartTask] 继续重试
   @override
   int get retryLimit => 0;
@@ -35,6 +38,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
     required this.maxPartsRequestNumber,
     required dynamic resource,
     this.key,
+    this.customVars,
     PutController? controller,
   })  : assert(() {
           if (partSize < 1 || partSize > 1024) {
@@ -160,6 +164,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
       uploadId: uploadId,
       parts: parts,
       key: key,
+      customVars: customVars,
       controller: _controller,
     );
 
