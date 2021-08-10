@@ -2,9 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
+import 'package:qiniu_sdk_base/src/storage/resource/resource.dart';
 
 part 'cache_mixin.dart';
 part 'complete_parts_task.dart';
@@ -15,7 +17,6 @@ part 'upload_parts_task.dart';
 
 /// 分片上传任务
 class PutByPartTask extends RequestTask<PutResponse> {
-  final File file;
   final String token;
 
   final int partSize;
@@ -27,11 +28,13 @@ class PutByPartTask extends RequestTask<PutResponse> {
   @override
   int get retryLimit => 0;
 
+  late final Resource _resource;
+
   PutByPartTask({
-    required this.file,
     required this.token,
     required this.partSize,
     required this.maxPartsRequestNumber,
+    required dynamic resource,
     this.key,
     PutController? controller,
   })  : assert(() {
@@ -41,6 +44,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
           }
           return true;
         }()),
+        _resource = Resource.create(resource),
         super(controller: controller);
 
   RequestTaskController? _currentWorkingTaskController;
@@ -48,20 +52,6 @@ class PutByPartTask extends RequestTask<PutResponse> {
   @override
   void preStart() {
     super.preStart();
-
-    // 处理相同任务
-    final sameTaskExist = manager
-        .getTasks()
-        .where((element) => element is PutByPartTask && isEquals(element))
-        .isNotEmpty;
-
-    if (sameTaskExist) {
-      throw StorageError(
-        type: StorageErrorType.IN_PROGRESS,
-        message: '$file 已在上传队列中',
-      );
-    }
-
     // controller 被取消后取消当前运行的子任务
     controller?.cancelToken.whenCancel.then((_) {
       _currentWorkingTaskController?.cancel();
@@ -72,6 +62,11 @@ class PutByPartTask extends RequestTask<PutResponse> {
   void postReceive(PutResponse data) {
     _currentWorkingTaskController = null;
     super.postReceive(data);
+  }
+
+  @override
+  void postError(Object error) {
+    super.postError(error);
   }
 
   @override
@@ -119,18 +114,12 @@ class PutByPartTask extends RequestTask<PutResponse> {
     return putResponse;
   }
 
-  bool isEquals(PutByPartTask target) {
-    return target.file.path == file.path &&
-        target.key == key &&
-        target.file.lengthSync() == file.lengthSync();
-  }
-
   /// 初始化上传信息，分片上传的第一步
   InitPartsTask _createInitParts() {
     final _controller = PutController();
 
     final task = InitPartsTask(
-      file: file,
+      resource: _resource,
       token: token,
       key: key,
       controller: _controller,
@@ -145,11 +134,11 @@ class PutByPartTask extends RequestTask<PutResponse> {
     final _controller = PutController();
 
     final task = UploadPartsTask(
-      file: file,
       token: token,
       partSize: partSize,
       uploadId: uploadId,
       maxPartsRequestNumber: maxPartsRequestNumber,
+      resource: _resource,
       key: key,
       controller: _controller,
     );

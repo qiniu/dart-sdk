@@ -23,6 +23,9 @@ enum StorageErrorType {
   /// 已在处理队列中
   IN_PROGRESS,
 
+  /// 不支持的上传资源类型
+  UNSUPPORTED_RESOURCE,
+
   /// 未知或者不能处理的错误
   UNKNOWN,
 }

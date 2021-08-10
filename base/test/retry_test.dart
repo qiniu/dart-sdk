@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:qiniu_sdk_base/src/storage/methods/put/by_part/put_parts_task.dart';
+import 'package:qiniu_sdk_base/src/storage/resource/resource.dart';
 import 'package:test/test.dart';
 import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
@@ -63,10 +64,10 @@ void main() {
     );
     final storage = Storage(config: config);
     final file = File('test_resource/test_for_put_parts.mp4');
+    final resource = FileResource(file);
     final statusList = <StorageStatus>[];
     // 设置一个假的初始化缓存，让分片上传跳过初始化文件，便于测试后面的上传文件流程
-    await cacheProvider.setItem(
-        InitPartsTask.getCacheKey(file.path, file.lengthSync(), null),
+    await cacheProvider.setItem(InitPartsTask.getCacheKey(resource.id, null),
         json.encode({'expireAt': 0, 'uploadId': '0'}));
     final future = storage.putFileByPart(file, token,
         options: PutByPartOptions(
@@ -126,6 +127,7 @@ void main() {
     );
     final storage = Storage(config: config);
     final file = File('test_resource/test_for_put_parts.mp4');
+    final resource = FileResource(file);
     final key = 'test_for_put_parts.mp4';
     final initPartsTaskStatusList = <StorageStatus>[];
 
@@ -133,7 +135,7 @@ void main() {
     // 手动初始化一个用于测试
     final task = InitPartsTask(
         token: token,
-        file: file,
+        resource: resource,
         key: key,
         controller: PutController()
           ..addStatusListener(initPartsTaskStatusList.add));

@@ -34,22 +34,21 @@ class Storage {
     RequestTask<PutResponse> task;
     final useSingle = options.forceBySingle == true ||
         file.lengthSync() < (options.partSize * 1024 * 1024);
-    final fileBytes = await file.readAsBytes();
 
     if (useSingle) {
       task = PutBySingleTask(
-        input: fileBytes,
+        resource: file,
         token: token,
         key: options.key,
         controller: options.controller,
       );
     } else {
       task = PutByPartTask(
-        file: file,
         token: token,
         key: options.key,
         maxPartsRequestNumber: options.maxPartsRequestNumber,
         partSize: options.partSize,
+        resource: file,
         controller: options.controller,
       );
     }
@@ -66,9 +65,8 @@ class Storage {
     PutBySingleOptions? options,
   }) async {
     options ??= PutBySingleOptions();
-    final fileBytes = await file.readAsBytes();
     final task = PutBySingleTask(
-      input: fileBytes,
+      resource: file,
       token: token,
       key: options.key,
       controller: options.controller,
@@ -87,11 +85,11 @@ class Storage {
   }) {
     options ??= PutByPartOptions();
     final task = PutByPartTask(
-      file: file,
       token: token,
       key: options.key,
       partSize: options.partSize,
       maxPartsRequestNumber: options.maxPartsRequestNumber,
+      resource: file,
       controller: options.controller,
     );
 
@@ -100,22 +98,33 @@ class Storage {
     return task.future;
   }
 
-  /// 上传 stream
-  ///
-  /// 该方法采用直传方式上传
   Future<PutResponse> putBytes(
     Uint8List bytes,
     String token, {
-    PutBySingleOptions? options,
+    PutOptions? options,
   }) async {
-    options ??= PutBySingleOptions();
+    options ??= PutOptions();
+    RequestTask<PutResponse> task;
+    final useSingle = options.forceBySingle == true ||
+        bytes.length < (options.partSize * 1024 * 1024);
 
-    final task = PutBySingleTask(
-      input: bytes,
-      token: token,
-      key: options.key,
-      controller: options.controller,
-    );
+    if (useSingle) {
+      task = PutBySingleTask(
+        resource: bytes,
+        token: token,
+        key: options.key,
+        controller: options.controller,
+      );
+    } else {
+      task = PutByPartTask(
+        token: token,
+        key: options.key,
+        maxPartsRequestNumber: options.maxPartsRequestNumber,
+        partSize: options.partSize,
+        resource: bytes,
+        controller: options.controller,
+      );
+    }
 
     taskManager.addTask(task);
 

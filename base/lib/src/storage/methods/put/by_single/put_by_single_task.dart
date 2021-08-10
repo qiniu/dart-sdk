@@ -1,15 +1,13 @@
-import 'dart:typed_data';
-
 import 'package:dio/dio.dart';
-import 'package:qiniu_sdk_base/src/storage/task/task.dart';
 
 import '../../../../auth/auth.dart';
+import '../../../resource/resource.dart';
+import '../../../task/task.dart';
 import '../put_response.dart';
 
 // 直传任务
 class PutBySingleTask extends RequestTask<PutResponse> {
-  /// 上传文件
-  final Uint8List input;
+  late final Resource _resource;
 
   /// 上传凭证
   final String token;
@@ -21,11 +19,13 @@ class PutBySingleTask extends RequestTask<PutResponse> {
   late UpTokenInfo _tokenInfo;
 
   PutBySingleTask({
-    required this.input,
+    required dynamic resource,
     required this.token,
     this.key,
     RequestTaskController? controller,
-  }) : super(controller: controller);
+  }) : super(controller: controller) {
+    _resource = Resource.create(resource);
+  }
 
   @override
   void preStart() {
@@ -36,7 +36,7 @@ class PutBySingleTask extends RequestTask<PutResponse> {
   @override
   Future<PutResponse> createTask() async {
     final formData = FormData.fromMap(<String, dynamic>{
-      'file': MultipartFile.fromBytes(input),
+      'file': MultipartFile.fromBytes(_resource.readAsBytes()),
       'token': token,
       'key': key,
     });
@@ -52,7 +52,6 @@ class PutBySingleTask extends RequestTask<PutResponse> {
       cancelToken: controller?.cancelToken,
     );
 
-    // response.data 应该是 none-nullable 而不是 nullable，如果 dio 修复了可以去掉 !
     return PutResponse.fromJson(response.data!);
   }
 }

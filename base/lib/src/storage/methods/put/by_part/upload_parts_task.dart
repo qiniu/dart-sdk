@@ -2,7 +2,6 @@ part of 'put_parts_task.dart';
 
 // 批处理上传 parts 的任务，为 [CompletePartsTask] 提供 [Part]
 class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
-  final File file;
   final String token;
   final String uploadId;
 
@@ -19,7 +18,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   int get retryLimit => 0;
 
   // 文件 bytes 长度
-  late final int _fileByteLength;
+  late final int _resourceByteLength;
 
   // 每个上传分片的字节长度
   //
@@ -44,30 +43,24 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   // 剩余多少被允许的请求数
   late int _idleRequestNumber;
 
-  late final RandomAccessFile _raf;
+  final Resource resource;
 
   UploadPartsTask({
-    required this.file,
     required this.token,
     required this.uploadId,
     required this.partSize,
     required this.maxPartsRequestNumber,
+    required this.resource,
     this.key,
     PutController? controller,
   }) : super(controller: controller);
 
   static String getCacheKey(
-    String path,
-    int length,
+    String resourceId,
     int partSize,
     String? key,
   ) {
-    final keyList = [
-      'key/$key',
-      'path/$path',
-      'file_size/$length',
-      'part_size/$partSize',
-    ];
+    final keyList = [resourceId, 'key/$key', 'part_size/$partSize'];
 
     return 'qiniu_dart_sdk_upload_parts_task@[${keyList..join("/")}]';
   }
@@ -81,27 +74,23 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
         controller.cancel();
       }
     });
-    _fileByteLength = file.lengthSync();
+    _resourceByteLength = resource.length();
     _partByteLength = partSize * 1024 * 1024;
     _idleRequestNumber = maxPartsRequestNumber;
-    _totalPartCount = (_fileByteLength / _partByteLength).ceil();
-    _cacheKey = getCacheKey(file.path, _fileByteLength, partSize, key);
-    // 子任务 UploadPartTask 从 file 去 open 的话虽然上传精度会颗粒更细但是会导致可能读不出文件的问题
-    // 可能 close 没办法立即关闭 file stream，而延迟 close 了，导致某次 open 的 stream 被立即关闭
-    // 所以读不出内容了
-    // 这里改成这里读取一次，子任务从中读取 bytes
-    _raf = file.openSync();
+    _totalPartCount = (_resourceByteLength / _partByteLength).ceil();
+    _cacheKey = getCacheKey(resource.id, _resourceByteLength, key);
+    resource.open();
   }
 
   @override
   void postReceive(data) async {
-    await _raf.close();
+    resource.close();
     super.postReceive(data);
   }
 
   @override
   void postError(Object error) async {
-    await _raf.close();
+    resource.close();
     // 取消，网络问题等可能导致上传中断，缓存已上传的分片信息
     await storeUploadedPart();
     super.postError(error);
@@ -194,7 +183,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
 
     final task = UploadPartTask(
       token: token,
-      raf: _raf,
+      bytes: _getBytesFromResource(partNumber),
       uploadId: uploadId,
       byteLength: _byteLength,
       partNumber: partNumber,
@@ -238,10 +227,17 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     final startOffset = (partNumber - 1) * _partByteLength;
 
     if (partNumber == _totalPartCount) {
-      return _fileByteLength - startOffset;
+      return _resourceByteLength - startOffset;
     }
 
     return _partByteLength;
+  }
+
+  Uint8List _getBytesFromResource(int partNumber) {
+    final start = (partNumber - 1) * _partByteLength;
+    final count = _getPartSizeByPartNumber(partNumber);
+
+    return resource.read(start, count);
   }
 
   void notifySendProgress() {

@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:qiniu_sdk_base/src/storage/error/error.dart';
 import 'package:qiniu_sdk_base/src/storage/methods/put/by_part/put_parts_task.dart';
 import 'package:qiniu_sdk_base/src/storage/methods/put/put_response.dart';
+import 'package:qiniu_sdk_base/src/storage/resource/resource.dart';
 import 'package:test/test.dart';
 import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
@@ -190,9 +191,14 @@ void main() {
     final storage = Storage(config: config);
     final file = File('test_resource/test_for_put_parts.mp4');
     final key = 'test_for_put_parts.mp4';
+    final resource = FileResource(file);
 
     /// 手动初始化一个初始化文件的任务，确定分片上传的第一步会被缓存
-    final task = InitPartsTask(token: token, file: file, key: key);
+    final task = InitPartsTask(
+      token: token,
+      resource: resource,
+      key: key,
+    );
 
     storage.taskManager.addTask(task);
 
@@ -219,8 +225,7 @@ void main() {
 
     /// 初始化的缓存 key 生成逻辑
     final cacheKey = InitPartsTask.getCacheKey(
-      file.path,
-      file.lengthSync(),
+      resource.id,
       key,
     );
 
@@ -252,60 +257,6 @@ void main() {
     expect(cacheProvider.value.length, 0);
     // init + 2 个分片 2 次 = 3 次
     expect(cacheProvider.callNumber, 3);
-  }, skip: !isSensitiveDataDefined);
-
-  test(
-      'putFileByPart should throw error while there is a same task is working.',
-      () async {
-    final cacheProvider = DefaultCacheProvider();
-    final config = Config(cacheProvider: cacheProvider);
-    final storage = Storage(config: config);
-    final file = File('test_resource/test_for_put_parts.mp4');
-    final key = 'test_for_put_parts.mp4';
-
-    /// 初始化的缓存 key 生成逻辑
-    final cacheKey = InitPartsTask.getCacheKey(
-      file.path,
-      file.lengthSync(),
-      key,
-    );
-
-    var errorOccurred = false;
-
-    final putController = PutController()
-      ..addSendProgressListener((_) async {
-        try {
-          if (await cacheProvider.getItem(cacheKey) != null) {
-            await storage.putFileByPart(
-              file,
-              token,
-              options: PutByPartOptions(
-                key: key,
-                partSize: 1,
-              ),
-            );
-          }
-        } catch (e) {
-          errorOccurred = true;
-          expect(e, isA<StorageError>());
-          expect((e as StorageError).type, StorageErrorType.IN_PROGRESS);
-        }
-      });
-
-    await storage.putFileByPart(
-      file,
-      token,
-      options: PutByPartOptions(
-        key: key,
-        partSize: 1,
-        controller: putController,
-      ),
-    );
-
-    expect(errorOccurred, true);
-
-    /// 上传完成后缓存应该被清理
-    expect(cacheProvider.value.length, 0);
   }, skip: !isSensitiveDataDefined);
 
   test('putFileByPart\'s status and progress should works well.', () async {
