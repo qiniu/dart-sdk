@@ -58,7 +58,7 @@ class ConsoleState extends DisposableState<Console> {
     controller.addListener(onMessageChange);
 
     addDisposer(() {
-      controller.removeListener(onMessageChange);
+      controller?.removeListener(onMessageChange);
     });
 
     super.didChangeDependencies();
@@ -66,7 +66,7 @@ class ConsoleState extends DisposableState<Console> {
 
   void onMessageChange() {
     setState(() {
-      messageList = controller.messageList;
+      messageList = controller?.messageList ?? messageList;
     });
   }
 

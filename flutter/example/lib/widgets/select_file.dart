@@ -1,10 +1,8 @@
 import 'dart:io';
-import 'dart:typed_data';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 
-typedef OnSelected = void Function(Uint8List input);
+typedef OnSelected = void Function(File file);
 
 class SelectFile extends StatefulWidget {
   final OnSelected onSelected;
@@ -19,11 +17,9 @@ class SelectFile extends StatefulWidget {
 class SelectFileState extends State<SelectFile> {
   void openSelectFileWindow() async {
     final fileResult = await FilePicker.platform.pickFiles();
-    if (kIsWeb && fileResult != null) {
-      widget.onSelected(fileResult.files[0].bytes!);
-    } else if (fileResult != null && fileResult.paths.first != null) {
+    if (fileResult != null && fileResult.paths.first != null) {
       final path = fileResult.paths.first;
-      // widget.onSelected(File(path!));
+      widget.onSelected(File(path!));
     }
   }
 
@@ -43,8 +39,11 @@ class SelectFileState extends State<SelectFile> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(mainAxisSize: MainAxisSize.min, children: [
-      selectButton,
-    ]);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        selectButton,
+      ]
+    );
   }
 }
