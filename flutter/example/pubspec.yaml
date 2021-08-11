@@ -24,7 +24,6 @@ dependencies:
   flutter:
     sdk: flutter
   file_picker: ^3.0.1
-  os_detect: 2.0.0-nullsafety.0
   qiniu_flutter_sdk:
     path: ../
 
