@@ -133,4 +133,20 @@ void main() {
     expect(response.key, 'test_for_put.txt');
     pcb.testAll();
   }, skip: !isSensitiveDataDefined);
+
+  test('putBytes should works well.', () async {
+    final file = File('test_resource/test_for_put.txt');
+    var pcb = PutControllerBuilder();
+    final response = await storage.putBytes(
+      file.readAsBytesSync(),
+      token,
+      options: PutOptions(
+        key: 'test_for_put.txt',
+        controller: pcb.putController,
+      ),
+    );
+
+    pcb.testAll();
+    expect(response.key, 'test_for_put.txt');
+  }, skip: !isSensitiveDataDefined);
 }

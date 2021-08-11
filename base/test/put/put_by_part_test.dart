@@ -319,6 +319,38 @@ void main() {
       ..testProcess()
       ..testStatus(targetProgressList: [0.001, 0.002, 0.99, 1]);
   }, skip: !isSensitiveDataDefined);
+
+  test('putBytes should works well.', () async {
+    final storage = Storage();
+    final pcb = PutControllerBuilder();
+    var callnumber = 0;
+    pcb.putController.addSendProgressListener((percent) {
+      callnumber++;
+    });
+    final file = File('test_resource/test_for_put_parts.mp4');
+    final response = await storage.putBytes(
+      file.readAsBytesSync(),
+      token,
+      options: PutOptions(
+        key: 'test_for_put_parts.mp4',
+        partSize: 1,
+        controller: pcb.putController,
+      ),
+    );
+    expect(response, isA<PutResponse>());
+    // 2 片分片所以 2 次
+    expect(callnumber, 2);
+
+    pcb.testAll();
+
+    // 不设置参数的情况
+    final responseNoOps = await storage.putBytes(
+      file.readAsBytesSync(),
+      token,
+    );
+
+    expect(responseNoOps, isA<PutResponse>());
+  }, skip: !isSensitiveDataDefined);
 }
 
 class HttpAdapterTestWith612 extends HttpClientAdapter {
