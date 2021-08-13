@@ -39,8 +39,16 @@ class PutBySingleTask extends RequestTask<PutResponse> {
 
   @override
   Future<PutResponse> createTask() async {
+    MultipartFile multipartFile;
+    if (_resource is FileResource) {
+      multipartFile =
+          await MultipartFile.fromFile((_resource as FileResource).file.path);
+    } else {
+      multipartFile = MultipartFile.fromBytes(_resource.readAsBytes());
+    }
+
     final formDataMap = <String, dynamic>{
-      'file': MultipartFile.fromBytes(_resource.readAsBytes()),
+      'file': multipartFile,
       'token': token,
       'key': key,
     };
