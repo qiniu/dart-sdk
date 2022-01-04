@@ -4,7 +4,7 @@ part of 'put_parts_task.dart';
 class UploadPartTask extends RequestTask<UploadPart> {
   final String token;
   final String uploadId;
-  final Uint8List bytes;
+  final List<int> bytes;
   final int partSize;
 
   // 如果 data 是 Stream 的话，Dio 需要判断 content-length 才会调用 onSendProgress

@@ -32,7 +32,7 @@ abstract class RequestTask<T> extends Task<T> {
   final RequestTaskController? controller;
 
   // 重试次数
-  int _retryCount = 0;
+  int retryCount = 0;
 
   // 最大重试次数
   late int retryLimit;
@@ -96,8 +96,8 @@ abstract class RequestTask<T> extends Task<T> {
         }
 
         // 继续尝试当前 host，如果是服务器坏了则切换到其他 host
-        if (_retryCount < retryLimit) {
-          _retryCount++;
+        if (retryCount < retryLimit) {
+          retryCount++;
           manager.restartTask(this);
           return;
         }
@@ -108,8 +108,8 @@ abstract class RequestTask<T> extends Task<T> {
         config.hostProvider.freezeHost(error.requestOptions.path);
 
         // 切换到其他 host
-        if (_retryCount < retryLimit) {
-          _retryCount++;
+        if (retryCount < retryLimit) {
+          retryCount++;
           manager.restartTask(this);
           return;
         }

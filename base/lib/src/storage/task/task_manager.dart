@@ -9,7 +9,7 @@ class TaskManager {
   ///
   /// 被添加的 [task] 会被立即执行 [createTask]
   @mustCallSuper
-  void addTask(Task task) {
+  void addTask(Task task) async {
     try {
       task
         ..manager = this
@@ -20,7 +20,13 @@ class TaskManager {
     }
 
     workingTasks.add(task);
-    task.createTask().then(task.postReceive).catchError(task.postError);
+
+    try {
+      task.postReceive(await task.createTask());
+    } catch (error) {
+      task.postError(error);
+      return;
+    }
 
     try {
       task.postStart();
@@ -36,7 +42,7 @@ class TaskManager {
   }
 
   @mustCallSuper
-  void restartTask(Task task) {
+  void restartTask(Task task) async {
     try {
       task.preRestart();
     } catch (e) {
@@ -44,7 +50,12 @@ class TaskManager {
       return;
     }
 
-    task.createTask().then(task.postReceive).catchError(task.postError);
+    try {
+      task.postReceive(await task.createTask());
+    } catch (error) {
+      task.postError(error);
+      return;
+    }
 
     try {
       task.postRestart();

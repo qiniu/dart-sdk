@@ -1,36 +1,33 @@
 part of 'resource.dart';
 
-class FileResource extends Resource {
-  final File file;
+class FileResource extends Resource<File> {
   late RandomAccessFile raf;
-  FileResource(this.file);
+  FileResource(File resource, int fileLength, {int? partSize})
+      : super(resource, fileLength, partSize: partSize);
 
   @override
-  String get id => 'path_${file.path}_size_${file.lengthSync()}';
+  String get id => 'path_${resource.path}_size_${resource.lengthSync()}';
 
   @override
-  void open() {
-    raf = file.openSync();
+  Future<void> open() async {
+    raf = resource.openSync();
+    await super.open();
   }
 
   @override
-  void close() {
+  Future<void> close() async {
     raf.closeSync();
+    await super.close();
   }
 
   @override
-  Uint8List read(int start, int count) {
-    raf.setPositionSync(start);
-    return raf.readSync(count);
-  }
-
-  @override
-  Uint8List readAsBytes() {
-    return file.readAsBytesSync();
-  }
-
-  @override
-  int length() {
-    return file.lengthSync();
+  Stream<List<int>> createStream() async* {
+    var start = 0;
+    while (true) {
+      raf.setPositionSync(start);
+      yield await raf.read(chunkSize);
+      start += chunkSize;
+      if (start >= length) break;
+    }
   }
 }

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
 
 import '../../../../auth/auth.dart';
 import '../../../resource/resource.dart';
@@ -7,54 +8,67 @@ import '../put_response.dart';
 
 // 直传任务
 class PutBySingleTask extends RequestTask<PutResponse> {
-  late final Resource _resource;
+  late Resource resource;
+
+  final dynamic rawResource;
+
+  final int length;
+
+  final PutOptions options;
 
   /// 上传凭证
   final String token;
 
-  /// 资源名
-  /// 如果不传则后端自动生成
-  final String? key;
-
-  /// 自定义变量，key 必须以 x: 开始
-  final Map<String, String>? customVars;
-
   late UpTokenInfo _tokenInfo;
 
   PutBySingleTask({
-    required dynamic resource,
+    required this.rawResource,
+    required this.length,
     required this.token,
-    this.key,
-    this.customVars,
-    RequestTaskController? controller,
-  }) : super(controller: controller) {
-    _resource = Resource.create(resource);
-  }
+    required this.options,
+  }) : super(controller: options.controller);
 
   @override
   void preStart() {
     _tokenInfo = Auth.parseUpToken(token);
+    resource = Resource.create(rawResource, length, partSize: length);
     super.preStart();
   }
 
   @override
-  Future<PutResponse> createTask() async {
-    MultipartFile multipartFile;
-    if (_resource is FileResource) {
-      multipartFile =
-          await MultipartFile.fromFile((_resource as FileResource).file.path);
-    } else {
-      multipartFile = MultipartFile.fromBytes(_resource.readAsBytes());
+  void postReceive(data) {
+    resource.close();
+    super.postReceive(data);
+  }
+
+  @override
+  void postError(error) {
+    // 有可能 resource 还没被打开就进入异常了，所以此时不需要 close
+    if (resource.status == ResourceStatus.Open) {
+      resource.close();
     }
+    super.postError(error);
+  }
+
+  @override
+  void preRestart() {
+    resource = Resource.create(rawResource, length);
+    super.preRestart();
+  }
+
+  @override
+  Future<PutResponse> createTask() async {
+    await resource.open();
+    final multipartFile = MultipartFile(resource.stream, resource.length);
 
     final formDataMap = <String, dynamic>{
       'file': multipartFile,
       'token': token,
-      'key': key,
+      'key': options.key,
     };
 
-    if (customVars != null) {
-      formDataMap.addAll(customVars!);
+    if (options.customVars != null) {
+      formDataMap.addAll(options.customVars!);
     }
 
     final formData = FormData.fromMap(formDataMap);

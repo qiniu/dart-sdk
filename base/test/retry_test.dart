@@ -1,3 +1,5 @@
+@Timeout(Duration(seconds: 60))
+
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -20,13 +22,15 @@ void main() {
     final config = Config(
       hostProvider: HostProviderTest(),
       httpClientAdapter: httpAdapter,
+      retryLimit: 3,
     );
     final storage = Storage(config: config);
     final statusList = <StorageStatus>[];
-    final future = storage.putFileBySingle(
+    final future = storage.putFile(
       File('test_resource/test_for_put.txt'),
       token,
-      options: PutBySingleOptions(
+      options: PutOptions(
+        forceBySingle: true,
         controller: PutController()..addStatusListener(statusList.add),
       ),
     );
@@ -64,13 +68,13 @@ void main() {
     );
     final storage = Storage(config: config);
     final file = File('test_resource/test_for_put_parts.mp4');
-    final resource = FileResource(file);
+    final resource = FileResource(file, file.lengthSync());
     final statusList = <StorageStatus>[];
     // 设置一个假的初始化缓存，让分片上传跳过初始化文件，便于测试后面的上传文件流程
     await cacheProvider.setItem(InitPartsTask.getCacheKey(resource.id, null),
         json.encode({'expireAt': 0, 'uploadId': '0'}));
-    final future = storage.putFileByPart(file, token,
-        options: PutByPartOptions(
+    final future = storage.putFile(file, token,
+        options: PutOptions(
           partSize: 1,
           controller: PutController()..addStatusListener(statusList.add),
         ));
@@ -98,10 +102,11 @@ void main() {
     final putController = PutController();
     final statusList = <StorageStatus>[];
     putController.addStatusListener(statusList.add);
-    final response = await storage.putFileBySingle(
+    final response = await storage.putFile(
       File('test_resource/test_for_put.txt'),
       token,
-      options: PutBySingleOptions(
+      options: PutOptions(
+        forceBySingle: true,
         key: 'test_for_put.txt',
         controller: putController,
       ),
@@ -127,7 +132,7 @@ void main() {
     );
     final storage = Storage(config: config);
     final file = File('test_resource/test_for_put_parts.mp4');
-    final resource = FileResource(file);
+    final resource = FileResource(file, file.lengthSync());
     final key = 'test_for_put_parts.mp4';
     final initPartsTaskStatusList = <StorageStatus>[];
 
@@ -153,10 +158,10 @@ void main() {
       ..addSendProgressListener((percent) {
         _sendPercent = percent;
       });
-    final response = await storage.putFileByPart(
+    final response = await storage.putFile(
       file,
       token,
-      options: PutByPartOptions(
+      options: PutOptions(
         key: key,
         partSize: 1,
         controller: putController,
@@ -182,7 +187,7 @@ void main() {
   }, skip: !isSensitiveDataDefined);
 }
 
-// 会扔出 DioError，错误类型是 DioErrorType.othen，每个请求调用了 3 次
+// 会扔出 DioError，错误类型是 DioErrorType.other，每个请求调用了 3 次
 class HttpAdapterTestWithConnectFailedToHost extends HttpClientAdapter {
   int callTimes = 0;
   final DefaultHttpClientAdapter _adapter = DefaultHttpClientAdapter();

@@ -37,65 +37,19 @@ class Storage {
 
     if (useSingle) {
       task = PutBySingleTask(
-        resource: file,
+        rawResource: file,
+        length: await file.length(),
+        options: options,
         token: token,
-        key: options.key,
-        customVars: options.customVars,
-        controller: options.controller,
       );
     } else {
       task = PutByPartTask(
         token: token,
-        key: options.key,
-        maxPartsRequestNumber: options.maxPartsRequestNumber,
-        partSize: options.partSize,
-        resource: file,
-        customVars: options.customVars,
-        controller: options.controller,
+        options: options,
+        rawResource: file,
+        length: await file.length(),
       );
     }
-
-    taskManager.addTask(task);
-
-    return task.future;
-  }
-
-  /// 单文件上传
-  Future<PutResponse> putFileBySingle(
-    File file,
-    String token, {
-    PutBySingleOptions? options,
-  }) async {
-    options ??= PutBySingleOptions();
-    final task = PutBySingleTask(
-      resource: file,
-      token: token,
-      key: options.key,
-      customVars: options.customVars,
-      controller: options.controller,
-    );
-
-    taskManager.addTask(task);
-
-    return task.future;
-  }
-
-  /// 分片上传
-  Future<PutResponse> putFileByPart(
-    File file,
-    String token, {
-    PutByPartOptions? options,
-  }) {
-    options ??= PutByPartOptions();
-    final task = PutByPartTask(
-      token: token,
-      key: options.key,
-      partSize: options.partSize,
-      maxPartsRequestNumber: options.maxPartsRequestNumber,
-      resource: file,
-      customVars: options.customVars,
-      controller: options.controller,
-    );
 
     taskManager.addTask(task);
 
@@ -114,19 +68,17 @@ class Storage {
 
     if (useSingle) {
       task = PutBySingleTask(
-        resource: bytes,
+        rawResource: bytes,
+        options: options,
+        length: bytes.length,
         token: token,
-        key: options.key,
-        controller: options.controller,
       );
     } else {
       task = PutByPartTask(
         token: token,
-        key: options.key,
-        maxPartsRequestNumber: options.maxPartsRequestNumber,
-        partSize: options.partSize,
-        resource: bytes,
-        controller: options.controller,
+        options: options,
+        rawResource: bytes,
+        length: bytes.length,
       );
     }
 

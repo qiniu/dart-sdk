@@ -1,30 +1,20 @@
 part of 'resource.dart';
 
-class BytesResource extends Resource {
-  final Uint8List bytes;
-  BytesResource(this.bytes);
+class BytesResource extends Resource<List<int>> {
+  BytesResource(List<int> bytes, int byteLength, {int? partSize})
+      : super(bytes, byteLength, partSize: partSize);
 
   @override
-  String get id => md5.convert(bytes).toString();
+  String get id => md5.convert(resource).toString();
 
   @override
-  void close() {}
-
-  @override
-  void open() {}
-
-  @override
-  Uint8List read(int start, int count) {
-    return bytes.sublist(start, start + count);
-  }
-
-  @override
-  Uint8List readAsBytes() {
-    return bytes;
-  }
-
-  @override
-  int length() {
-    return bytes.length;
+  Stream<List<int>> createStream() async* {
+    var start = 0;
+    while (true) {
+      final end = start + chunkSize > length ? length : start + chunkSize;
+      yield resource.sublist(start, end);
+      start = end;
+      if (start >= length) break;
+    }
   }
 }

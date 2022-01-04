@@ -37,10 +37,11 @@ void main() {
 
     final file = File('test_resource/test_for_put.txt');
     var putController = PutController();
-    final response = await storage.putFileBySingle(
+    final response = await storage.putFile(
       file,
       token,
-      options: PutBySingleOptions(
+      options: PutOptions(
+        forceBySingle: true,
         key: 'test_for_put.txt',
         customVars: customVars,
         controller: putController,
@@ -55,10 +56,11 @@ void main() {
   test('putFileBySingle should works well.', () async {
     final file = File('test_resource/test_for_put.txt');
     var pcb = PutControllerBuilder();
-    final response = await storage.putFileBySingle(
+    final response = await storage.putFile(
       file,
       token,
-      options: PutBySingleOptions(
+      options: PutOptions(
+        forceBySingle: true,
         key: 'test_for_put.txt',
         controller: pcb.putController,
       ),
@@ -80,10 +82,11 @@ void main() {
         putController.cancel();
       }
     });
-    var future = storage.putFileBySingle(
+    var future = storage.putFile(
       file,
       token,
-      options: PutBySingleOptions(key: key, controller: putController),
+      options:
+          PutOptions(forceBySingle: true, key: key, controller: putController),
     );
     try {
       await future;
@@ -97,10 +100,11 @@ void main() {
     expect(statusList[2], StorageStatus.Cancel);
 
     try {
-      await storage.putFileBySingle(
+      await storage.putFile(
         file,
         token,
-        options: PutBySingleOptions(key: key, controller: putController),
+        options: PutOptions(
+            forceBySingle: true, key: key, controller: putController),
       );
     } catch (error) {
       // 复用了相同的 controller，所以也会触发取消的错误
@@ -110,10 +114,10 @@ void main() {
 
     expect(future, throwsA(TypeMatcher<StorageError>()));
 
-    final response = await storage.putFileBySingle(
+    final response = await storage.putFile(
       file,
       token,
-      options: PutBySingleOptions(key: key),
+      options: PutOptions(forceBySingle: true, key: key),
     );
 
     expect(response, isA<PutResponse>());
@@ -122,10 +126,11 @@ void main() {
   test('putFileBySingle\'s status and progress should works well.', () async {
     final pcb = PutControllerBuilder();
 
-    final response = await storage.putFileBySingle(
+    final response = await storage.putFile(
       File('test_resource/test_for_put.txt'),
       token,
-      options: PutBySingleOptions(
+      options: PutOptions(
+        forceBySingle: true,
         key: 'test_for_put.txt',
         controller: pcb.putController,
       ),
@@ -141,6 +146,7 @@ void main() {
       file.readAsBytesSync(),
       token,
       options: PutOptions(
+        forceBySingle: true,
         key: 'test_for_put.txt',
         controller: pcb.putController,
       ),

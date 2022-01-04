@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
-import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
@@ -17,44 +16,31 @@ part 'upload_parts_task.dart';
 /// 分片上传任务
 class PutByPartTask extends RequestTask<PutResponse> {
   final String token;
+  final dynamic rawResource;
 
-  final int partSize;
-  final int maxPartsRequestNumber;
+  final int length;
 
-  final String? key;
-
-  /// 自定义变量，key 必须以 x: 开始
-  final Map<String, String>? customVars;
+  final PutOptions options;
 
   /// 设置为 0，避免子任务重试失败后 [PutByPartTask] 继续重试
   @override
   int get retryLimit => 0;
 
-  late final Resource _resource;
+  late final Resource resource;
 
   PutByPartTask({
+    required this.rawResource,
+    required this.length,
     required this.token,
-    required this.partSize,
-    required this.maxPartsRequestNumber,
-    required dynamic resource,
-    this.key,
-    this.customVars,
-    PutController? controller,
-  })  : assert(() {
-          if (partSize < 1 || partSize > 1024) {
-            throw RangeError.range(partSize, 1, 1024, 'partSize',
-                'partSize must be greater than 1 and less than 1024');
-          }
-          return true;
-        }()),
-        _resource = Resource.create(resource),
-        super(controller: controller);
+    required this.options,
+  }) : super(controller: options.controller);
 
   RequestTaskController? _currentWorkingTaskController;
 
   @override
   void preStart() {
     super.preStart();
+    resource = Resource.create(rawResource, length, partSize: options.partSize);
     // controller 被取消后取消当前运行的子任务
     controller?.cancelToken.whenCancel.then((_) {
       _currentWorkingTaskController?.cancel();
@@ -122,9 +108,9 @@ class PutByPartTask extends RequestTask<PutResponse> {
     final _controller = PutController();
 
     final task = InitPartsTask(
-      resource: _resource,
+      resource: resource,
       token: token,
-      key: key,
+      key: options.key,
       controller: _controller,
     );
 
@@ -138,11 +124,11 @@ class PutByPartTask extends RequestTask<PutResponse> {
 
     final task = UploadPartsTask(
       token: token,
-      partSize: partSize,
+      partSize: options.partSize,
       uploadId: uploadId,
-      maxPartsRequestNumber: maxPartsRequestNumber,
-      resource: _resource,
-      key: key,
+      maxPartsRequestNumber: options.maxPartsRequestNumber,
+      resource: resource,
+      key: options.key,
       controller: _controller,
     );
 
@@ -163,8 +149,8 @@ class PutByPartTask extends RequestTask<PutResponse> {
       token: token,
       uploadId: uploadId,
       parts: parts,
-      key: key,
-      customVars: customVars,
+      key: options.key,
+      customVars: options.customVars,
       controller: _controller,
     );
 
