@@ -2,8 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
 import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
 
-import 'task.dart';
-
 part 'request_task_controller.dart';
 part 'request_task_manager.dart';
 
