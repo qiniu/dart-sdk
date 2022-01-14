@@ -24,7 +24,7 @@ jobs:
     - stage: base(analyze,format,test)
       name: "Format"
       os: linux
-      script: cd $TRAVIS_BUILD_DIR/base && dartfmt -n --set-exit-if-changed .
+      script: cd $TRAVIS_BUILD_DIR/base && dart format --set-exit-if-changed .
     # 执行测试（已开启 null safe）
     - stage: base(analyze,format,test)
       name: "Vm Tests"
