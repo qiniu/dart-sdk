@@ -35,7 +35,10 @@ abstract class RequestTask<T> extends Task<T> {
   int retryCount = 0;
 
   // 最大重试次数
-  late int retryLimit;
+  int retryLimit = 3;
+
+  bool _isRetrying = false;
+  bool get isRetrying => _isRetrying;
 
   RequestTask({this.controller});
 
@@ -46,6 +49,7 @@ abstract class RequestTask<T> extends Task<T> {
     if (controller != null && controller!.cancelToken.isCancelled) {
       throw StorageError(type: StorageErrorType.CANCEL);
     }
+
     controller?.notifyStatusListeners(StorageStatus.Init);
     controller?.notifyProgressListeners(preStartTakePercentOfTotal);
     retryLimit = config.retryLimit;
@@ -66,6 +70,7 @@ abstract class RequestTask<T> extends Task<T> {
   @override
   @mustCallSuper
   void preRestart() {
+    _isRetrying = retryCount <= retryLimit && retryCount > 0;
     controller?.notifyStatusListeners(StorageStatus.Retry);
     super.preRestart();
   }

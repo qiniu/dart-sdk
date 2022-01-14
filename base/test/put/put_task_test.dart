@@ -1,10 +1,10 @@
 import 'dart:io';
-import 'package:qiniu_sdk_base/src/storage/methods/put/by_single/put_by_single_task.dart';
-import 'package:qiniu_sdk_base/src/storage/methods/put/put_response.dart';
-import 'package:test/test.dart';
+
 // ignore: import_of_legacy_library_into_null_safe
 import 'package:dotenv/dotenv.dart' show env;
 import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
+import 'package:qiniu_sdk_base/src/storage/methods/put/by_single/put_by_single_task.dart';
+import 'package:test/test.dart';
 
 import '../config.dart';
 import 'put_controller_builder.dart';

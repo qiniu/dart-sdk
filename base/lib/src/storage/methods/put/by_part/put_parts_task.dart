@@ -16,9 +16,7 @@ part 'upload_parts_task.dart';
 /// 分片上传任务
 class PutByPartTask extends RequestTask<PutResponse> {
   final String token;
-  final dynamic rawResource;
-
-  final int length;
+  final Resource resource;
 
   final PutOptions options;
 
@@ -26,11 +24,8 @@ class PutByPartTask extends RequestTask<PutResponse> {
   @override
   int get retryLimit => 0;
 
-  late final Resource resource;
-
   PutByPartTask({
-    required this.rawResource,
-    required this.length,
+    required this.resource,
     required this.token,
     required this.options,
   }) : super(controller: options.controller);
@@ -40,7 +35,6 @@ class PutByPartTask extends RequestTask<PutResponse> {
   @override
   void preStart() {
     super.preStart();
-    resource = Resource.create(rawResource, length, partSize: options.partSize);
     // controller 被取消后取消当前运行的子任务
     controller?.cancelToken.whenCancel.then((_) {
       _currentWorkingTaskController?.cancel();

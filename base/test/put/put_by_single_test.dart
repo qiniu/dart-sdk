@@ -1,11 +1,9 @@
 @Timeout(Duration(seconds: 60))
-
 import 'dart:io';
-import 'package:qiniu_sdk_base/src/storage/error/error.dart';
-import 'package:qiniu_sdk_base/src/storage/methods/put/put_response.dart';
-import 'package:test/test.dart';
-import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
+
 import 'package:dotenv/dotenv.dart' show env;
+import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
+import 'package:test/test.dart';
 
 import '../config.dart';
 import 'put_controller_builder.dart';

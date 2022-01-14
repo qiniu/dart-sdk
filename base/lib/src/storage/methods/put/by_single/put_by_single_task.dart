@@ -1,18 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
 
-import '../../../../auth/auth.dart';
 import '../../../resource/resource.dart';
-import '../../../task/task.dart';
-import '../put_response.dart';
 
 // 直传任务
 class PutBySingleTask extends RequestTask<PutResponse> {
   late Resource resource;
-
-  final dynamic rawResource;
-
-  final int length;
 
   final PutOptions options;
 
@@ -22,8 +15,7 @@ class PutBySingleTask extends RequestTask<PutResponse> {
   late UpTokenInfo _tokenInfo;
 
   PutBySingleTask({
-    required this.rawResource,
-    required this.length,
+    required this.resource,
     required this.token,
     required this.options,
   }) : super(controller: options.controller);
@@ -31,33 +23,29 @@ class PutBySingleTask extends RequestTask<PutResponse> {
   @override
   void preStart() {
     _tokenInfo = Auth.parseUpToken(token);
-    resource = Resource.create(rawResource, length, partSize: length);
     super.preStart();
   }
 
   @override
   void postReceive(data) {
-    resource.close();
     super.postReceive(data);
+    resource.close();
   }
 
   @override
   void postError(error) {
-    // 有可能 resource 还没被打开就进入异常了，所以此时不需要 close
-    if (resource.status == ResourceStatus.Open) {
+    super.postError(error);
+    if (!isRetrying) {
       resource.close();
     }
-    super.postError(error);
-  }
-
-  @override
-  void preRestart() {
-    resource = Resource.create(rawResource, length);
-    super.preRestart();
   }
 
   @override
   Future<PutResponse> createTask() async {
+    if (isRetrying) {
+      // 单文件上传的重试需要从头开始传，所以先关了再开
+      await resource.close();
+    }
     await resource.open();
     final multipartFile = MultipartFile(resource.stream, resource.length);
 

@@ -1,16 +1,14 @@
 @Timeout(Duration(seconds: 60))
-
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:qiniu_sdk_base/src/storage/error/error.dart';
-import 'package:qiniu_sdk_base/src/storage/methods/put/by_part/put_parts_task.dart';
-import 'package:qiniu_sdk_base/src/storage/methods/put/put_response.dart';
-import 'package:qiniu_sdk_base/src/storage/resource/resource.dart';
-import 'package:test/test.dart';
+
 import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
-import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
 import 'package:dotenv/dotenv.dart' show env;
+import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
+import 'package:qiniu_sdk_base/src/storage/methods/put/by_part/put_parts_task.dart';
+import 'package:qiniu_sdk_base/src/storage/resource/resource.dart';
+import 'package:test/test.dart';
 
 import '../config.dart';
 import 'put_controller_builder.dart';
@@ -233,7 +231,7 @@ void main() {
     final storage = Storage(config: config);
     final file = File('test_resource/test_for_put_parts.mp4');
     final key = 'test_for_put_parts.mp4';
-    final resource = FileResource(file, file.lengthSync());
+    final resource = FileResource(file: file, length: file.lengthSync());
 
     /// 手动初始化一个初始化文件的任务，确定分片上传的第一步会被缓存
     final task = InitPartsTask(

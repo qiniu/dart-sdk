@@ -2,21 +2,26 @@ part of 'resource.dart';
 
 class FileResource extends Resource<File> {
   late RandomAccessFile raf;
-  FileResource(File resource, int fileLength, {int? partSize})
-      : super(resource, fileLength, partSize: partSize);
+  FileResource({
+    required File file,
+    required int length,
+    int? partSize,
+  }) : super(rawResource: file, length: length, partSize: partSize);
 
   @override
-  String get id => 'path_${resource.path}_size_${resource.lengthSync()}';
+  String get id => 'path_${rawResource.path}_size_${rawResource.lengthSync()}';
 
   @override
   Future<void> open() async {
-    raf = resource.openSync();
+    raf = await rawResource.open();
     await super.open();
   }
 
   @override
   Future<void> close() async {
-    raf.closeSync();
+    if (status == ResourceStatus.Open) {
+      await raf.close();
+    }
     await super.close();
   }
 
