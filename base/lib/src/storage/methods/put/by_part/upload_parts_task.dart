@@ -88,13 +88,11 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   @override
   void postReceive(data) {
     super.postReceive(data);
-    resource.close();
   }
 
   @override
   void postError(Object error) {
     super.postError(error);
-    resource.close();
     // 取消，网络问题等可能导致上传中断，缓存已上传的分片信息
     storeUploadedPart();
   }
@@ -142,8 +140,6 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
 
     // 尝试恢复缓存，如果有
     await recoverUploadedPart();
-    // 重试中如果做重复的动作可能触发  An async operation is currently pending, path =
-    await resource.open();
     // 上传分片
     await _uploadParts();
     return _uploadedPartMap.values.toList();

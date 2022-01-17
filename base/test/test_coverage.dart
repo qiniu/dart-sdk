@@ -4,6 +4,7 @@ import 'put/put_by_part_test.dart' as put_by_part_test;
 import 'put/put_by_single_test.dart' as put_by_single_test;
 import 'put/put_controller_test.dart' as put_controller_test;
 import 'put/put_task_test.dart' as put_task_test;
+import 'resource_test.dart' as resource_test;
 import 'retry_test.dart' as retry_test;
 
 void main() {
@@ -14,4 +15,5 @@ void main() {
   put_by_single_test.main();
   put_controller_test.main();
   put_task_test.main();
+  resource_test.main();
 }

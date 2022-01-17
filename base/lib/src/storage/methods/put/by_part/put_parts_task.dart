@@ -43,18 +43,22 @@ class PutByPartTask extends RequestTask<PutResponse> {
 
   @override
   void postReceive(PutResponse data) {
-    _currentWorkingTaskController = null;
     super.postReceive(data);
+    _currentWorkingTaskController = null;
+    resource.close();
   }
 
   @override
   void postError(Object error) {
     super.postError(error);
+    resource.close();
   }
 
   @override
   Future<PutResponse> createTask() async {
     controller?.notifyStatusListeners(StorageStatus.Request);
+
+    await resource.open();
 
     final initPartsTask = _createInitParts();
     final initParts = await initPartsTask.future;
@@ -83,6 +87,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
         /// 如果服务端文件被删除了，重新上传
         if (error.code == 612) {
           controller?.notifyStatusListeners(StorageStatus.Retry);
+          await resource.close();
           return createTask();
         }
       }

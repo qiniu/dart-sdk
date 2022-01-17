@@ -1,5 +1,5 @@
-import 'package:dio/adapter.dart';
-import 'package:dio/adapter_browser.dart';
+import 'package:dio/adapter.dart'
+    if (dart.library.html) 'package:dio/adapter_browser.dart';
 import 'package:dio/dio.dart';
 
 import 'package:qiniu_sdk_base/src/storage/error/error.dart';
@@ -29,9 +29,5 @@ class Config {
     this.retryLimit = 3,
   })  : hostProvider = hostProvider ?? DefaultHostProvider(),
         cacheProvider = cacheProvider ?? DefaultCacheProvider(),
-        httpClientAdapter = httpClientAdapter ??
-            // dio 的 adapter 需要手动指定
-            (platform == Platform.Web
-                ? BrowserHttpClientAdapter()
-                : DefaultHttpClientAdapter());
+        httpClientAdapter = httpClientAdapter ?? DefaultHttpClientAdapter();
 }

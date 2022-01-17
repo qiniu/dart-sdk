@@ -1,7 +1,7 @@
 part of 'resource.dart';
 
 class StreamResource extends Resource<Stream<List<int>>> {
-  final _controller = StreamController<List<int>>();
+  StreamController<List<int>> _controller = StreamController<List<int>>();
   late StreamSubscription _subscription;
   late final String _id;
 
@@ -31,6 +31,7 @@ class StreamResource extends Resource<Stream<List<int>>> {
   Future<void> close() async {
     if (status == ResourceStatus.Open) {
       await _subscription.cancel();
+      _controller = StreamController<List<int>>();
     }
     await super.close();
   }
@@ -44,6 +45,7 @@ class StreamResource extends Resource<Stream<List<int>>> {
       await for (var _chunk in chunkStream) {
         if (_chunk.length == chunkSize) {
           yield _chunk;
+          nextChunk.removeRange(0, chunkSize);
         } else {
           nextChunk
             ..clear()
@@ -58,7 +60,7 @@ class StreamResource extends Resource<Stream<List<int>>> {
 
   // 尝试从 chunk 中读取出符合 chunkSize 大小的 chunk, chunkSize 是根据 partSize 算出来的
   Stream<List<int>> _readChunk(List<int> chunk) async* {
-    var count = chunk.length / chunkSize;
+    var count = (chunk.length / chunkSize).floor();
     var start = 0;
     while (count-- > 0) {
       var end = (chunk.length >= start + chunkSize)

@@ -104,6 +104,7 @@ void main() {
     var n = 0;
     await for (var bytes in streamResource.stream) {
       n++;
+      print(bytes.length);
       chunkLengths.add(bytes.length);
     }
     // 不管 rawStream 是如何 emit chunk 给 StreamResource 的，StreamResource 都是按照 partSize 往外 emit

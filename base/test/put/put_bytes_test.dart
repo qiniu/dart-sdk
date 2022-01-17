@@ -16,7 +16,7 @@ import 'put_controller_builder.dart';
 void main() {
   configEnv();
 
-  test('putFile customVars should works well.', () async {
+  test('putBytes customVars should works well.', () async {
     final storage = Storage();
 
     final auth = Auth(
@@ -40,8 +40,8 @@ void main() {
 
     var putController = PutController();
     final file = File('test_resource/test_for_put_parts.mp4');
-    final response = await storage.putFile(
-      file,
+    final response = await storage.putBytes(
+      file.readAsBytesSync(),
       token,
       options: PutOptions(
         key: 'test_for_put_parts.mp4',
@@ -56,7 +56,7 @@ void main() {
     expect(response.rawData['ext'], 'testXExt');
   }, skip: !isSensitiveDataDefined);
 
-  test('putFile should works well.', () async {
+  test('putBytes should works well.', () async {
     final storage = Storage();
     final pcb = PutControllerBuilder();
     var callnumber = 0;
@@ -64,8 +64,8 @@ void main() {
       callnumber++;
     });
     final file = File('test_resource/test_for_put_parts.mp4');
-    final response = await storage.putFile(
-      file,
+    final response = await storage.putBytes(
+      file.readAsBytesSync(),
       token,
       options: PutOptions(
         key: 'test_for_put_parts.mp4',
@@ -88,12 +88,12 @@ void main() {
     expect(responseNoOps, isA<PutResponse>());
   }, skip: !isSensitiveDataDefined);
 
-  test('putFile should throw error with incorrect partSize.', () async {
+  test('putBytes should throw error with incorrect partSize.', () async {
     final storage = Storage();
     final file = File('test_resource/test_for_put_parts.mp4');
     try {
-      await storage.putFile(
-        file,
+      await storage.putBytes(
+        file.readAsBytesSync(),
         token,
         options: PutOptions(partSize: 0),
       );
@@ -102,8 +102,8 @@ void main() {
     }
 
     try {
-      await storage.putFile(
-        file,
+      await storage.putBytes(
+        file.readAsBytesSync(),
         token,
         options: PutOptions(partSize: 1025),
       );
@@ -112,11 +112,11 @@ void main() {
     }
   }, skip: !isSensitiveDataDefined);
 
-  test('putFile should works well while response 612.', () async {
+  test('putBytes should works well while response 612.', () async {
     final httpAdapterTest = HttpAdapterTestWith612();
     final storage = Storage(config: Config(httpClientAdapter: httpAdapterTest));
-    final response = await storage.putFile(
-      File('test_resource/test_for_put_parts.mp4'),
+    final response = await storage.putBytes(
+      File('test_resource/test_for_put_parts.mp4').readAsBytesSync(),
       token,
       options: PutOptions(key: 'test_for_put_parts.mp4', partSize: 1),
     );
@@ -126,7 +126,7 @@ void main() {
     expect(response, isA<PutResponse>());
   }, skip: !isSensitiveDataDefined);
 
-  test('putFile can be cancelled.', () async {
+  test('putBytes can be cancelled.', () async {
     final pcb = PutControllerBuilder();
     final storage = Storage(config: Config(hostProvider: HostProviderTest()));
     final file = File('test_resource/test_for_put_parts.mp4');
@@ -137,8 +137,8 @@ void main() {
         pcb.putController.cancel();
       }
     });
-    var future = storage.putFile(
-      file,
+    var future = storage.putBytes(
+      file.readAsBytesSync(),
       token,
       options: PutOptions(
         key: key,
@@ -162,8 +162,8 @@ void main() {
     ]);
 
     try {
-      await storage.putFile(
-        file,
+      await storage.putBytes(
+        file.readAsBytesSync(),
         token,
         options: PutOptions(
           key: key,
@@ -179,15 +179,15 @@ void main() {
 
     expect(future, throwsA(isA<StorageError>()));
 
-    final response = await storage.putFile(
-      file,
+    final response = await storage.putBytes(
+      file.readAsBytesSync(),
       token,
       options: PutOptions(key: key, partSize: 1),
     );
     expect(response, isA<PutResponse>());
   }, skip: !isSensitiveDataDefined);
 
-  test('putFile can be resumed.', () async {
+  test('putBytes can be resumed.', () async {
     final storage = Storage(config: Config(hostProvider: HostProviderTest()));
     final putController = PutController();
     putController.addSendProgressListener((percent) {
@@ -197,8 +197,8 @@ void main() {
       }
     });
 
-    final future = storage.putFile(
-      File('test_resource/test_for_put_parts.mp4'),
+    final future = storage.putBytes(
+      File('test_resource/test_for_put_parts.mp4').readAsBytesSync(),
       token,
       options: PutOptions(
         key: 'test_for_put_parts.mp4',
@@ -216,8 +216,8 @@ void main() {
 
     expect(future, throwsA(TypeMatcher<StorageError>()));
 
-    final response = await storage.putFile(
-      File('test_resource/test_for_put_parts.mp4'),
+    final response = await storage.putBytes(
+      File('test_resource/test_for_put_parts.mp4').readAsBytesSync(),
       token,
       options: PutOptions(key: 'test_for_put_parts.mp4', partSize: 1),
     );
@@ -225,7 +225,7 @@ void main() {
     expect(response, isA<PutResponse>());
   }, skip: !isSensitiveDataDefined);
 
-  test('putFile should works well with cacheProvider.', () async {
+  test('putBytes should works well with cacheProvider.', () async {
     final cacheProvider = CacheProviderForTest();
     final config = Config(cacheProvider: cacheProvider);
     final storage = Storage(config: config);
@@ -253,8 +253,8 @@ void main() {
       }
     });
 
-    final future = storage.putFile(
-      file,
+    final future = storage.putBytes(
+      file.readAsBytesSync(),
       token,
       options: PutOptions(key: key, partSize: 1, controller: putController),
     );
@@ -284,8 +284,8 @@ void main() {
     await cacheProvider.clear();
     cacheProvider.callNumber = 0;
 
-    final response = await storage.putFile(
-      file,
+    final response = await storage.putBytes(
+      file.readAsBytesSync(),
       token,
       options: PutOptions(key: key, partSize: 1),
     );
@@ -298,12 +298,12 @@ void main() {
     expect(cacheProvider.callNumber, 3);
   }, skip: !isSensitiveDataDefined);
 
-  test('putFile\'s status and progress should works well.', () async {
+  test('putBytes\'s status and progress should works well.', () async {
     final storage = Storage();
     final pcb = PutControllerBuilder();
 
-    final response = await storage.putFile(
-      File('test_resource/test_for_put_parts.mp4'),
+    final response = await storage.putBytes(
+      File('test_resource/test_for_put_parts.mp4').readAsBytesSync(),
       token,
       options: PutOptions(
         key: 'test_for_put_parts.mp4',
@@ -315,38 +315,6 @@ void main() {
     pcb
       ..testProcess()
       ..testStatus(targetProgressList: [0.001, 0.002, 0.99, 1]);
-  }, skip: !isSensitiveDataDefined);
-
-  test('putBytes should works well.', () async {
-    final storage = Storage();
-    final pcb = PutControllerBuilder();
-    var callnumber = 0;
-    pcb.putController.addSendProgressListener((percent) {
-      callnumber++;
-    });
-    final file = File('test_resource/test_for_put_parts.mp4');
-    final response = await storage.putBytes(
-      file.readAsBytesSync(),
-      token,
-      options: PutOptions(
-        key: 'test_for_put_parts.mp4',
-        partSize: 1,
-        controller: pcb.putController,
-      ),
-    );
-    expect(response, isA<PutResponse>());
-    // 2 片分片所以 2 次
-    expect(callnumber, 2);
-
-    pcb.testAll();
-
-    // 不设置参数的情况
-    final responseNoOps = await storage.putBytes(
-      file.readAsBytesSync(),
-      token,
-    );
-
-    expect(responseNoOps, isA<PutResponse>());
   }, skip: !isSensitiveDataDefined);
 }
 
