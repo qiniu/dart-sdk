@@ -43,7 +43,11 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
   }) : super(controller: controller);
 
   static String getCacheKey(String resourceId, String? key) {
-    return 'qiniu_dart_sdk_init_parts_task_key_${key}_$resourceId';
+    final keyList = [
+      'resource_id/$resourceId',
+      'key/$key',
+    ];
+    return 'qiniu_dart_sdk_init_parts_task@@[${keyList..join("/")}]';
   }
 
   @override

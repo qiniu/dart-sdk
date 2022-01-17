@@ -60,7 +60,11 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     int partSize,
     String? key,
   ) {
-    final keyList = [resourceId, 'key/$key', 'part_size/$partSize'];
+    final keyList = [
+      'resource_id/$resourceId',
+      'key/$key',
+      'part_size/$partSize'
+    ];
 
     return 'qiniu_dart_sdk_upload_parts_task@[${keyList..join("/")}]';
   }
