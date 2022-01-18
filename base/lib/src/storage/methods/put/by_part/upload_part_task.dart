@@ -30,8 +30,6 @@ class UploadPartTask extends RequestTask<UploadPart> {
 
   @override
   void preStart() {
-    print(bytes.length);
-    print(partNumber);
     _tokenInfo = Auth.parseUpToken(token);
     super.preStart();
   }

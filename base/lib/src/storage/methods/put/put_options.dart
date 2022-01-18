@@ -7,6 +7,8 @@ class PutOptions {
   final String? key;
 
   /// 强制使用单文件上传，不使用分片，默认值 false
+  ///
+  /// 如果使用 putStream, 这个值会被忽略
   final bool forceBySingle;
 
   /// 使用分片上传时的分片大小，默认值 4，单位为 MB

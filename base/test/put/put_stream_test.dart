@@ -38,18 +38,15 @@ void main() {
       'x:ext': 'testXExt',
     };
 
-    var putController = PutController();
     final file = File('test_resource/test_for_put_parts.mp4');
     final response = await storage.putStream(
       file.openRead(),
       token,
       file.readAsBytesSync().length,
-      id: 'test',
       options: PutOptions(
         key: 'test_for_put_parts.mp4',
         partSize: 1,
         customVars: customVars,
-        controller: putController,
       ),
     );
 
@@ -70,7 +67,6 @@ void main() {
       file.openRead(),
       token,
       file.readAsBytesSync().length,
-      id: 'test',
       options: PutOptions(
         key: 'test_for_put_parts.mp4',
         partSize: 1,
@@ -88,7 +84,6 @@ void main() {
       file.openRead(),
       token,
       file.readAsBytesSync().length,
-      id: 'test',
     );
 
     expect(responseNoOps, isA<PutResponse>());
@@ -102,7 +97,6 @@ void main() {
         file.openRead(),
         token,
         file.readAsBytesSync().length,
-        id: 'test',
         options: PutOptions(
           key: 'test_for_put_parts.mp4',
           partSize: 0,
@@ -117,7 +111,6 @@ void main() {
         file.openRead(),
         token,
         file.readAsBytesSync().length,
-        id: 'test',
         options: PutOptions(
           key: 'test_for_put_parts.mp4',
           partSize: 1025,
@@ -132,20 +125,23 @@ void main() {
     final httpAdapterTest = HttpAdapterTestWith612();
     final storage = Storage(config: Config(httpClientAdapter: httpAdapterTest));
     final file = File('test_resource/test_for_put_parts.mp4');
-    final response = await storage.putStream(
-      file.openRead(),
-      token,
-      file.readAsBytesSync().length,
-      id: 'test',
-      options: PutOptions(
-        key: 'test_for_put_parts.mp4',
-        partSize: 1,
-      ),
-    );
 
-    /// httpAdapterTest 应该会触发一次 612 response
-    expect(httpAdapterTest.completePartsTaskResponse612, true);
-    expect(response, isA<PutResponse>());
+    try {
+      await storage.putStream(
+        file.openRead(),
+        token,
+        file.readAsBytesSync().length,
+        options: PutOptions(
+          key: 'test_for_put_parts.mp4',
+          partSize: 1,
+        ),
+      );
+    } catch (e) {
+      /// httpAdapterTest 应该会触发一次 612 response
+      expect(httpAdapterTest.completePartsTaskResponse612, true);
+      expect(e, isA<StorageError>());
+      expect((e as StorageError).code, 612);
+    }
   }, skip: !isSensitiveDataDefined);
 
   test('putStream can be cancelled.', () async {
@@ -163,7 +159,6 @@ void main() {
       file.openRead(),
       token,
       file.readAsBytesSync().length,
-      id: 'test',
       options: PutOptions(
         key: key,
         partSize: 1,
@@ -173,6 +168,7 @@ void main() {
     try {
       await future;
     } catch (error) {
+      print(error);
       expect((error as StorageError).type, StorageErrorType.CANCEL);
     }
     expect(future, throwsA(TypeMatcher<StorageError>()));
@@ -190,7 +186,6 @@ void main() {
         file.openRead(),
         token,
         file.readAsBytesSync().length,
-        id: 'test',
         options: PutOptions(
           key: key,
           partSize: 1,
@@ -227,7 +222,6 @@ void main() {
       File('test_resource/test_for_put_parts.mp4').openRead(),
       token,
       File('test_resource/test_for_put_parts.mp4').readAsBytesSync().length,
-      id: 'test',
       options: PutOptions(
         key: 'test_for_put_parts.mp4',
         partSize: 1,
@@ -285,7 +279,6 @@ void main() {
       file.openRead(),
       token,
       file.readAsBytesSync().length,
-      id: 'test',
       options: PutOptions(
         key: key,
         partSize: 1,
@@ -322,7 +315,6 @@ void main() {
       file.openRead(),
       token,
       file.readAsBytesSync().length,
-      id: 'test',
       options: PutOptions(
         key: key,
         partSize: 1,
@@ -345,7 +337,6 @@ void main() {
       File('test_resource/test_for_put_parts.mp4').openRead(),
       token,
       File('test_resource/test_for_put_parts.mp4').readAsBytesSync().length,
-      id: 'test',
       options: PutOptions(
         key: 'test_for_put_parts.mp4',
         partSize: 1,

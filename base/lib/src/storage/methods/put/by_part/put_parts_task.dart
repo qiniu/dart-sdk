@@ -79,13 +79,17 @@ class PutByPartTask extends RequestTask<PutResponse> {
         /// 满足以下两种情况清理缓存：
         /// 1、如果服务端文件被删除了，清除本地缓存
         /// 2、如果 uploadId 等参数不对原因会导致 400
-        if (error.code == 612 || error.code == 400) {
+        if (error.code == 400) {
           await initPartsTask.clearCache();
           await uploadParts.clearCache();
         }
 
         /// 如果服务端文件被删除了，重新上传
         if (error.code == 612) {
+          // 如果是 StreamResource，无法保证能从头获取到完整的数据，不做处理
+          if (resource is StreamResource) {
+            rethrow;
+          }
           controller?.notifyStatusListeners(StorageStatus.Retry);
           await resource.close();
           return createTask();

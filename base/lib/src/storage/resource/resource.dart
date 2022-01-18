@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:crypto/crypto.dart' show md5;
 import 'package:meta/meta.dart';
+import 'package:uuid/uuid.dart';
 
 part 'bytes_resource.dart';
 part 'file_resource.dart';

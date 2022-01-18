@@ -97,42 +97,37 @@ class Storage {
 
   /// 上传 [Stream]
   ///
-  /// 如果客户端从[Stream]接收字节的速度大于上传速度会造成内存使用量上涨
+  /// 使用注意：
+  ///
+  /// 1、资源流需要在上传结束后自行关闭，SDK 内部不做关闭操作
+  ///
+  /// 2、只支持分片上传
+  ///
+  /// 3、如果客户端从[Stream]接收字节的速度大于上传速度会造成内存使用量上涨
   ///
   /// [length] 资源字节长度
   ///
-  /// [id] 资源 id，作为构建断点续传信息保存的 key，如果为空则使用没有断点续传功能的单文件上传
+  /// [id] 资源 id，作为构建断点续传信息保存的 key，如果不传则没有断点续传功能
   Future<PutResponse> putStream(
     Stream<List<int>> stream,
     String token,
     int length, {
-    final String? id,
+    String? id,
     PutOptions? options,
   }) async {
     options ??= PutOptions();
     RequestTask<PutResponse> task;
-    final useSingle = id == null ||
-        options.forceBySingle == true ||
-        length < (options.partSize * 1024 * 1024);
     final resource = StreamResource(
       stream: stream,
       length: length,
-      id: id ?? '',
+      id: id,
       partSize: options.partSize,
     );
-    if (useSingle) {
-      task = PutBySingleTask(
-        resource: resource,
-        options: options,
-        token: token,
-      );
-    } else {
-      task = PutByPartTask(
-        token: token,
-        options: options,
-        resource: resource,
-      );
-    }
+    task = PutByPartTask(
+      token: token,
+      options: options,
+      resource: resource,
+    );
 
     taskManager.addTask(task);
 
