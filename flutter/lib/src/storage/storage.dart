@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:qiniu_sdk_base/qiniu_sdk_base.dart' as base;
 
@@ -10,6 +11,7 @@ export 'package:qiniu_sdk_base/qiniu_sdk_base.dart'
         HostProvider,
         CacheProvider,
         HttpClientAdapter,
+        BrowserHttpClientAdapter,
         QiniuError,
         StorageError,
         StorageErrorType,
@@ -29,5 +31,13 @@ class Storage {
     base.PutOptions? options,
   }) {
     return _baseStorage.putFile(file, token, options: options);
+  }
+
+  Future<base.PutResponse> putBytes(
+    Uint8List bytes,
+    String token, {
+    base.PutOptions? options,
+  }) {
+    return _baseStorage.putBytes(bytes, token, options: options);
   }
 }

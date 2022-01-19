@@ -1,5 +1,4 @@
-import 'package:dio/adapter.dart'
-    if (dart.library.html) 'package:dio/adapter_browser.dart';
+import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
 
 import 'package:qiniu_sdk_base/src/storage/error/error.dart';
@@ -7,11 +6,8 @@ import 'package:qiniu_sdk_base/src/storage/error/error.dart';
 part 'cache.dart';
 part 'host.dart';
 part 'protocol.dart';
-part 'platform.dart';
 
 class Config {
-  /// SDK 的运行平台, 默认 [Platform.IOS]
-  final Platform platform;
   final HostProvider hostProvider;
   final CacheProvider cacheProvider;
   final HttpClientAdapter httpClientAdapter;
@@ -22,7 +18,6 @@ class Config {
   final int retryLimit;
 
   Config({
-    this.platform = Platform.IOS,
     HostProvider? hostProvider,
     CacheProvider? cacheProvider,
     HttpClientAdapter? httpClientAdapter,
