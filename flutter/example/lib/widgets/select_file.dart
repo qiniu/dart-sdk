@@ -15,8 +15,9 @@ class SelectFile extends StatefulWidget {
 
 class SelectFileState extends State<SelectFile> {
   void openSelectFileWindow() async {
-    final fileResult = await FilePicker.platform.pickFiles();
-    if (fileResult != null && fileResult.paths.first != null) {
+    final fileResult =
+        await FilePicker.platform.pickFiles(allowMultiple: false);
+    if (fileResult != null) {
       widget.onSelected(fileResult.files.first);
     }
   }
