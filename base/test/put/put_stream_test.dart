@@ -246,6 +246,46 @@ void main() {
     expect(response, isA<PutResponse>());
   }, skip: !isSensitiveDataDefined);
 
+  test('putstream should throw error if there is a same task is working.',
+      () async {
+    final storage = Storage();
+    final file = File('test_resource/test_for_put_parts.mp4');
+    final key = 'test_for_put_parts.mp4';
+
+    var errorOccurred = false;
+
+    // 故意不 await，让后面发送一个相同的任务
+    // ignore: unawaited_futures
+    storage.putStream(
+      file.openRead(),
+      token,
+      file.lengthSync(),
+      id: 'test',
+      options: PutOptions(
+        key: key,
+        partSize: 1,
+      ),
+    );
+
+    try {
+      await storage.putStream(
+        file.openRead(),
+        token,
+        file.lengthSync(),
+        id: 'test',
+        options: PutOptions(
+          key: key,
+          partSize: 1,
+        ),
+      );
+    } catch (e) {
+      errorOccurred = true;
+      expect(e, isA<StorageError>());
+      expect((e as StorageError).type, StorageErrorType.IN_PROGRESS);
+    }
+    expect(errorOccurred, true);
+  }, skip: !isSensitiveDataDefined);
+
   test('putStream should works well with cacheProvider.', () async {
     final cacheProvider = CacheProviderForTest();
     final config = Config(cacheProvider: cacheProvider);

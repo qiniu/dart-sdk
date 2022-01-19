@@ -298,6 +298,42 @@ void main() {
     expect(cacheProvider.callNumber, 3);
   }, skip: !isSensitiveDataDefined);
 
+  test('putFile should throw error if there is a same task is working.',
+      () async {
+    final storage = Storage();
+    final file = File('test_resource/test_for_put_parts.mp4');
+    final key = 'test_for_put_parts.mp4';
+
+    var errorOccurred = false;
+
+    // 故意不 await，让后面发送一个相同的任务
+    // ignore: unawaited_futures
+    storage.putFile(
+      file,
+      token,
+      options: PutOptions(
+        key: key,
+        partSize: 1,
+      ),
+    );
+
+    try {
+      await storage.putFile(
+        file,
+        token,
+        options: PutOptions(
+          key: key,
+          partSize: 1,
+        ),
+      );
+    } catch (e) {
+      errorOccurred = true;
+      expect(e, isA<StorageError>());
+      expect((e as StorageError).type, StorageErrorType.IN_PROGRESS);
+    }
+    expect(errorOccurred, true);
+  }, skip: !isSensitiveDataDefined);
+
   test('putFile\'s status and progress should works well.', () async {
     final storage = Storage();
     final pcb = PutControllerBuilder();
