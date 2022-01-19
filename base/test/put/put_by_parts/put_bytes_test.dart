@@ -1,8 +1,4 @@
 @Timeout(Duration(seconds: 60))
-import 'dart:typed_data';
-
-import 'package:dio/adapter.dart';
-import 'package:dio/dio.dart';
 import 'package:dotenv/dotenv.dart' show env;
 import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
 import 'package:qiniu_sdk_base/src/storage/methods/put/by_part/put_parts_task.dart';
