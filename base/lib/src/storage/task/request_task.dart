@@ -7,6 +7,7 @@ part 'request_task_manager.dart';
 
 String _getUserAgent() {
   return [
+    'QiniuDartSDK',
     // TODO version
     'Vendor/qiniu-sdk'
   ].join(' ');
@@ -98,6 +99,7 @@ abstract class RequestTask<T> extends Task<T> {
         }
         if (retryCount < retryLimit) {
           retryCount++;
+          // TODO 这里也许有优化空间，任务不应该自己重启自己，而应该通过消息或者报错告诉负责这个任务的管理者去重试
           manager.restartTask(this);
           return;
         }
