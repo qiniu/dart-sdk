@@ -33,7 +33,8 @@ class Base extends StatefulWidget implements Example {
 class BaseState extends DisposableState<Base> {
   BaseState()
       : storage = Storage(
-            config: Config(httpClientAdapter: BrowserHttpClientAdapter()));
+            config: Config(
+                httpClientAdapter: kIsWeb ? BrowserHttpClientAdapter() : null));
 
   // 用户输入的文件名
   String? key;
