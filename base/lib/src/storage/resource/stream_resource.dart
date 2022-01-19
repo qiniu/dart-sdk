@@ -11,7 +11,7 @@ class StreamResource extends Resource<Stream<List<int>>> {
   StreamResource({
     required Stream<List<int>> stream,
     required int length,
-    required String? id,
+    String? id,
     int? partSize,
   }) : super(
           rawResource: stream.isBroadcast ? stream : stream.asBroadcastStream(),

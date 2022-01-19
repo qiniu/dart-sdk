@@ -1,5 +1,4 @@
 @Timeout(Duration(seconds: 60))
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/adapter.dart';
@@ -10,13 +9,16 @@ import 'package:qiniu_sdk_base/src/storage/methods/put/by_part/put_parts_task.da
 import 'package:qiniu_sdk_base/src/storage/resource/resource.dart';
 import 'package:test/test.dart';
 
-import '../config.dart';
-import 'put_controller_builder.dart';
+import '../../config.dart';
+import '../helpers.dart';
 
 void main() {
   configEnv();
 
-  test('putFile customVars should works well.', () async {
+  final stream = fileForPart.openRead();
+  final fileLength = fileForPart.lengthSync();
+
+  test('customVars&returnBody customVars should works well.', () async {
     final storage = Storage();
 
     final auth = Auth(
@@ -38,16 +40,14 @@ void main() {
       'x:ext': 'testXExt',
     };
 
-    var putController = PutController();
-    final file = File('test_resource/test_for_put_parts.mp4');
-    final response = await storage.putFile(
-      file,
+    final response = await storage.putStream(
+      stream,
       token,
+      fileLength,
       options: PutOptions(
         key: 'test_for_put_parts.mp4',
         partSize: 1,
         customVars: customVars,
-        controller: putController,
       ),
     );
 
@@ -56,17 +56,17 @@ void main() {
     expect(response.rawData['ext'], 'testXExt');
   }, skip: !isSensitiveDataDefined);
 
-  test('putFile should works well.', () async {
+  test('putStream should works well.', () async {
     final storage = Storage();
     final pcb = PutControllerBuilder();
     var callnumber = 0;
     pcb.putController.addSendProgressListener((percent) {
       callnumber++;
     });
-    final file = File('test_resource/test_for_put_parts.mp4');
-    final response = await storage.putFile(
-      file,
+    final response = await storage.putStream(
+      stream,
       token,
+      fileLength,
       options: PutOptions(
         key: 'test_for_put_parts.mp4',
         partSize: 1,
@@ -80,56 +80,71 @@ void main() {
     pcb.testAll();
 
     // 不设置参数的情况
-    final responseNoOps = await storage.putFile(
-      file,
+    final responseNoOps = await storage.putStream(
+      stream,
       token,
+      fileLength,
     );
 
     expect(responseNoOps, isA<PutResponse>());
   }, skip: !isSensitiveDataDefined);
 
-  test('putFile should throw error with incorrect partSize.', () async {
+  test('putStream should throw error with incorrect partSize.', () async {
     final storage = Storage();
-    final file = File('test_resource/test_for_put_parts.mp4');
     try {
-      await storage.putFile(
-        file,
+      await storage.putStream(
+        stream,
         token,
-        options: PutOptions(partSize: 0),
+        fileLength,
+        options: PutOptions(
+          key: 'test_for_put_parts.mp4',
+          partSize: 0,
+        ),
       );
     } catch (e) {
       expect(e, isA<AssertionError>());
     }
 
     try {
-      await storage.putFile(
-        file,
+      await storage.putStream(
+        stream,
         token,
-        options: PutOptions(partSize: 1025),
+        fileLength,
+        options: PutOptions(
+          key: 'test_for_put_parts.mp4',
+          partSize: 1025,
+        ),
       );
     } catch (e) {
       expect(e, isA<AssertionError>());
     }
   }, skip: !isSensitiveDataDefined);
 
-  test('putFile should works well while response 612.', () async {
+  test('putStream should works well while response 612.', () async {
     final httpAdapterTest = HttpAdapterTestWith612();
     final storage = Storage(config: Config(httpClientAdapter: httpAdapterTest));
-    final response = await storage.putFile(
-      File('test_resource/test_for_put_parts.mp4'),
-      token,
-      options: PutOptions(key: 'test_for_put_parts.mp4', partSize: 1),
-    );
 
-    /// httpAdapterTest 应该会触发一次 612 response
-    expect(httpAdapterTest.completePartsTaskResponse612, true);
-    expect(response, isA<PutResponse>());
+    try {
+      await storage.putStream(
+        stream,
+        token,
+        fileLength,
+        options: PutOptions(
+          key: 'test_for_put_parts.mp4',
+          partSize: 1,
+        ),
+      );
+    } catch (e) {
+      /// httpAdapterTest 应该会触发一次 612 response
+      expect(httpAdapterTest.completePartsTaskResponse612, true);
+      expect(e, isA<StorageError>());
+      expect((e as StorageError).code, 612);
+    }
   }, skip: !isSensitiveDataDefined);
 
-  test('putFile can be cancelled.', () async {
+  test('putStream can be cancelled.', () async {
     final pcb = PutControllerBuilder();
     final storage = Storage(config: Config(hostProvider: HostProviderTest()));
-    final file = File('test_resource/test_for_put_parts.mp4');
     final key = 'test_for_put_parts.mp4';
     pcb.putController.addSendProgressListener((percent) {
       // 开始上传并且 InitPartsTask 设置完缓存后取消
@@ -137,9 +152,10 @@ void main() {
         pcb.putController.cancel();
       }
     });
-    var future = storage.putFile(
-      file,
+    var future = storage.putStream(
+      stream,
       token,
+      fileLength,
       options: PutOptions(
         key: key,
         partSize: 1,
@@ -162,9 +178,10 @@ void main() {
     ]);
 
     try {
-      await storage.putFile(
-        file,
+      await storage.putStream(
+        stream,
         token,
+        fileLength,
         options: PutOptions(
           key: key,
           partSize: 1,
@@ -179,15 +196,16 @@ void main() {
 
     expect(future, throwsA(isA<StorageError>()));
 
-    final response = await storage.putFile(
-      file,
+    final response = await storage.putStream(
+      stream,
       token,
+      fileLength,
       options: PutOptions(key: key, partSize: 1),
     );
     expect(response, isA<PutResponse>());
   }, skip: !isSensitiveDataDefined);
 
-  test('putFile can be resumed.', () async {
+  test('putStream can be resumed.', () async {
     final storage = Storage(config: Config(hostProvider: HostProviderTest()));
     final putController = PutController();
     putController.addSendProgressListener((percent) {
@@ -197,9 +215,10 @@ void main() {
       }
     });
 
-    final future = storage.putFile(
-      File('test_resource/test_for_put_parts.mp4'),
+    final future = storage.putStream(
+      stream,
       token,
+      fileLength,
       options: PutOptions(
         key: 'test_for_put_parts.mp4',
         partSize: 1,
@@ -216,22 +235,61 @@ void main() {
 
     expect(future, throwsA(TypeMatcher<StorageError>()));
 
-    final response = await storage.putFile(
-      File('test_resource/test_for_put_parts.mp4'),
+    final response = await storage.putStream(
+      stream,
       token,
+      fileLength,
       options: PutOptions(key: 'test_for_put_parts.mp4', partSize: 1),
     );
 
     expect(response, isA<PutResponse>());
   }, skip: !isSensitiveDataDefined);
 
-  test('putFile should works well with cacheProvider.', () async {
+  test('putstream should throw error if there is a same task is working.',
+      () async {
+    final storage = Storage();
+    final key = 'test_for_put_parts.mp4';
+
+    var errorOccurred = false;
+
+    // 故意不 await，让后面发送一个相同的任务
+    // ignore: unawaited_futures
+    storage.putStream(
+      stream,
+      token,
+      fileLength,
+      id: 'test',
+      options: PutOptions(
+        key: key,
+        partSize: 1,
+      ),
+    );
+
+    try {
+      await storage.putStream(
+        stream,
+        token,
+        fileLength,
+        id: 'test',
+        options: PutOptions(
+          key: key,
+          partSize: 1,
+        ),
+      );
+    } catch (e) {
+      errorOccurred = true;
+      expect(e, isA<StorageError>());
+      expect((e as StorageError).type, StorageErrorType.IN_PROGRESS);
+    }
+    expect(errorOccurred, true);
+  }, skip: !isSensitiveDataDefined);
+
+  test('putStream should works well with cacheProvider.', () async {
     final cacheProvider = CacheProviderForTest();
     final config = Config(cacheProvider: cacheProvider);
     final storage = Storage(config: config);
-    final file = File('test_resource/test_for_put_parts.mp4');
     final key = 'test_for_put_parts.mp4';
-    final resource = FileResource(file: file, length: file.lengthSync());
+    final resource = StreamResource(stream: stream, length: fileLength);
 
     /// 手动初始化一个初始化文件的任务，确定分片上传的第一步会被缓存
     final task = InitPartsTask(
@@ -253,10 +311,15 @@ void main() {
       }
     });
 
-    final future = storage.putFile(
-      file,
+    final future = storage.putStream(
+      stream,
       token,
-      options: PutOptions(key: key, partSize: 1, controller: putController),
+      fileLength,
+      options: PutOptions(
+        key: key,
+        partSize: 1,
+        controller: putController,
+      ),
     );
 
     /// 这个时候应该只缓存了初始化的缓存信息
@@ -284,10 +347,14 @@ void main() {
     await cacheProvider.clear();
     cacheProvider.callNumber = 0;
 
-    final response = await storage.putFile(
-      file,
+    final response = await storage.putStream(
+      stream,
       token,
-      options: PutOptions(key: key, partSize: 1),
+      fileLength,
+      options: PutOptions(
+        key: key,
+        partSize: 1,
+      ),
     );
 
     expect(response, isA<PutResponse>());
@@ -298,13 +365,14 @@ void main() {
     expect(cacheProvider.callNumber, 3);
   }, skip: !isSensitiveDataDefined);
 
-  test('putFile\'s status and progress should works well.', () async {
+  test('putStream\'s status and progress should works well.', () async {
     final storage = Storage();
     final pcb = PutControllerBuilder();
 
-    final response = await storage.putFile(
-      File('test_resource/test_for_put_parts.mp4'),
+    final response = await storage.putStream(
+      stream,
       token,
+      fileLength,
       options: PutOptions(
         key: 'test_for_put_parts.mp4',
         partSize: 1,
@@ -315,38 +383,6 @@ void main() {
     pcb
       ..testProcess()
       ..testStatus(targetProgressList: [0.001, 0.002, 0.99, 1]);
-  }, skip: !isSensitiveDataDefined);
-
-  test('putBytes should works well.', () async {
-    final storage = Storage();
-    final pcb = PutControllerBuilder();
-    var callnumber = 0;
-    pcb.putController.addSendProgressListener((percent) {
-      callnumber++;
-    });
-    final file = File('test_resource/test_for_put_parts.mp4');
-    final response = await storage.putBytes(
-      file.readAsBytesSync(),
-      token,
-      options: PutOptions(
-        key: 'test_for_put_parts.mp4',
-        partSize: 1,
-        controller: pcb.putController,
-      ),
-    );
-    expect(response, isA<PutResponse>());
-    // 2 片分片所以 2 次
-    expect(callnumber, 2);
-
-    pcb.testAll();
-
-    // 不设置参数的情况
-    final responseNoOps = await storage.putBytes(
-      file.readAsBytesSync(),
-      token,
-    );
-
-    expect(responseNoOps, isA<PutResponse>());
   }, skip: !isSensitiveDataDefined);
 }
 
