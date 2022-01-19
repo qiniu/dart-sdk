@@ -11,7 +11,6 @@ import '../helpers.dart';
 void main() {
   configEnv();
 
-  final stream = fileForPart.openRead();
   final fileLength = fileForPart.lengthSync();
 
   test('customVars&returnBody customVars should works well.', () async {
@@ -37,17 +36,17 @@ void main() {
     };
 
     final response = await storage.putStream(
-      stream,
+      fileForPart.openRead(),
       token,
       fileLength,
       options: PutOptions(
-        key: 'test_for_put_parts.mp4',
+        key: fileKeyForPart,
         partSize: 1,
         customVars: customVars,
       ),
     );
 
-    expect(response.key, 'test_for_put_parts.mp4');
+    expect(response.key, fileKeyForPart);
     expect(response.rawData['type'], 'testXType');
     expect(response.rawData['ext'], 'testXExt');
   }, skip: !isSensitiveDataDefined);
@@ -60,11 +59,11 @@ void main() {
       callnumber++;
     });
     final response = await storage.putStream(
-      stream,
+      fileForPart.openRead(),
       token,
       fileLength,
       options: PutOptions(
-        key: 'test_for_put_parts.mp4',
+        key: fileKeyForPart,
         partSize: 1,
         controller: pcb.putController,
       ),
@@ -77,7 +76,7 @@ void main() {
 
     // 不设置参数的情况
     final responseNoOps = await storage.putStream(
-      stream,
+      fileForPart.openRead(),
       token,
       fileLength,
     );
@@ -89,11 +88,11 @@ void main() {
     final storage = Storage();
     try {
       await storage.putStream(
-        stream,
+        fileForPart.openRead(),
         token,
         fileLength,
         options: PutOptions(
-          key: 'test_for_put_parts.mp4',
+          key: fileKeyForPart,
           partSize: 0,
         ),
       );
@@ -103,11 +102,11 @@ void main() {
 
     try {
       await storage.putStream(
-        stream,
+        fileForPart.openRead(),
         token,
         fileLength,
         options: PutOptions(
-          key: 'test_for_put_parts.mp4',
+          key: fileKeyForPart,
           partSize: 1025,
         ),
       );
@@ -122,11 +121,11 @@ void main() {
 
     try {
       await storage.putStream(
-        stream,
+        fileForPart.openRead(),
         token,
         fileLength,
         options: PutOptions(
-          key: 'test_for_put_parts.mp4',
+          key: fileKeyForPart,
           partSize: 1,
         ),
       );
@@ -141,7 +140,7 @@ void main() {
   test('putStream can be cancelled.', () async {
     final pcb = PutControllerBuilder();
     final storage = Storage(config: Config(hostProvider: HostProviderTest()));
-    final key = 'test_for_put_parts.mp4';
+    final key = fileKeyForPart;
     pcb.putController.addSendProgressListener((percent) {
       // 开始上传并且 InitPartsTask 设置完缓存后取消
       if (percent > 0.1) {
@@ -149,7 +148,7 @@ void main() {
       }
     });
     var future = storage.putStream(
-      stream,
+      fileForPart.openRead(),
       token,
       fileLength,
       options: PutOptions(
@@ -175,7 +174,7 @@ void main() {
 
     try {
       await storage.putStream(
-        stream,
+        fileForPart.openRead(),
         token,
         fileLength,
         options: PutOptions(
@@ -193,7 +192,7 @@ void main() {
     expect(future, throwsA(isA<StorageError>()));
 
     final response = await storage.putStream(
-      stream,
+      fileForPart.openRead(),
       token,
       fileLength,
       options: PutOptions(key: key, partSize: 1),
@@ -212,11 +211,11 @@ void main() {
     });
 
     final future = storage.putStream(
-      stream,
+      fileForPart.openRead(),
       token,
       fileLength,
       options: PutOptions(
-        key: 'test_for_put_parts.mp4',
+        key: fileKeyForPart,
         partSize: 1,
         controller: putController,
       ),
@@ -232,10 +231,10 @@ void main() {
     expect(future, throwsA(TypeMatcher<StorageError>()));
 
     final response = await storage.putStream(
-      stream,
+      fileForPart.openRead(),
       token,
       fileLength,
-      options: PutOptions(key: 'test_for_put_parts.mp4', partSize: 1),
+      options: PutOptions(key: fileKeyForPart, partSize: 1),
     );
 
     expect(response, isA<PutResponse>());
@@ -244,14 +243,14 @@ void main() {
   test('putstream should throw error if there is a same task is working.',
       () async {
     final storage = Storage();
-    final key = 'test_for_put_parts.mp4';
+    final key = fileKeyForPart;
 
     var errorOccurred = false;
 
     // 故意不 await，让后面发送一个相同的任务
     // ignore: unawaited_futures
     storage.putStream(
-      stream,
+      fileForPart.openRead(),
       token,
       fileLength,
       id: 'test',
@@ -263,7 +262,7 @@ void main() {
 
     try {
       await storage.putStream(
-        stream,
+        fileForPart.openRead(),
         token,
         fileLength,
         id: 'test',
@@ -284,8 +283,9 @@ void main() {
     final cacheProvider = CacheProviderForTest();
     final config = Config(cacheProvider: cacheProvider);
     final storage = Storage(config: config);
-    final key = 'test_for_put_parts.mp4';
-    final resource = StreamResource(stream: stream, length: fileLength);
+    final key = fileKeyForPart;
+    final resource =
+        StreamResource(stream: fileForPart.openRead(), length: fileLength);
 
     /// 手动初始化一个初始化文件的任务，确定分片上传的第一步会被缓存
     final task = InitPartsTask(
@@ -308,7 +308,7 @@ void main() {
     });
 
     final future = storage.putStream(
-      stream,
+      fileForPart.openRead(),
       token,
       fileLength,
       options: PutOptions(
@@ -344,7 +344,7 @@ void main() {
     cacheProvider.callNumber = 0;
 
     final response = await storage.putStream(
-      stream,
+      fileForPart.openRead(),
       token,
       fileLength,
       options: PutOptions(
@@ -366,11 +366,11 @@ void main() {
     final pcb = PutControllerBuilder();
 
     final response = await storage.putStream(
-      stream,
+      fileForPart.openRead(),
       token,
       fileLength,
       options: PutOptions(
-        key: 'test_for_put_parts.mp4',
+        key: fileKeyForPart,
         partSize: 1,
         controller: pcb.putController,
       ),

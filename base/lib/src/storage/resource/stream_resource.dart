@@ -6,7 +6,7 @@ final _uuid = Uuid();
 class StreamResource extends Resource<Stream<List<int>>> {
   StreamController<List<int>> _controller = StreamController<List<int>>();
   late StreamSubscription _subscription;
-  late final String? _id;
+  late final String _id;
 
   StreamResource({
     required Stream<List<int>> stream,
@@ -18,14 +18,14 @@ class StreamResource extends Resource<Stream<List<int>>> {
           length: length,
           partSize: partSize,
         ) {
-    _id = id;
+    // 如果没有 id 则声称随机的 id
+    // 同一个 [rawStream] close 后再 open 会继续接收 event 而不是从头开始
+    // 设置一个随机 id，可帮助失败重试功能的时候能跳过已缓存的分片(存在 DefaultCacheProvider 里)
+    _id = id ?? _uuid.v4();
   }
 
-  // 如果没有 id 则声称随机的 id
-  // 同一个 [rawStream] close 后再 open 会继续接收 event 而不是从头开始
-  // 设置一个随机 id，可帮助失败重试功能的时候能跳过已缓存的分片(存在 DefaultCacheProvider 里)
   @override
-  String get id => _id ?? _uuid.v4();
+  String get id => _id;
 
   /// 重新 open 的
   @override
