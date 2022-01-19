@@ -92,25 +92,10 @@ abstract class RequestTask<T> extends Task<T> {
   void postError(Object error) async {
     // 处理 Dio 异常
     if (error is DioError) {
-      if (!_canConnectToHost(error)) {
-        // host 连不上，判断是否 host 不可用造成的, 比如 tls error(没做还)
+      if (_checkIfNeedRetry(error)) {
         if (_isHostUnavailable(error)) {
           config.hostProvider.freezeHost(error.requestOptions.path);
         }
-
-        // 继续尝试当前 host，如果是服务器坏了则切换到其他 host
-        if (retryCount < retryLimit) {
-          retryCount++;
-          manager.restartTask(this);
-          return;
-        }
-      }
-
-      // 能连上但是服务器不可用，比如 502
-      if (_isHostUnavailable(error)) {
-        config.hostProvider.freezeHost(error.requestOptions.path);
-
-        // 切换到其他 host
         if (retryCount < retryLimit) {
           retryCount++;
           manager.restartTask(this);
@@ -160,6 +145,18 @@ abstract class RequestTask<T> extends Task<T> {
     controller?.notifySendProgressListeners(percent);
     controller
         ?.notifyProgressListeners(percent * onSendProgressTakePercentOfTotal);
+  }
+
+  bool _checkIfNeedRetry(DioError error) {
+    if (!_canConnectToHost(error) || _isHostUnavailable(error)) {
+      return true;
+    }
+    if (error.type == DioErrorType.response) {
+      if (error.response?.statusCode == 612) {
+        return true;
+      }
+    }
+    return false;
   }
 
   // host 是否可以连接上

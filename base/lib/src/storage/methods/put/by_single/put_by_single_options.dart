@@ -1,6 +1,6 @@
 import '../put_controller.dart';
 
-/// @deprecated
+@Deprecated('use PutOptions')
 class PutBySingleOptions {
   /// 资源名
   ///

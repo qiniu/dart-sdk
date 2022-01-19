@@ -168,7 +168,6 @@ void main() {
     try {
       await future;
     } catch (error) {
-      print(error);
       expect((error as StorageError).type, StorageErrorType.CANCEL);
     }
     expect(future, throwsA(TypeMatcher<StorageError>()));

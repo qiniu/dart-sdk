@@ -93,67 +93,27 @@ void main() {
   });
 
   test('random emit chunk should work well', () async {
-    // final stream = File('test_resource/test_for_put_parts.mp4')
-    //     .openRead()
-    //     .asBroadcastStream();
-    print(File('test_resource/test_for_put_parts.mp4').lengthSync());
-    final stream =
-        Stream<int>.periodic(const Duration(seconds: 1), (x) => x).take(15);
-
+    final bytes =
+        File('test_resource/test_for_put_parts.mp4').readAsBytesSync();
+    final chunkLengths = <int>[];
+    // 把 bytes 随机切割成 n 份 chunk
+    final chunks = splitBytesToChunks(bytes);
+    final stream = Stream.fromIterable(chunks);
+    final streamResource = StreamResource(
+        stream: stream, length: bytes.length, id: 'test', partSize: 1);
+    await streamResource.open();
     var n = 0;
-    // await for (var bytes
-    //     in File('test_resource/test_for_put_parts.mp4').openRead()) {
-    //   n++;
-    // }
-
-    // print(n);
-    // n = 0;
-    // await for (var bytes in stream) {
-    //   n++;
-    //   break;
-    // }
-    // await for (var bytes in stream) {
-    //   n++;
-    // }
-    // print(n);
-    StreamSubscription? sub;
-    sub = stream.asBroadcastStream().listen((event) {
+    await for (var bytes in streamResource.stream) {
       n++;
-      if (sub != null) {
-        print('exist');
-        sub.cancel();
-      }
-    });
-    await Future.delayed(Duration(seconds: 4), () {});
-    print(n);
-    sub = stream.asBroadcastStream().listen((event) {
-      print('haha: $event');
-      n++;
-    });
-    await Future.delayed(Duration(seconds: 10), () {});
-    await sub.cancel();
-    print(n);
-    //   final bytes =
-    //       File('test_resource/test_for_put_parts.mp4').readAsBytesSync();
-    //   final chunkLengths = <int>[];
-    //   // 把 bytes 随机切割成 n 份 chunk
-    //   final chunks = splitBytesToChunks(bytes);
-    //   final stream = Stream.fromIterable(chunks);
-    //   final streamResource = StreamResource(
-    //       stream: stream, length: bytes.length, id: 'test', partSize: 1);
-    //   await streamResource.open();
-    //   var n = 0;
-    //   await for (var bytes in streamResource.stream) {
-    //     n++;
-    //     print(bytes.length);
-    //     chunkLengths.add(bytes.length);
-    //   }
-    //   // 不管 rawStream 是如何 emit chunk 给 StreamResource 的，StreamResource 都是按照 partSize 往外 emit
-    //   // 所以这里应该还是 2 片
-    //   expect(n, 2);
-    //   expect(chunkLengths[0], 1 * 1024 * 1024);
-    //   expect(chunkLengths[1], bytes.length - 1 * 1024 * 1024);
-    //   await streamResource.close();
+      print(bytes.length);
+      chunkLengths.add(bytes.length);
+    }
+    // 不管 rawStream 是如何 emit chunk 给 StreamResource 的，StreamResource 都是按照 partSize 往外 emit
+    // 所以这里应该还是 2 片
+    expect(n, 2);
+    expect(chunkLengths[0], 1 * 1024 * 1024);
+    expect(chunkLengths[1], bytes.length - 1 * 1024 * 1024);
+    await streamResource.close();
   });
 }
 

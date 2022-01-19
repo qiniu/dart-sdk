@@ -35,6 +35,19 @@ class PutByPartTask extends RequestTask<PutResponse> {
   @override
   void preStart() {
     super.preStart();
+
+    // 处理相同任务
+    final sameTaskExist = manager
+        .getTasks()
+        .where((element) => element is PutByPartTask && isEquals(element))
+        .isNotEmpty;
+
+    if (sameTaskExist) {
+      throw StorageError(
+        type: StorageErrorType.IN_PROGRESS,
+        message: '$resource 已在上传队列中',
+      );
+    }
     // controller 被取消后取消当前运行的子任务
     controller?.cancelToken.whenCancel.then((_) {
       _currentWorkingTaskController?.cancel();
@@ -92,6 +105,9 @@ class PutByPartTask extends RequestTask<PutResponse> {
           }
           controller?.notifyStatusListeners(StorageStatus.Retry);
           await resource.close();
+          // TODO 调整为重试机制，而不是在这里 rerun，以降低复杂度
+          // 记录下子任务，可以解决引用问题
+          // 子任务关闭重试机制，重试改为从头开始
           return createTask();
         }
       }
@@ -104,6 +120,10 @@ class PutByPartTask extends RequestTask<PutResponse> {
     await uploadParts.clearCache();
 
     return putResponse;
+  }
+
+  bool isEquals(PutByPartTask target) {
+    return target.resource.id == resource.id;
   }
 
   /// 初始化上传信息，分片上传的第一步

@@ -51,6 +51,11 @@ abstract class Resource<T> {
     // stream 支持分段读取，设置为 Broadcast stream 防止中断后无法继续监听
     stream = createStream().asBroadcastStream();
   }
+
+  @override
+  String toString() {
+    return '';
+  }
 }
 
 enum ResourceStatus { Init, Open, Close }

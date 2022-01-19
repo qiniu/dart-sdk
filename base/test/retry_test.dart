@@ -30,7 +30,6 @@ void main() {
       File('test_resource/test_for_put.txt'),
       token,
       options: PutOptions(
-        forceBySingle: true,
         controller: PutController()..addStatusListener(statusList.add),
       ),
     );

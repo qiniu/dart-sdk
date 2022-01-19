@@ -2,6 +2,7 @@ part of 'resource.dart';
 
 class FileResource extends Resource<File> {
   late RandomAccessFile raf;
+  List<RandomAccessFile> waitingForCloseRafs = [];
   FileResource({
     required File file,
     required int length,
@@ -14,15 +15,15 @@ class FileResource extends Resource<File> {
   @override
   Future<void> open() async {
     raf = await rawResource.open();
-    await super.open();
+    return await super.open();
   }
 
   @override
   Future<void> close() async {
     if (status == ResourceStatus.Open) {
-      await raf.close();
+      waitingForCloseRafs.add(raf);
     }
-    await super.close();
+    return await super.close();
   }
 
   @override
@@ -31,8 +32,21 @@ class FileResource extends Resource<File> {
     while (true) {
       raf.setPositionSync(start);
       yield await raf.read(chunkSize);
+      // 连不上报错可能导致还在有 read 的任务，这时立即 close 操作会触发冲突
+      // 文件读完检测一下当前任务是不是已中断
+      // 不改成 raf.openRead 那种方式，是因为这种方式省内存
+      if (waitingForCloseRafs.isNotEmpty) {
+        await waitingForCloseRafs.first.close();
+        waitingForCloseRafs.removeAt(0);
+        break;
+      }
       start += chunkSize;
       if (start >= length) break;
     }
+  }
+
+  @override
+  String toString() {
+    return rawResource.toString();
   }
 }

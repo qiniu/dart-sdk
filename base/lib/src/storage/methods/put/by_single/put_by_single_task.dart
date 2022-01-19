@@ -47,6 +47,7 @@ class PutBySingleTask extends RequestTask<PutResponse> {
       await resource.close();
     }
     await resource.open();
+
     final multipartFile = MultipartFile(resource.stream, resource.length);
 
     final formDataMap = <String, dynamic>{

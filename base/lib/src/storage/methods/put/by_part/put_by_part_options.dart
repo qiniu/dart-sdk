@@ -1,6 +1,6 @@
 import '../put_controller.dart';
 
-/// @deprecated
+@Deprecated('use PutOptions')
 class PutByPartOptions {
   /// 资源名
   /// 如果不传则后端自动生成

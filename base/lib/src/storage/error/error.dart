@@ -20,7 +20,6 @@ enum StorageErrorType {
   /// 没有可用的服务器
   NO_AVAILABLE_HOST,
 
-  /// @deprecated
   /// 已在处理队列中
   IN_PROGRESS,
 

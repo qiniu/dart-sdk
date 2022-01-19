@@ -44,7 +44,6 @@ class StreamResource extends Resource<Stream<List<int>>> {
     if (status == ResourceStatus.Open) {
       await _subscription.cancel();
       await _controller.close();
-      _controller = StreamController<List<int>>();
     }
     await super.close();
   }
