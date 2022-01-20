@@ -33,9 +33,9 @@ class FileResource extends Resource<File> {
       raf.setPositionSync(start);
       yield await raf.read(chunkSize);
       // 连不上报错可能导致还在有 read 的任务，这时立即 close 操作会触发冲突
-      // 文件读完检测一下当前任务是不是已中断
+      // 文件读完检测一下当前 raf 是不是已经打算被 close
       // 不改成 raf.openRead 那种方式，是因为这种方式省内存
-      if (waitingForCloseRafs.isNotEmpty) {
+      if (waitingForCloseRafs.contains(raf)) {
         await waitingForCloseRafs.first.close();
         waitingForCloseRafs.removeAt(0);
         break;
