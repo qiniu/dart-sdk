@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:qiniu_sdk_base/qiniu_sdk_base.dart' as base;
 
+export 'package:dio/adapter_browser.dart';
 export 'package:qiniu_sdk_base/qiniu_sdk_base.dart'
     show
         Config,
@@ -11,7 +12,6 @@ export 'package:qiniu_sdk_base/qiniu_sdk_base.dart'
         HostProvider,
         CacheProvider,
         HttpClientAdapter,
-        BrowserHttpClientAdapter,
         QiniuError,
         StorageError,
         StorageErrorType,

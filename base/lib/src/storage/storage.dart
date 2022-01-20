@@ -9,7 +9,6 @@ import 'methods/put/by_single/put_by_single_task.dart';
 import 'methods/put/put.dart';
 import 'task/task.dart';
 
-export 'package:dio/adapter_browser.dart' show BrowserHttpClientAdapter;
 export 'package:dio/dio.dart' show HttpClientAdapter;
 
 export 'config/config.dart';
