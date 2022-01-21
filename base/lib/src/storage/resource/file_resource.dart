@@ -36,7 +36,7 @@ class FileResource extends Resource<File> {
       // 文件读完检测一下当前 raf 是不是已经打算被 close
       // 不改成 raf.openRead 那种方式，是因为这种方式省内存
       if (waitingForCloseRafs.contains(raf)) {
-        await waitingForCloseRafs.first.close();
+        await raf.close();
         waitingForCloseRafs.remove(raf);
         break;
       }
