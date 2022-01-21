@@ -37,7 +37,7 @@ class FileResource extends Resource<File> {
       // 不改成 raf.openRead 那种方式，是因为这种方式省内存
       if (waitingForCloseRafs.contains(raf)) {
         await waitingForCloseRafs.first.close();
-        waitingForCloseRafs.removeAt(0);
+        waitingForCloseRafs.remove(raf);
         break;
       }
       start += chunkSize;
