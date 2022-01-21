@@ -132,20 +132,4 @@ void main() {
     expect(response.key, fileKeyForSingle);
     pcb.testAll();
   }, skip: !isSensitiveDataDefined);
-
-  test('putBytes should works well.', () async {
-    var pcb = PutControllerBuilder();
-    final response = await storage.putBytes(
-      bytes,
-      token,
-      options: PutOptions(
-        forceBySingle: true,
-        key: fileKeyForSingle,
-        controller: pcb.putController,
-      ),
-    );
-
-    pcb.testAll();
-    expect(response.key, fileKeyForSingle);
-  }, skip: !isSensitiveDataDefined);
 }
