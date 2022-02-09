@@ -31,5 +31,5 @@ class PutOptions {
     this.customVars,
     this.controller,
   }) : assert(partSize >= 1 && partSize <= 1024,
-            'partSize must be greater than 0 and less than 1025');
+            'partSize must be greater than or equal to 1 and less than or equal to 1024');
 }
