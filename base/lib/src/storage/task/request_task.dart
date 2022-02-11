@@ -9,12 +9,16 @@ part 'request_task_controller.dart';
 part 'request_task_manager.dart';
 
 String _getUserAgent() {
-  return [
+  final ua = [
     // TODO version
-    'Vendor/qiniu',
-    '${Platform.operatingSystem}/${Platform.operatingSystemVersion}',
-    'Dart/${Platform.version}'
-  ].join(' ');
+    'QiniuDart',
+    Platform.version,
+    Platform.operatingSystem,
+    Platform.operatingSystemVersion,
+    // 字母，数字和 -_.!~*'() 不会被编码
+  ].join('-');
+
+  return Uri.encodeComponent(ua);
 }
 
 abstract class RequestTask<T> extends Task<T> {

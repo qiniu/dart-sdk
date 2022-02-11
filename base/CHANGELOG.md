@@ -27,3 +27,7 @@
 ## 0.3.2
 
 - 修复 `PutPolicy` 的 forceSaveKey 类型
+
+## 0.3.3
+
+- 修复 UserAgent 可能被设置为中文导致报错的问题
