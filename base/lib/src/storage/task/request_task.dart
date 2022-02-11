@@ -12,8 +12,8 @@ String _getUserAgent() {
   return [
     // TODO version
     'QiniuDart',
-    'platformVersion/${Uri.encodeComponent(Platform.version)}',
-    '${Platform.operatingSystem}/${Platform.operatingSystemVersion}',
+    'Dart/${Uri.encodeComponent(Platform.version)}',
+    '${Uri.encodeComponent(Platform.operatingSystem)}/${Uri.encodeComponent(Platform.operatingSystemVersion)}',
   ].join(' ');
 }
 
