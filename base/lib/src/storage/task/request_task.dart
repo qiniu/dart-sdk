@@ -11,9 +11,9 @@ part 'request_task_manager.dart';
 String _getUserAgent() {
   return [
     // TODO version
-    'Vendor/qiniu',
-    '${Platform.operatingSystem}/${Platform.operatingSystemVersion}',
-    'Dart/${Platform.version}'
+    'QiniuDart',
+    'Dart/${Uri.encodeComponent(Platform.version)}',
+    '${Uri.encodeComponent(Platform.operatingSystem)}/${Uri.encodeComponent(Platform.operatingSystemVersion)}',
   ].join(' ');
 }
 
