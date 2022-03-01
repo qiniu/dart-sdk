@@ -91,7 +91,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
       if (error is StorageError) {
         /// 满足以下两种情况清理缓存：
         /// 1、如果服务端文件被删除了，清除本地缓存
-        /// 2、如果 uploadId 等参数不对原因会导致 400
+        /// 2、如果 PartNumber 不符合要求，顺序不对等原因导致的参数不对(400)
         if (error.code == 400 || error.code == 612) {
           await initPartsTask.clearCache();
           await uploadParts.clearCache();
