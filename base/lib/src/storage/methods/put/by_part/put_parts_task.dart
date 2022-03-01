@@ -89,8 +89,10 @@ class PutByPartTask extends RequestTask<PutResponse> {
     } catch (error) {
       // 拿不到 initPartsTask 和 uploadParts 的引用，所以不放到 postError 去
       if (error is StorageError) {
-        // 如果 uploadId 等参数不对的原因导致的 400，则清楚缓存
-        if (error.code == 400) {
+        /// 满足以下两种情况清理缓存：
+        /// 1、如果服务端文件被删除了，清除本地缓存
+        /// 2、如果 uploadId 等参数不对原因会导致 400
+        if (error.code == 400 || error.code == 612) {
           await initPartsTask.clearCache();
           await uploadParts.clearCache();
         }
