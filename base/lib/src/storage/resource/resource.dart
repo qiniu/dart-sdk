@@ -3,11 +3,9 @@ import 'dart:io';
 
 import 'package:crypto/crypto.dart' show md5;
 import 'package:meta/meta.dart';
-import 'package:uuid/uuid.dart';
 
 part 'bytes_resource.dart';
 part 'file_resource.dart';
-part 'stream_resource.dart';
 
 // 抽象的资源概念，帮助统一内部的资源类型管理
 abstract class Resource<T> {
@@ -48,8 +46,7 @@ abstract class Resource<T> {
   @mustCallSuper
   Future<void> open() async {
     status = ResourceStatus.Open;
-    // stream 支持分段读取，设置为 Broadcast stream 防止中断后无法继续监听
-    stream = createStream().asBroadcastStream();
+    stream = createStream();
   }
 
   @override

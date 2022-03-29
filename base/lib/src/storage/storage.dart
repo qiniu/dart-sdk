@@ -95,41 +95,4 @@ class Storage {
 
     return task.future;
   }
-
-  /// 上传 [Stream]
-  ///
-  /// 使用注意：
-  ///
-  /// 1、只支持分片上传
-  ///
-  /// 2、如果客户端从[Stream]接收字节的速度大于上传速度会造成内存使用量上涨
-  ///
-  /// [length] 资源字节长度
-  ///
-  /// [id] 资源 id，作为构建断点续传信息保存的 key，如果不传则没有断点续传功能
-  Future<PutResponse> putStream(
-    Stream<List<int>> stream,
-    String token,
-    int length, {
-    String? id,
-    PutOptions? options,
-  }) async {
-    options ??= PutOptions();
-    RequestTask<PutResponse> task;
-    final resource = StreamResource(
-      stream: stream,
-      length: length,
-      id: id,
-      partSize: options.partSize,
-    );
-    task = PutByPartTask(
-      token: token,
-      options: options,
-      resource: resource,
-    );
-
-    taskManager.addTask(task);
-
-    return task.future;
-  }
 }

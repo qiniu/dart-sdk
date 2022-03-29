@@ -99,10 +99,6 @@ class PutByPartTask extends RequestTask<PutResponse> {
 
         /// 如果服务端文件被删除了，重新上传
         if (error.code == 612) {
-          // 如果是 StreamResource，无法保证能从头获取到完整的数据，不做处理
-          if (resource is StreamResource) {
-            rethrow;
-          }
           controller?.notifyStatusListeners(StorageStatus.Retry);
           await resource.close();
           // TODO 调整为重试机制，而不是在这里 rerun，以降低复杂度
