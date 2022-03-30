@@ -48,7 +48,10 @@ class PutBySingleTask extends RequestTask<PutResponse> {
     }
     await resource.open();
 
-    final multipartFile = MultipartFile(resource.stream, resource.length);
+    final multipartFile =
+        // 此处不传 filename dio 会生成错误的 multipart form 格式，有空看看为啥
+        // 这个 filename 不影响最终的文件名，文件名根据 key 生成
+        MultipartFile(resource.stream, resource.length, filename: 'filename');
 
     final formDataMap = <String, dynamic>{
       'file': multipartFile,
