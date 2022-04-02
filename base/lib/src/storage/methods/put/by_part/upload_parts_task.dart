@@ -17,14 +17,6 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   @override
   int get retryLimit => 0;
 
-  // 文件 bytes 长度
-  late final int _resourceByteLength;
-
-  // 每个上传分片的字节长度
-  //
-  // 文件会按照此长度切片
-  late final int _partByteLength;
-
   // 文件总共被拆分的分片数
   late final int _totalPartCount;
 
@@ -78,11 +70,9 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
         controller.cancel();
       }
     });
-    _resourceByteLength = resource.length;
-    _partByteLength = partSize * 1024 * 1024;
     _idleRequestNumber = maxPartsRequestNumber;
-    _totalPartCount = (_resourceByteLength / _partByteLength).ceil();
-    _cacheKey = getCacheKey(resource.id, _resourceByteLength, key);
+    _totalPartCount = (resource.length / resource.chunkSize).ceil();
+    _cacheKey = getCacheKey(resource.id, resource.length, key);
   }
 
   @override

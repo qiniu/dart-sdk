@@ -1,14 +1,15 @@
 part of 'resource.dart';
 
-class BytesResource extends Resource<List<int>> {
+class BytesResource extends Resource {
+  List<int> bytes;
   BytesResource({
-    required List<int> bytes,
+    required this.bytes,
     required int length,
     int? partSize,
-  }) : super(rawResource: bytes, length: length, partSize: partSize);
+  }) : super(length: length, partSize: partSize);
 
   @override
-  String get id => md5.convert(rawResource).toString();
+  String get id => md5.convert(bytes).toString();
 
   late StreamController<List<int>> _controller;
 
@@ -27,7 +28,7 @@ class BytesResource extends Resource<List<int>> {
     _controller = StreamController<List<int>>.broadcast(
       onListen: () {
         final end = start + chunkSize > length ? length : start + chunkSize;
-        _controller.add(rawResource.sublist(start, end));
+        _controller.add(bytes.sublist(start, end));
         start = end;
         if (start >= length) _controller.close();
       },

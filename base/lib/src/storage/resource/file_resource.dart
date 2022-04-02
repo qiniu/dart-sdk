@@ -1,22 +1,23 @@
 part of 'resource.dart';
 
-class FileResource extends Resource<File> {
+class FileResource extends Resource {
   late RandomAccessFile raf;
   List<RandomAccessFile> waitingForCloseRafs = [];
+  File file;
   FileResource({
-    required File file,
+    required this.file,
     required int length,
     int? partSize,
-  }) : super(rawResource: file, length: length, partSize: partSize);
+  }) : super(length: length, partSize: partSize);
 
   @override
-  String get id => 'path_${rawResource.path}_size_${rawResource.lengthSync()}';
+  String get id => 'path_${file.path}_size_${file.lengthSync()}';
 
   late StreamController<List<int>> _controller;
 
   @override
   Future<void> open() async {
-    raf = await rawResource.open();
+    raf = await file.open();
     return await super.open();
   }
 
@@ -54,6 +55,6 @@ class FileResource extends Resource<File> {
 
   @override
   String toString() {
-    return rawResource.toString();
+    return file.toString();
   }
 }

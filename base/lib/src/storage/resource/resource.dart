@@ -8,9 +8,8 @@ part 'bytes_resource.dart';
 part 'file_resource.dart';
 
 // 抽象的资源概念，帮助统一内部的资源类型管理
-abstract class Resource<T> {
+abstract class Resource {
   Resource({
-    required this.rawResource,
     required int length,
     int? partSize,
   }) {
@@ -23,7 +22,6 @@ abstract class Resource<T> {
   }
   // 能区分该资源的唯一 id
   String get id;
-  late final T rawResource;
   late final int _length;
   int get length => _length;
 
