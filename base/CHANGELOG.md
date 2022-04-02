@@ -3,6 +3,10 @@
 - 新增 putBytes 接口用于上传 Uint8List 类型的资源
 - 相同的文件不再"不允许上传"了，也就是允许"同时上传重复的文件"
 
+## 0.3.3
+
+- 修复 UserAgent 可能被设置为中文导致报错的问题
+
 ## 0.3.2
 
 - 修复 `PutPolicy` 的 forceSaveKey 类型
