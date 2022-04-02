@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:path/path.dart' show basename;
 
 import 'package:qiniu_sdk_base/src/storage/resource/resource.dart';
 
@@ -48,6 +49,7 @@ class Storage {
         resource: resource,
         options: options,
         token: token,
+        filename: basename(file.path),
       );
     } else {
       task = PutByPartTask(
@@ -82,6 +84,7 @@ class Storage {
         resource: resource,
         options: options,
         token: token,
+        filename: null,
       );
     } else {
       task = PutByPartTask(

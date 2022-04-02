@@ -12,12 +12,19 @@ class PutBySingleTask extends RequestTask<PutResponse> {
   /// 上传凭证
   final String token;
 
+  // FormData Content-Disposition Header Field 里的 filename
+  // 如果没有此字段且 multipart form data 超过 16m 后端会报错
+  // 这个同时也是魔法变量 fname 的值
+  // TODO 补充测试
+  final String? filename;
+
   late UpTokenInfo _tokenInfo;
 
   PutBySingleTask({
     required this.resource,
     required this.token,
     required this.options,
+    required this.filename,
   }) : super(controller: options.controller);
 
   @override
@@ -48,10 +55,11 @@ class PutBySingleTask extends RequestTask<PutResponse> {
     }
     await resource.open();
 
-    final multipartFile =
-        // 此处不传 filename dio 会生成错误的 multipart form 格式，有空看看为啥
-        // 这个 filename 不影响最终的文件名，文件名根据 key 生成
-        MultipartFile(resource.stream, resource.length, filename: 'filename');
+    final multipartFile = MultipartFile(
+      resource.stream,
+      resource.length,
+      filename: filename ?? options.key,
+    );
 
     final formDataMap = <String, dynamic>{
       'file': multipartFile,
