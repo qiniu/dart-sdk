@@ -15,10 +15,7 @@ abstract class Resource {
     required this.name,
     required this.length,
     int? partSize,
-  })  : chunkSize = partSize != null ? partSize * 1024 * 1024 : length,
-        super() {
-    stream = createStream();
-  }
+  }) : chunkSize = partSize != null ? partSize * 1024 * 1024 : length;
 
   // 能区分该资源的唯一 id
   abstract final String id;
@@ -43,6 +40,7 @@ abstract class Resource {
   @mustCallSuper
   Future<void> open() async {
     status = ResourceStatus.Open;
+    stream = createStream();
   }
 
   @override
