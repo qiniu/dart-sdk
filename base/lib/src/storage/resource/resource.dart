@@ -3,29 +3,28 @@ import 'dart:io';
 
 import 'package:crypto/crypto.dart' show md5;
 import 'package:meta/meta.dart';
+import 'package:path/path.dart' show basename;
 
 part 'bytes_resource.dart';
 part 'file_resource.dart';
 
+// TODO 等重试机制有调整，Resource 改成一次性的，重试需要重新创建 Resource
 // 抽象的资源概念，帮助统一内部的资源类型管理
 abstract class Resource {
   Resource({
-    required int length,
+    required this.name,
+    required this.length,
     int? partSize,
-  }) {
-    _length = length;
-    if (partSize != null) {
-      chunkSize = partSize * 1024 * 1024;
-    } else {
-      chunkSize = length;
-    }
+  })  : chunkSize = partSize != null ? partSize * 1024 * 1024 : length,
+        super() {
+    stream = createStream();
   }
-  // 能区分该资源的唯一 id
-  String get id;
-  late final int _length;
-  int get length => _length;
 
-  late final int chunkSize;
+  // 能区分该资源的唯一 id
+  abstract final String id;
+  final String? name;
+  final int length;
+  final int chunkSize;
   ResourceStatus status = ResourceStatus.Init;
   late Stream<List<int>> stream;
   Stream<List<int>> createStream();
@@ -44,12 +43,11 @@ abstract class Resource {
   @mustCallSuper
   Future<void> open() async {
     status = ResourceStatus.Open;
-    stream = createStream();
   }
 
   @override
   String toString() {
-    return '';
+    return id;
   }
 }
 

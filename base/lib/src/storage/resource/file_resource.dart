@@ -3,15 +3,16 @@ part of 'resource.dart';
 class FileResource extends Resource {
   late RandomAccessFile raf;
   List<RandomAccessFile> waitingForCloseRafs = [];
-  File file;
+  final File file;
+  @override
+  final String id;
   FileResource({
     required this.file,
     required int length,
+    String? name,
     int? partSize,
-  }) : super(length: length, partSize: partSize);
-
-  @override
-  String get id => 'path_${file.path}_size_${file.lengthSync()}';
+  })  : id = 'path_${file.path}_size_${file.lengthSync()}',
+        super(name: name, length: length, partSize: partSize);
 
   late StreamController<List<int>> _controller;
 
@@ -24,8 +25,11 @@ class FileResource extends Resource {
   @override
   Future<void> close() async {
     if (status == ResourceStatus.Open) {
-      waitingForCloseRafs.add(raf);
-      await _controller.close();
+      // 如果在 [Resource.createStream] 里被关了就不处理了
+      if (!_controller.isClosed) {
+        waitingForCloseRafs.add(raf);
+        await _controller.close();
+      }
     }
     return await super.close();
   }
@@ -38,15 +42,24 @@ class FileResource extends Resource {
       onListen: () {
         raf.setPositionSync(start);
         _controller.add(raf.readSync(chunkSize));
+        // 读文件过程中被结束了
         // 连不上报错可能导致还在有 read 的任务，这时立即 close 操作会触发冲突
         // 文件读完检测一下当前 raf 是不是已经打算被 close
         // 不改成 raf.openRead 那种方式，是因为这种方式省内存
         if (waitingForCloseRafs.contains(raf)) {
           raf.closeSync();
           waitingForCloseRafs.remove(raf);
+          return;
         }
         start += chunkSize;
-        if (start >= length) _controller.close();
+        // 文件读取完毕
+        if (start >= length) {
+          // 如果 raf 还没有被关闭，关闭它
+          if (!waitingForCloseRafs.contains(raf)) {
+            raf.closeSync();
+          }
+          _controller.close();
+        }
       },
     );
 
@@ -55,6 +68,6 @@ class FileResource extends Resource {
 
   @override
   String toString() {
-    return file.toString();
+    return 'file@${basename(file.path)}';
   }
 }

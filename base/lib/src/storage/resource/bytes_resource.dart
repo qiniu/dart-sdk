@@ -1,15 +1,16 @@
 part of 'resource.dart';
 
 class BytesResource extends Resource {
-  List<int> bytes;
+  final List<int> bytes;
+  @override
+  final String id;
   BytesResource({
     required this.bytes,
     required int length,
+    String? name,
     int? partSize,
-  }) : super(length: length, partSize: partSize);
-
-  @override
-  String get id => md5.convert(bytes).toString();
+  })  : id = md5.convert(bytes).toString(),
+        super(name: name, length: length, partSize: partSize);
 
   late StreamController<List<int>> _controller;
 
@@ -35,5 +36,10 @@ class BytesResource extends Resource {
     );
 
     return _controller.stream;
+  }
+
+  @override
+  String toString() {
+    return 'bytes@$id';
   }
 }

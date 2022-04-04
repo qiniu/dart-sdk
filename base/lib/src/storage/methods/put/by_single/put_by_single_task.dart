@@ -58,13 +58,13 @@ class PutBySingleTask extends RequestTask<PutResponse> {
     final multipartFile = MultipartFile(
       resource.stream,
       resource.length,
-      filename: filename ?? options.key,
+      filename: resource.name ?? filename,
     );
 
     final formDataMap = <String, dynamic>{
       'file': multipartFile,
       'token': token,
-      'key': options.key,
+      'key': resource.name,
     };
 
     if (options.customVars != null) {

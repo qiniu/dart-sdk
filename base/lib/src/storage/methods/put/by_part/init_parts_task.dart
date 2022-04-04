@@ -47,7 +47,7 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
       'resource_id/$resourceId',
       'key/$key',
     ];
-    return 'qiniu_dart_sdk_init_parts_task@@[${keyList..join("/")}]';
+    return 'qiniu_dart_sdk_init_parts_task@@[${keyList.join("/")}]';
   }
 
   @override

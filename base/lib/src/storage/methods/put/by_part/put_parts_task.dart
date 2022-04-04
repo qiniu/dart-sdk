@@ -147,7 +147,6 @@ class PutByPartTask extends RequestTask<PutResponse> {
       uploadId: uploadId,
       maxPartsRequestNumber: options.maxPartsRequestNumber,
       resource: resource,
-      key: options.key,
       controller: _controller,
     );
 
@@ -168,7 +167,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
       token: token,
       uploadId: uploadId,
       parts: parts,
-      key: options.key,
+      key: resource.name,
       customVars: options.customVars,
       controller: _controller,
     );

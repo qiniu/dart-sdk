@@ -1,14 +1,20 @@
 import 'dart:io';
 
+import 'package:path/path.dart';
 import 'package:qiniu_sdk_base/src/storage/resource/resource.dart';
 import 'package:test/test.dart';
 
 void main() {
   test('bytes resource should work well', () async {
-    final bytes =
-        File('test_resource/test_for_put_parts.mp4').readAsBytesSync();
-    final bytesResource =
-        BytesResource(bytes: bytes, length: bytes.length, partSize: 1);
+    final filepath = 'test_resource/test_for_put_parts.mp4';
+    final bytes = File(filepath).readAsBytesSync();
+    final bytesResource = BytesResource(
+      bytes: bytes,
+      length: bytes.length,
+      name: basename(filepath),
+      partSize: 1,
+    );
+    expect(bytesResource.name, basename(filepath));
     final chunkLengths = <int>[];
 
     await bytesResource.open();
@@ -33,10 +39,16 @@ void main() {
   });
 
   test('file resource should work well', () async {
-    final file = File('test_resource/test_for_put_parts.mp4');
+    final filepath = 'test_resource/test_for_put_parts.mp4';
+    final file = File(filepath);
     final chunkLengths = <int>[];
-    final fileResource =
-        FileResource(file: file, length: file.lengthSync(), partSize: 1);
+    final fileResource = FileResource(
+      file: file,
+      length: file.lengthSync(),
+      partSize: 1,
+      name: basename(filepath),
+    );
+    expect(fileResource.name, basename(filepath));
     await fileResource.open();
 
     var n = 0;

@@ -8,8 +8,6 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   final int partSize;
   final int maxPartsRequestNumber;
 
-  final String? key;
-
   @override
   late final String _cacheKey;
 
@@ -43,7 +41,6 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     required this.partSize,
     required this.maxPartsRequestNumber,
     required this.resource,
-    this.key,
     PutController? controller,
   }) : super(controller: controller);
 
@@ -72,7 +69,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     });
     _idleRequestNumber = maxPartsRequestNumber;
     _totalPartCount = (resource.length / resource.chunkSize).ceil();
-    _cacheKey = getCacheKey(resource.id, resource.length, key);
+    _cacheKey = getCacheKey(resource.id, resource.length, resource.name);
   }
 
   @override
@@ -183,7 +180,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
       byteLength: bytes.length,
       partNumber: partNumber,
       partSize: partSize,
-      key: key,
+      key: resource.name,
       controller: _controller,
     );
 

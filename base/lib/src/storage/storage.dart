@@ -41,6 +41,7 @@ class Storage {
     final resource = FileResource(
       file: file,
       length: await file.length(),
+      name: options.key,
       partSize: useSingle ? null : options.partSize,
     );
 
@@ -76,6 +77,7 @@ class Storage {
     final resource = BytesResource(
       bytes: bytes,
       length: bytes.length,
+      name: options.key,
       partSize: useSingle ? null : options.partSize,
     );
 
