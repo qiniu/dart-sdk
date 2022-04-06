@@ -1,4 +1,3 @@
-import 'dart:io' show Platform;
 import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
 import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
@@ -9,8 +8,7 @@ part 'request_task_manager.dart';
 String _getUserAgent() {
   return [
     // TODO version
-    'QiniuDart',
-    '${Uri.encodeComponent(Platform.operatingSystem)}/${Uri.encodeComponent(Platform.operatingSystemVersion)}',
+    'QiniuDart'
   ].join(' ');
 }
 
