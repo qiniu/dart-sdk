@@ -258,21 +258,21 @@ class BaseState extends DisposableState<Base> {
         padding: const EdgeInsets.all(8.0),
         child: StringInput(
           onKeyChange,
-          label: '请输入 Key（可选）',
+          label: '请输入 Key（可选）回车确认',
         ),
       ),
       Padding(
         padding: const EdgeInsets.all(8.0),
         child: StringInput(
           onPartSizeChange,
-          label: '请输入分片尺寸，单位 M（默认 4，可选）',
+          label: '请输入分片尺寸，单位 M（默认 4，可选）回车确认',
         ),
       ),
       Padding(
         padding: const EdgeInsets.all(8.0),
         child: StringInput(
           onTokenChange,
-          label: '请输入 Token（可选）',
+          label: '请输入 Token（可选）回车确认',
         ),
       ),
       Padding(
