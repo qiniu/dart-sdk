@@ -13,7 +13,7 @@ class PutBySingleTask extends RequestTask<PutResponse> {
   final String token;
 
   // FormData Content-Disposition Header Field 里的 filename
-  // 如果没有此字段且 multipart form data 超过 16m 后端会报错
+  // 如果没有此字段且 multipart 超过 16m 后端会认为是非 file part，则报错
   // 这个同时也是魔法变量 fname 的值
   // TODO 补充测试
   final String? filename;
@@ -58,7 +58,8 @@ class PutBySingleTask extends RequestTask<PutResponse> {
     final multipartFile = MultipartFile(
       resource.stream,
       resource.length,
-      filename: resource.name ?? filename,
+      // 与其他 sdk 保持一致，没有 filename 就是问号
+      filename: filename ?? '?',
     );
 
     final formDataMap = <String, dynamic>{

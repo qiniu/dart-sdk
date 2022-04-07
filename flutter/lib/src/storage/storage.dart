@@ -32,8 +32,6 @@ class Storage {
     return _baseStorage.putFile(file, token, options: options);
   }
 
-  /// 单文件上传，如果不指定 [options.key] 的同时上传了超过大约 16m 的字节，则会报错，
-  /// 这种情况请使用分片上传
   Future<base.PutResponse> putBytes(
     Uint8List bytes,
     String token, {
