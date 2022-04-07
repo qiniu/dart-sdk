@@ -1,4 +1,8 @@
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:path/path.dart' show basename;
+
+import 'package:qiniu_sdk_base/src/storage/resource/resource.dart';
 
 import 'config/config.dart';
 import 'methods/put/by_part/put_parts_task.dart';
@@ -7,6 +11,7 @@ import 'methods/put/put.dart';
 import 'task/task.dart';
 
 export 'package:dio/dio.dart' show HttpClientAdapter;
+
 export 'config/config.dart';
 export 'error/error.dart';
 export 'methods/put/put.dart';
@@ -28,29 +33,30 @@ class Storage {
     File file,
     String token, {
     PutOptions? options,
-  }) {
+  }) async {
     options ??= PutOptions();
     RequestTask<PutResponse> task;
     final useSingle = options.forceBySingle == true ||
         file.lengthSync() < (options.partSize * 1024 * 1024);
+    final resource = FileResource(
+      file: file,
+      length: await file.length(),
+      name: options.key,
+      partSize: useSingle ? null : options.partSize,
+    );
 
     if (useSingle) {
       task = PutBySingleTask(
-        file: file,
+        resource: resource,
+        options: options,
         token: token,
-        key: options.key,
-        customVars: options.customVars,
-        controller: options.controller,
+        filename: basename(file.path),
       );
     } else {
       task = PutByPartTask(
-        file: file,
         token: token,
-        key: options.key,
-        maxPartsRequestNumber: options.maxPartsRequestNumber,
-        partSize: options.partSize,
-        customVars: options.customVars,
-        controller: options.controller,
+        options: options,
+        resource: resource,
       );
     }
 
@@ -59,42 +65,36 @@ class Storage {
     return task.future;
   }
 
-  /// 单文件上传
-  Future<PutResponse> putFileBySingle(
-    File file,
+  Future<PutResponse> putBytes(
+    Uint8List bytes,
     String token, {
-    PutBySingleOptions? options,
-  }) {
-    options ??= PutBySingleOptions();
-    final task = PutBySingleTask(
-      file: file,
-      token: token,
-      key: options.key,
-      customVars: options.customVars,
-      controller: options.controller,
+    PutOptions? options,
+  }) async {
+    options ??= PutOptions();
+    RequestTask<PutResponse> task;
+    final useSingle = options.forceBySingle == true ||
+        bytes.length < (options.partSize * 1024 * 1024);
+    final resource = BytesResource(
+      bytes: bytes,
+      length: bytes.length,
+      name: options.key,
+      partSize: useSingle ? null : options.partSize,
     );
 
-    taskManager.addTask(task);
-
-    return task.future;
-  }
-
-  /// 分片上传
-  Future<PutResponse> putFileByPart(
-    File file,
-    String token, {
-    PutByPartOptions? options,
-  }) {
-    options ??= PutByPartOptions();
-    final task = PutByPartTask(
-      file: file,
-      token: token,
-      key: options.key,
-      partSize: options.partSize,
-      maxPartsRequestNumber: options.maxPartsRequestNumber,
-      customVars: options.customVars,
-      controller: options.controller,
-    );
+    if (useSingle) {
+      task = PutBySingleTask(
+        resource: resource,
+        options: options,
+        token: token,
+        filename: null,
+      );
+    } else {
+      task = PutByPartTask(
+        token: token,
+        options: options,
+        resource: resource,
+      );
+    }
 
     taskManager.addTask(task);
 

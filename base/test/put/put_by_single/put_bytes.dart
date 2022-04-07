@@ -1,21 +1,18 @@
 @Timeout(Duration(seconds: 60))
-
-import 'dart:io';
-import 'package:qiniu_sdk_base/src/storage/error/error.dart';
-import 'package:qiniu_sdk_base/src/storage/methods/put/put_response.dart';
-import 'package:test/test.dart';
-import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
 import 'package:dotenv/dotenv.dart' show env;
+import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
+import 'package:test/test.dart';
 
-import '../config.dart';
-import 'put_controller_builder.dart';
+import '../../config.dart';
+import '../helpers.dart';
 
 void main() {
   configEnv();
 
   final storage = Storage();
+  final bytes = fileForSingle.readAsBytesSync();
 
-  test('putFileBySingle customVars should works well.', () async {
+  test('customVars&returnBody should works well.', () async {
     final auth = Auth(
       accessKey: env['QINIU_DART_SDK_ACCESS_KEY']!,
       secretKey: env['QINIU_DART_SDK_SECRET_KEY']!,
@@ -35,43 +32,42 @@ void main() {
       'x:ext': 'testXExt',
     };
 
-    final file = File('test_resource/test_for_put.txt');
     var putController = PutController();
-    final response = await storage.putFileBySingle(
-      file,
+    final response = await storage.putBytes(
+      bytes,
       token,
-      options: PutBySingleOptions(
-        key: 'test_for_put.txt',
+      options: PutOptions(
+        forceBySingle: true,
+        key: fileKeyForSingle,
         customVars: customVars,
         controller: putController,
       ),
     );
 
-    expect(response.key, 'test_for_put.txt');
+    expect(response.key, fileKeyForSingle);
     expect(response.rawData['type'], 'testXType');
     expect(response.rawData['ext'], 'testXExt');
   }, skip: !isSensitiveDataDefined);
 
-  test('putFileBySingle should works well.', () async {
-    final file = File('test_resource/test_for_put.txt');
+  test('putBytes should works well.', () async {
     var pcb = PutControllerBuilder();
-    final response = await storage.putFileBySingle(
-      file,
+    final response = await storage.putBytes(
+      bytes,
       token,
-      options: PutBySingleOptions(
-        key: 'test_for_put.txt',
+      options: PutOptions(
+        forceBySingle: true,
+        key: fileKeyForSingle,
         controller: pcb.putController,
       ),
     );
 
     pcb.testAll();
-    expect(response.key, 'test_for_put.txt');
+    expect(response.key, fileKeyForSingle);
   }, skip: !isSensitiveDataDefined);
 
-  test('putFileBySingle can be cancelled.', () async {
+  test('putBytes can be cancelled.', () async {
     final putController = PutController();
-    final key = 'test_for_put.txt';
-    final file = File('test_resource/test_for_put.txt');
+    final key = fileKeyForSingle;
 
     final statusList = <StorageStatus>[];
     putController.addStatusListener((status) {
@@ -80,10 +76,11 @@ void main() {
         putController.cancel();
       }
     });
-    var future = storage.putFileBySingle(
-      file,
+    var future = storage.putBytes(
+      bytes,
       token,
-      options: PutBySingleOptions(key: key, controller: putController),
+      options:
+          PutOptions(forceBySingle: true, key: key, controller: putController),
     );
     try {
       await future;
@@ -97,10 +94,11 @@ void main() {
     expect(statusList[2], StorageStatus.Cancel);
 
     try {
-      await storage.putFileBySingle(
-        file,
+      await storage.putBytes(
+        bytes,
         token,
-        options: PutBySingleOptions(key: key, controller: putController),
+        options: PutOptions(
+            forceBySingle: true, key: key, controller: putController),
       );
     } catch (error) {
       // 复用了相同的 controller，所以也会触发取消的错误
@@ -110,27 +108,28 @@ void main() {
 
     expect(future, throwsA(TypeMatcher<StorageError>()));
 
-    final response = await storage.putFileBySingle(
-      file,
+    final response = await storage.putBytes(
+      bytes,
       token,
-      options: PutBySingleOptions(key: key),
+      options: PutOptions(forceBySingle: true, key: key),
     );
 
     expect(response, isA<PutResponse>());
   }, skip: !isSensitiveDataDefined);
 
-  test('putFileBySingle\'s status and progress should works well.', () async {
+  test('putBytes\'s status and progress should works well.', () async {
     final pcb = PutControllerBuilder();
 
-    final response = await storage.putFileBySingle(
-      File('test_resource/test_for_put.txt'),
+    final response = await storage.putBytes(
+      bytes,
       token,
-      options: PutBySingleOptions(
-        key: 'test_for_put.txt',
+      options: PutOptions(
+        forceBySingle: true,
+        key: fileKeyForSingle,
         controller: pcb.putController,
       ),
     );
-    expect(response.key, 'test_for_put.txt');
+    expect(response.key, fileKeyForSingle);
     pcb.testAll();
   }, skip: !isSensitiveDataDefined);
 }

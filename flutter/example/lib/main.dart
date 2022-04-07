@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:qiniu_flutter_sdk/qiniu_flutter_sdk.dart';
 
@@ -29,7 +31,7 @@ class Base extends StatefulWidget implements Example {
 }
 
 class BaseState extends DisposableState<Base> {
-  BaseState(): storage = Storage();
+  BaseState() : storage = Storage();
 
   // 用户输入的文件名
   String? key;
@@ -44,7 +46,7 @@ class BaseState extends DisposableState<Base> {
   final Storage storage;
 
   /// 当前选择的文件
-  File? selectedFile;
+  PlatformFile? selectedFile;
 
   // 当前的进度
   double progressValue = 1;
@@ -122,15 +124,28 @@ class BaseState extends DisposableState<Base> {
     }
 
     printToConsole('开始上传文件');
-    storage.putFile(
-      selectedFile!,
-      usedToken,
-      options: PutOptions(
-        key: key,
-        partSize: partSize,
-        controller: putController,
-      ),
-    )
+
+    final putOptions = PutOptions(
+      key: key,
+      partSize: partSize,
+      controller: putController,
+    );
+    Future<PutResponse> upload;
+    if (kIsWeb) {
+      upload = storage.putBytes(
+        selectedFile!.bytes!,
+        usedToken,
+        options: putOptions,
+      );
+    } else {
+      upload = storage.putFile(
+        File(selectedFile!.path!),
+        usedToken,
+        options: putOptions,
+      );
+    }
+
+    upload
       ..then((PutResponse response) {
         printToConsole('上传已完成: 原始响应数据: ${jsonEncode(response.rawData)}');
         printToConsole('------------------------');
@@ -171,9 +186,15 @@ class BaseState extends DisposableState<Base> {
       });
   }
 
-  void onSelectedFile(File file) {
+  void onSelectedFile(PlatformFile file) {
     printToConsole('选中文件: ${file.path}');
-    printToConsole('文件尺寸：${humanizeFileSize(file.lengthSync().toDouble())}');
+    // ignore: unnecessary_null_comparison
+    if (file.size != null) {
+      // 一般在非 web 平台上可以直接读取 size 属性
+      printToConsole('文件尺寸：${humanizeFileSize(file.size.toDouble())}');
+    } else if (file.bytes != null) {
+      printToConsole('文件尺寸：${humanizeFileSize(file.bytes!.length.toDouble())}');
+    }
 
     setState(() {
       printToConsole('设置 selectedFile');
@@ -234,45 +255,43 @@ class BaseState extends DisposableState<Base> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      children: [
-        Padding(
-          padding: EdgeInsets.all(20),
-          child: Progress(progressValue),
+    return ListView(children: [
+      Padding(
+        padding: EdgeInsets.all(20),
+        child: Progress(progressValue),
+      ),
+      Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: StringInput(
+          onKeyChange,
+          label: '请输入 Key（可选）回车确认',
         ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: StringInput(
-            onKeyChange,
-            label: '请输入 Key（可选）',
-          ),
+      ),
+      Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: StringInput(
+          onPartSizeChange,
+          label: '请输入分片尺寸，单位 M（默认 4，可选）回车确认',
         ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: StringInput(
-            onPartSizeChange,
-            label: '请输入分片尺寸，单位 M（默认 4，可选）',
-          ),
+      ),
+      Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: StringInput(
+          onTokenChange,
+          label: '请输入 Token（可选）回车确认',
         ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: StringInput(
-            onTokenChange,
-            label: '请输入 Token（可选）',
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: SelectFile(onSelectedFile),
-        ),
-        // 取消按钮
-        cancelButton,
-        Padding(
-          key: Key('console'),
-          child: const Console(),
-          padding: EdgeInsets.all(8.0),
-        ),
-      ]
-    );
+      ),
+      Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: SelectFile(onSelectedFile),
+      ),
+      // 取消按钮
+      cancelButton,
+      Padding(
+        key: Key('console'),
+        child: const Console(),
+        padding: EdgeInsets.all(8.0),
+      ),
+    ]);
   }
 }

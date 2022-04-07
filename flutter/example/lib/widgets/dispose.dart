@@ -12,7 +12,7 @@ abstract class DisposableState<T extends StatefulWidget> extends State<T> {
   void dispose() {
     for (var disposer in disposerList) {
       try {
-        disposer?.call();
+        disposer.call();
       } catch (error) {
         rethrow;
       }

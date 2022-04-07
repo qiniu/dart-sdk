@@ -1,9 +1,6 @@
-import 'dart:io' show Platform;
 import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
 import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
-
-import 'task.dart';
 
 part 'request_task_controller.dart';
 part 'request_task_manager.dart';
@@ -11,9 +8,7 @@ part 'request_task_manager.dart';
 String _getUserAgent() {
   return [
     // TODO version
-    'QiniuDart',
-    'Dart/${Uri.encodeComponent(Platform.version)}',
-    '${Uri.encodeComponent(Platform.operatingSystem)}/${Uri.encodeComponent(Platform.operatingSystemVersion)}',
+    'QiniuDart'
   ].join(' ');
 }
 
@@ -35,10 +30,13 @@ abstract class RequestTask<T> extends Task<T> {
   final RequestTaskController? controller;
 
   // 重试次数
-  int _retryCount = 0;
+  int retryCount = 0;
 
   // 最大重试次数
-  late int retryLimit;
+  int retryLimit = 3;
+
+  bool _isRetrying = false;
+  bool get isRetrying => _isRetrying;
 
   RequestTask({this.controller});
 
@@ -49,6 +47,7 @@ abstract class RequestTask<T> extends Task<T> {
     if (controller != null && controller!.cancelToken.isCancelled) {
       throw StorageError(type: StorageErrorType.CANCEL);
     }
+
     controller?.notifyStatusListeners(StorageStatus.Init);
     controller?.notifyProgressListeners(preStartTakePercentOfTotal);
     retryLimit = config.retryLimit;
@@ -69,6 +68,7 @@ abstract class RequestTask<T> extends Task<T> {
   @override
   @mustCallSuper
   void preRestart() {
+    _isRetrying = retryCount <= retryLimit && retryCount > 0;
     controller?.notifyStatusListeners(StorageStatus.Retry);
     super.preRestart();
   }
@@ -92,27 +92,13 @@ abstract class RequestTask<T> extends Task<T> {
   void postError(Object error) async {
     // 处理 Dio 异常
     if (error is DioError) {
-      if (!_canConnectToHost(error)) {
-        // host 连不上，判断是否 host 不可用造成的, 比如 tls error(没做还)
+      if (_checkIfNeedRetry(error)) {
         if (_isHostUnavailable(error)) {
           config.hostProvider.freezeHost(error.requestOptions.path);
         }
-
-        // 继续尝试当前 host，如果是服务器坏了则切换到其他 host
-        if (_retryCount < retryLimit) {
-          _retryCount++;
-          manager.restartTask(this);
-          return;
-        }
-      }
-
-      // 能连上但是服务器不可用，比如 502
-      if (_isHostUnavailable(error)) {
-        config.hostProvider.freezeHost(error.requestOptions.path);
-
-        // 切换到其他 host
-        if (_retryCount < retryLimit) {
-          _retryCount++;
+        if (retryCount < retryLimit) {
+          retryCount++;
+          // TODO 这里也许有优化空间，任务不应该自己重启自己，而应该通过消息或者报错告诉负责这个任务的管理者去重试
           manager.restartTask(this);
           return;
         }
@@ -160,6 +146,18 @@ abstract class RequestTask<T> extends Task<T> {
     controller?.notifySendProgressListeners(percent);
     controller
         ?.notifyProgressListeners(percent * onSendProgressTakePercentOfTotal);
+  }
+
+  bool _checkIfNeedRetry(DioError error) {
+    if (!_canConnectToHost(error) || _isHostUnavailable(error)) {
+      return true;
+    }
+    if (error.type == DioErrorType.response) {
+      if (error.response?.statusCode == 612) {
+        return true;
+      }
+    }
+    return false;
   }
 
   // host 是否可以连接上

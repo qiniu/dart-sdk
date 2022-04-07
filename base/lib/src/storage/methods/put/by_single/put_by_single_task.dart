@@ -1,35 +1,31 @@
-import 'dart:io';
-
 import 'package:dio/dio.dart';
-import 'package:qiniu_sdk_base/src/storage/task/task.dart';
+import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
 
-import '../../../../auth/auth.dart';
-import '../put_response.dart';
+import '../../../resource/resource.dart';
 
 // 直传任务
 class PutBySingleTask extends RequestTask<PutResponse> {
-  /// 上传文件
-  final File file;
+  late Resource resource;
+
+  final PutOptions options;
 
   /// 上传凭证
   final String token;
 
-  /// 资源名
-  /// 如果不传则后端自动生成
-  final String? key;
-
-  /// 自定义变量，key 必须以 x: 开始
-  final Map<String, String>? customVars;
+  // FormData Content-Disposition Header Field 里的 filename
+  // 如果没有此字段且 multipart 超过 16m 后端会认为是非 file part，则报错
+  // 这个同时也是魔法变量 fname 的值
+  // TODO 补充测试
+  final String? filename;
 
   late UpTokenInfo _tokenInfo;
 
   PutBySingleTask({
-    required this.file,
+    required this.resource,
     required this.token,
-    this.key,
-    this.customVars,
-    RequestTaskController? controller,
-  }) : super(controller: controller);
+    required this.options,
+    required this.filename,
+  }) : super(controller: options.controller);
 
   @override
   void preStart() {
@@ -38,15 +34,42 @@ class PutBySingleTask extends RequestTask<PutResponse> {
   }
 
   @override
+  void postReceive(data) {
+    super.postReceive(data);
+    resource.close();
+  }
+
+  @override
+  void postError(error) {
+    super.postError(error);
+    if (!isRetrying) {
+      resource.close();
+    }
+  }
+
+  @override
   Future<PutResponse> createTask() async {
+    if (isRetrying) {
+      // 单文件上传的重试需要从头开始传，所以先关了再开
+      await resource.close();
+    }
+    await resource.open();
+
+    final multipartFile = MultipartFile(
+      resource.stream,
+      resource.length,
+      // 与其他 sdk 保持一致，没有 filename 就是问号
+      filename: filename ?? '?',
+    );
+
     final formDataMap = <String, dynamic>{
-      'file': await MultipartFile.fromFile(file.path),
+      'file': multipartFile,
       'token': token,
-      'key': key,
+      'key': resource.name,
     };
 
-    if (customVars != null) {
-      formDataMap.addAll(customVars!);
+    if (options.customVars != null) {
+      formDataMap.addAll(options.customVars!);
     }
 
     final formData = FormData.fromMap(formDataMap);
@@ -62,7 +85,6 @@ class PutBySingleTask extends RequestTask<PutResponse> {
       cancelToken: controller?.cancelToken,
     );
 
-    // response.data 应该是 none-nullable 而不是 nullable，如果 dio 修复了可以去掉 !
     return PutResponse.fromJson(response.data!);
   }
 }

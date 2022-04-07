@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'dart:math';
 
 import 'package:dio/dio.dart';
 import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
+import 'package:qiniu_sdk_base/src/storage/resource/resource.dart';
 
 part 'cache_mixin.dart';
 part 'complete_parts_task.dart';
@@ -15,37 +15,20 @@ part 'upload_parts_task.dart';
 
 /// 分片上传任务
 class PutByPartTask extends RequestTask<PutResponse> {
-  final File file;
   final String token;
+  final Resource resource;
 
-  final int partSize;
-  final int maxPartsRequestNumber;
-
-  final String? key;
-
-  /// 自定义变量，key 必须以 x: 开始
-  final Map<String, String>? customVars;
+  final PutOptions options;
 
   /// 设置为 0，避免子任务重试失败后 [PutByPartTask] 继续重试
   @override
   int get retryLimit => 0;
 
   PutByPartTask({
-    required this.file,
+    required this.resource,
     required this.token,
-    required this.partSize,
-    required this.maxPartsRequestNumber,
-    this.key,
-    this.customVars,
-    PutController? controller,
-  })  : assert(() {
-          if (partSize < 1 || partSize > 1024) {
-            throw RangeError.range(partSize, 1, 1024, 'partSize',
-                'partSize must be greater than 1 and less than 1024');
-          }
-          return true;
-        }()),
-        super(controller: controller);
+    required this.options,
+  }) : super(controller: options.controller);
 
   RequestTaskController? _currentWorkingTaskController;
 
@@ -62,10 +45,9 @@ class PutByPartTask extends RequestTask<PutResponse> {
     if (sameTaskExist) {
       throw StorageError(
         type: StorageErrorType.IN_PROGRESS,
-        message: '$file 已在上传队列中',
+        message: '$resource 已在上传队列中',
       );
     }
-
     // controller 被取消后取消当前运行的子任务
     controller?.cancelToken.whenCancel.then((_) {
       _currentWorkingTaskController?.cancel();
@@ -74,13 +56,22 @@ class PutByPartTask extends RequestTask<PutResponse> {
 
   @override
   void postReceive(PutResponse data) {
-    _currentWorkingTaskController = null;
     super.postReceive(data);
+    _currentWorkingTaskController = null;
+    resource.close();
+  }
+
+  @override
+  void postError(Object error) {
+    super.postError(error);
+    resource.close();
   }
 
   @override
   Future<PutResponse> createTask() async {
     controller?.notifyStatusListeners(StorageStatus.Request);
+
+    await resource.open();
 
     final initPartsTask = _createInitParts();
     final initParts = await initPartsTask.future;
@@ -100,8 +91,8 @@ class PutByPartTask extends RequestTask<PutResponse> {
       if (error is StorageError) {
         /// 满足以下两种情况清理缓存：
         /// 1、如果服务端文件被删除了，清除本地缓存
-        /// 2、如果 uploadId 等参数不对原因会导致 400
-        if (error.code == 612 || error.code == 400) {
+        /// 2、如果 PartNumber 不符合要求，顺序不对等原因导致的参数不对(400)
+        if (error.code == 400 || error.code == 612) {
           await initPartsTask.clearCache();
           await uploadParts.clearCache();
         }
@@ -109,6 +100,10 @@ class PutByPartTask extends RequestTask<PutResponse> {
         /// 如果服务端文件被删除了，重新上传
         if (error.code == 612) {
           controller?.notifyStatusListeners(StorageStatus.Retry);
+          await resource.close();
+          // TODO 调整为重试机制，而不是在这里 rerun，以降低复杂度
+          // 记录下子任务，可以解决引用问题
+          // 子任务关闭重试机制，重试改为从头开始
           return createTask();
         }
       }
@@ -124,9 +119,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
   }
 
   bool isEquals(PutByPartTask target) {
-    return target.file.path == file.path &&
-        target.key == key &&
-        target.file.lengthSync() == file.lengthSync();
+    return target.resource.id == resource.id;
   }
 
   /// 初始化上传信息，分片上传的第一步
@@ -134,9 +127,9 @@ class PutByPartTask extends RequestTask<PutResponse> {
     final _controller = PutController();
 
     final task = InitPartsTask(
-      file: file,
+      resource: resource,
       token: token,
-      key: key,
+      key: options.key,
       controller: _controller,
     );
 
@@ -149,12 +142,11 @@ class PutByPartTask extends RequestTask<PutResponse> {
     final _controller = PutController();
 
     final task = UploadPartsTask(
-      file: file,
       token: token,
-      partSize: partSize,
+      partSize: options.partSize,
       uploadId: uploadId,
-      maxPartsRequestNumber: maxPartsRequestNumber,
-      key: key,
+      maxPartsRequestNumber: options.maxPartsRequestNumber,
+      resource: resource,
       controller: _controller,
     );
 
@@ -175,8 +167,8 @@ class PutByPartTask extends RequestTask<PutResponse> {
       token: token,
       uploadId: uploadId,
       parts: parts,
-      key: key,
-      customVars: customVars,
+      key: resource.name,
+      customVars: options.customVars,
       controller: _controller,
     );
 

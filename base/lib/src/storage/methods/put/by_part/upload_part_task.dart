@@ -4,7 +4,7 @@ part of 'put_parts_task.dart';
 class UploadPartTask extends RequestTask<UploadPart> {
   final String token;
   final String uploadId;
-  final RandomAccessFile raf;
+  final List<int> bytes;
   final int partSize;
 
   // 如果 data 是 Stream 的话，Dio 需要判断 content-length 才会调用 onSendProgress
@@ -19,7 +19,7 @@ class UploadPartTask extends RequestTask<UploadPart> {
 
   UploadPartTask({
     required this.token,
-    required this.raf,
+    required this.bytes,
     required this.uploadId,
     required this.byteLength,
     required this.partNumber,
@@ -59,7 +59,7 @@ class UploadPartTask extends RequestTask<UploadPart> {
 
     final response = await client.put<Map<String, dynamic>>(
       '$host/$paramUrl/uploads/$uploadId/$partNumber',
-      data: Stream.fromIterable([_readFileByPartNumber(partNumber)]),
+      data: Stream.fromIterable([bytes.cast<int>()]),
       // 在 data 是 stream 的场景下， interceptor 传入 cancelToken 这里不传会有 bug
       cancelToken: controller?.cancelToken,
       options: Options(headers: headers),
@@ -76,13 +76,6 @@ class UploadPartTask extends RequestTask<UploadPart> {
   @override
   void onSendProgress(double percent) {
     controller?.notifySendProgressListeners(percent);
-  }
-
-  // 根据 partNumber 获取要上传的文件片段
-  List<int> _readFileByPartNumber(int partNumber) {
-    final startOffset = (partNumber - 1) * partSize * 1024 * 1024;
-    raf.setPositionSync(startOffset);
-    return raf.readSync(byteLength);
   }
 }
 

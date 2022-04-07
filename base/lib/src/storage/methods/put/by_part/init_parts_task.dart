@@ -27,7 +27,7 @@ class InitParts {
 
 /// 初始化一个分片上传任务，为 [UploadPartsTask] 提供 uploadId
 class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
-  final File file;
+  final Resource resource;
   final String token;
   final String? key;
 
@@ -36,20 +36,24 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
   late final UpTokenInfo _tokenInfo;
 
   InitPartsTask({
-    required this.file,
+    required this.resource,
     required this.token,
     this.key,
     PutController? controller,
   }) : super(controller: controller);
 
-  static String getCacheKey(String path, int length, String? key) {
-    return 'qiniu_dart_sdk_init_parts_task_${path}_key_${key}_size_$length';
+  static String getCacheKey(String resourceId, String? key) {
+    final keyList = [
+      'resource_id/$resourceId',
+      'key/$key',
+    ];
+    return 'qiniu_dart_sdk_init_parts_task@@[${keyList.join("/")}]';
   }
 
   @override
   void preStart() {
     _tokenInfo = Auth.parseUpToken(token);
-    _cacheKey = InitPartsTask.getCacheKey(file.path, file.lengthSync(), key);
+    _cacheKey = InitPartsTask.getCacheKey(resource.id, key);
     super.preStart();
   }
 
@@ -85,8 +89,8 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
   }
 
   @override
-  void postReceive(data) async {
-    await setCache(json.encode(data.toJson()));
+  void postReceive(data) {
+    setCache(json.encode(data.toJson()));
     super.postReceive(data);
   }
 }

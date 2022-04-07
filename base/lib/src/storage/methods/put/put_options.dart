@@ -7,6 +7,8 @@ class PutOptions {
   final String? key;
 
   /// 强制使用单文件上传，不使用分片，默认值 false
+  ///
+  /// 如果使用 putStream, 这个值会被忽略
   final bool forceBySingle;
 
   /// 使用分片上传时的分片大小，默认值 4，单位为 MB
@@ -28,5 +30,6 @@ class PutOptions {
     this.maxPartsRequestNumber = 5,
     this.customVars,
     this.controller,
-  });
+  }) : assert(partSize >= 1 && partSize <= 1024,
+            'partSize must be greater than or equal to 1 and less than or equal to 1024');
 }
