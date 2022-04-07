@@ -188,7 +188,13 @@ class BaseState extends DisposableState<Base> {
 
   void onSelectedFile(PlatformFile file) {
     printToConsole('选中文件: ${file.path}');
-    printToConsole('文件尺寸：${humanizeFileSize(file.bytes!.length.toDouble())}');
+    // ignore: unnecessary_null_comparison
+    if (file.size != null) {
+      // 一般在非 web 平台上可以直接读取 size 属性
+      printToConsole('文件尺寸：${humanizeFileSize(file.size.toDouble())}');
+    } else if (file.bytes != null) {
+      printToConsole('文件尺寸：${humanizeFileSize(file.bytes!.length.toDouble())}');
+    }
 
     setState(() {
       printToConsole('设置 selectedFile');
