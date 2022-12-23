@@ -3,11 +3,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dio/adapter.dart';
-import 'package:dio/dio.dart';
-import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
-import 'package:qiniu_sdk_base/src/storage/methods/put/by_part/put_parts_task.dart';
-import 'package:qiniu_sdk_base/src/storage/resource/resource.dart';
+import 'package:diox/diox.dart';
+import 'package:qiniu_sdk_base_diox/qiniu_sdk_base.dart';
+import 'package:qiniu_sdk_base_diox/src/storage/config/config.dart';
+import 'package:qiniu_sdk_base_diox/src/storage/methods/put/by_part/put_parts_task.dart';
+import 'package:qiniu_sdk_base_diox/src/storage/resource/resource.dart';
 import 'package:test/test.dart';
 
 import 'config.dart';
@@ -187,9 +187,9 @@ void main() {
 }
 
 // 会扔出 DioError，错误类型是 DioErrorType.other，每个请求调用了 3 次
-class HttpAdapterTestWithConnectFailedToHost extends HttpClientAdapter {
+class HttpAdapterTestWithConnectFailedToHost implements HttpClientAdapter {
   int callTimes = 0;
-  final DefaultHttpClientAdapter _adapter = DefaultHttpClientAdapter();
+  final HttpClientAdapter _adapter = HttpClientAdapter();
   // 0 single, 1 parts
   int type = 0;
   HttpAdapterTestWithConnectFailedToHost(this.type);
@@ -214,8 +214,8 @@ class HttpAdapterTestWithConnectFailedToHost extends HttpClientAdapter {
 }
 
 // 502 会触发服务不可用逻辑导致该 host 被冻结，并重试其他 host
-class HttpAdapterTestWith502 extends HttpClientAdapter {
-  final DefaultHttpClientAdapter _adapter = DefaultHttpClientAdapter();
+class HttpAdapterTestWith502 implements HttpClientAdapter {
+  final HttpClientAdapter _adapter = HttpClientAdapter();
   @override
   void close({bool force = false}) {
     _adapter.close(force: force);

@@ -2,7 +2,7 @@ import 'dart:io';
 
 // ignore: import_of_legacy_library_into_null_safe
 import 'package:dotenv/dotenv.dart' show load, clean, isEveryDefined, env;
-import 'package:qiniu_sdk_base/src/auth/auth.dart';
+import 'package:qiniu_sdk_base_diox/src/auth/auth.dart';
 import 'package:test/test.dart';
 
 late String token;

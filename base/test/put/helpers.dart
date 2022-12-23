@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:dio/adapter.dart';
-import 'package:dio/dio.dart';
-import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
+import 'package:diox/diox.dart';
+import 'package:qiniu_sdk_base_diox/qiniu_sdk_base.dart';
+import 'package:qiniu_sdk_base_diox/src/storage/config/config.dart';
 import 'package:test/test.dart';
 
 final fileForPart = File('test_resource/test_for_put_parts.mp4');
@@ -57,11 +57,11 @@ class PutControllerBuilder {
   }
 }
 
-class HttpAdapterTestWith612 extends HttpClientAdapter {
+class HttpAdapterTestWith612 implements HttpClientAdapter {
   /// 记录 CompletePartsTask 被创建的次数
   /// 第一次我们拦截并返回 612，第二次不拦截
   bool completePartsTaskResponse612 = false;
-  final DefaultHttpClientAdapter _adapter = DefaultHttpClientAdapter();
+  final HttpClientAdapter _adapter = HttpClientAdapter();
   @override
   void close({bool force = false}) {
     _adapter.close(force: force);

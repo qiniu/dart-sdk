@@ -1,6 +1,7 @@
 // ignore: import_of_legacy_library_into_null_safe
 import 'package:dotenv/dotenv.dart';
-import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
+import 'package:qiniu_sdk_base_diox/qiniu_sdk_base.dart';
+import 'package:qiniu_sdk_base_diox/src/storage/config/config.dart';
 import 'package:test/test.dart';
 
 import 'config.dart';

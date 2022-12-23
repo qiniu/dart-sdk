@@ -1,6 +1,8 @@
-import 'package:dio/dio.dart';
+import 'package:diox/diox.dart';
 import 'package:meta/meta.dart';
-import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
+
+import '../../../../qiniu_sdk_base.dart';
+import '../config/config.dart';
 
 part 'request_task_controller.dart';
 part 'request_task_manager.dart';
@@ -152,7 +154,7 @@ abstract class RequestTask<T> extends Task<T> {
     if (!_canConnectToHost(error) || _isHostUnavailable(error)) {
       return true;
     }
-    if (error.type == DioErrorType.response) {
+    if (error.type == DioErrorType.badResponse) {
       if (error.response?.statusCode == 612) {
         return true;
       }
@@ -163,7 +165,7 @@ abstract class RequestTask<T> extends Task<T> {
   // host 是否可以连接上
   bool _canConnectToHost(Object error) {
     if (error is DioError) {
-      if (error.type == DioErrorType.response) {
+      if (error.type == DioErrorType.badResponse) {
         final statusCode = error.response?.statusCode;
         if (statusCode is int && statusCode > 99) {
           return true;
@@ -181,7 +183,7 @@ abstract class RequestTask<T> extends Task<T> {
   // host 是否不可用
   bool _isHostUnavailable(Object error) {
     if (error is DioError) {
-      if (error.type == DioErrorType.response) {
+      if (error.type == DioErrorType.badResponse) {
         final statusCode = error.response?.statusCode;
         if (statusCode == 502) {
           return true;
