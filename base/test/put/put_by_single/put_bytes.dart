@@ -1,6 +1,6 @@
 @Timeout(Duration(seconds: 60))
 import 'package:dotenv/dotenv.dart' show env;
-import 'package:qiniu_sdk_base_diox/qiniu_sdk_base.dart';
+import 'package:qiniu_sdk_base_diox/qiniu_sdk_base_diox.dart';
 import 'package:test/test.dart';
 
 import '../../config.dart';

@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:qiniu_sdk_base/qiniu_sdk_base.dart' as base;
+import 'package:qiniu_sdk_base_diox/qiniu_sdk_base_diox.dart' as base;
 
-export 'package:qiniu_sdk_base/qiniu_sdk_base.dart'
+export 'package:qiniu_sdk_base_diox/qiniu_sdk_base_diox.dart'
     show
         Config,
         PutOptions,

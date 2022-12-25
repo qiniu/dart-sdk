@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:qiniu_flutter_sdk/qiniu_flutter_sdk.dart';
+import 'package:qiniu_flutter_sdk_diox/qiniu_flutter_sdk_diox.dart';
 
 import 'token.dart';
 import 'utils/uint.dart';
@@ -241,12 +241,9 @@ class BaseState extends DisposableState<Base> {
     if (statusValue == StorageStatus.Request) {
       return Padding(
         padding: EdgeInsets.all(10),
-        child: RaisedButton(
+        child: ElevatedButton(
           child: Text('取消上传'),
           onPressed: () => putController?.cancel(),
-          padding: EdgeInsets.symmetric(vertical: 10, horizontal: 40),
-          textColor: Colors.white,
-          color: Colors.red,
         ),
       );
     }

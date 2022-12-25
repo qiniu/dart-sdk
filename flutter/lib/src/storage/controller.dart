@@ -1,3 +1,3 @@
-import 'package:qiniu_sdk_base/qiniu_sdk_base.dart' as base;
+import 'package:qiniu_sdk_base_diox/qiniu_sdk_base_diox.dart' as base;
 
 class PutController extends base.PutController {}

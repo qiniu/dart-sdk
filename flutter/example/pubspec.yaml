@@ -24,7 +24,7 @@ dependencies:
   flutter:
     sdk: flutter
   file_picker: ^3.0.1
-  qiniu_flutter_sdk:
+  qiniu_flutter_sdk_diox:
     path: ../
 
   # The following adds the Cupertino Icons font to your application.

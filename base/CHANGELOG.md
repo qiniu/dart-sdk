@@ -1,3 +1,7 @@
+## 0.4.1
+
+- fix package file name
+
 ## 0.4.0
 
 - 新增 putBytes 接口用于上传 Uint8List 类型的资源

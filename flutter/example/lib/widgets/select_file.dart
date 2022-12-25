@@ -25,13 +25,10 @@ class SelectFileState extends State<SelectFile> {
   Widget get selectButton {
     return Container(
       width: double.maxFinite,
-      child: RaisedButton.icon(
+      child: ElevatedButton.icon(
         label: Text('点击选择文件'),
         icon: Icon(Icons.folder),
         onPressed: openSelectFileWindow,
-        padding: EdgeInsets.symmetric(vertical: 10, horizontal: 40),
-        textColor: Colors.white,
-        color: Colors.blue,
       ),
     );
   }
