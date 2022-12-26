@@ -152,9 +152,9 @@ packages:
   qiniu_sdk_base_diox:
     dependency: transitive
     description:
-      path: "../../base"
-      relative: true
-    source: path
+      name: qiniu_sdk_base_diox
+      url: "https://pub.flutter-io.cn"
+    source: hosted
     version: "0.4.1"
   sky_engine:
     dependency: transitive
