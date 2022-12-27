@@ -1,4 +1,4 @@
-# Qiniu Sdk Base [![qiniu_sdk_base](https://img.shields.io/pub/v/qiniu_sdk_base.svg?label=qiniu_sdk_base)](https://pub.dev/packages/qiniu_sdk_base) [![codecov](https://codecov.io/gh/qiniu/dart-sdk/branch/master/graph/badge.svg?token=5VOX6NJTKF)](https://codecov.io/gh/qiniu/dart-sdk)
+# Qiniu Sdk Base [![qiniu_sdk_base](https://img.shields.io/pub/v/qiniu_sdk_base.svg?label=qiniu_sdk_base_diox)](https://pub.dev/packages/qiniu_sdk_base_diox) [![codecov](https://codecov.io/gh/qiniu/dart-sdk/branch/master/graph/badge.svg?token=5VOX6NJTKF)](https://codecov.io/gh/qiniu/dart-sdk)
 
 七牛 dart 平台 sdk 的 base 包，为上层 sdk 提供基础设施和共享代码。
 
