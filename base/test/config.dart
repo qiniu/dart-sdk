@@ -1,20 +1,19 @@
 import 'dart:io';
 
 // ignore: import_of_legacy_library_into_null_safe
-import 'package:dotenv/dotenv.dart' show load, clean, isEveryDefined, env;
+import 'package:dotenv/dotenv.dart' show DotEnv;
 import 'package:qiniu_sdk_base_diox/src/auth/auth.dart';
 import 'package:test/test.dart';
 
 late String token;
 
-bool get isSensitiveDataDefined {
-  load();
-  return isEveryDefined([
-    'QINIU_DART_SDK_ACCESS_KEY',
-    'QINIU_DART_SDK_SECRET_KEY',
-    'QINIU_DART_SDK_TOKEN_SCOPE'
-  ]);
-}
+final env = DotEnv(includePlatformEnvironment: true)..load();
+
+final isSensitiveDataDefined = env.isEveryDefined([
+  'QINIU_DART_SDK_ACCESS_KEY',
+  'QINIU_DART_SDK_SECRET_KEY',
+  'QINIU_DART_SDK_TOKEN_SCOPE'
+]);
 
 void configEnv() {
   setUpAll(() {
@@ -35,5 +34,5 @@ void configEnv() {
     }
   });
 
-  tearDownAll(clean);
+  tearDownAll(env.clear);
 }

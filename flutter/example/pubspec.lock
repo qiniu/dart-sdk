@@ -187,10 +187,10 @@ packages:
     dependency: transitive
     description:
       name: qiniu_sdk_base_diox
-      sha256: f9d51a0b3c10df937fccbe490901f722184b7b3ce015f41c5d69aff33ed31a87
+      sha256: f1efca003b5278091074c17574598840f48b5c9e1f0b2cff6b630da0739978d3
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "0.4.1"
+    version: "0.4.2"
   sky_engine:
     dependency: transitive
     description: flutter
