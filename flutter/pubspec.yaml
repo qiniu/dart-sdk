@@ -1,6 +1,6 @@
 name: qiniu_flutter_sdk_diox
 description: Qiniu Flutter sdk
-version: 0.4.0
+version: 0.4.1
 homepage: https://github.com/qiniu/dart-sdk/tree/master/flutter
 
 environment:
@@ -10,7 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  diox: ^5.0.0-dev.2
+  diox: ^5.0.0
   qiniu_sdk_base_diox: ^0.4.1
 
 dev_dependencies:

@@ -10,13 +10,10 @@ export 'package:qiniu_sdk_base_diox/qiniu_sdk_base_diox.dart'
         PutResponse,
         HostProvider,
         CacheProvider,
-        HttpClientAdapter,
         QiniuError,
         StorageError,
         StorageErrorType,
-        PutByPartOptions,
-        StorageStatus,
-        PutBySingleOptions;
+        StorageStatus;
 
 export './controller.dart';
 

@@ -3,7 +3,6 @@ import 'dart:typed_data';
 
 import 'package:diox/diox.dart';
 import 'package:qiniu_sdk_base_diox/qiniu_sdk_base_diox.dart';
-import 'package:qiniu_sdk_base_diox/src/storage/config/config.dart';
 import 'package:test/test.dart';
 
 final fileForPart = File('test_resource/test_for_put_parts.mp4');

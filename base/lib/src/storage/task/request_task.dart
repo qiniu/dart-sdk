@@ -2,7 +2,6 @@ import 'package:diox/diox.dart';
 import 'package:meta/meta.dart';
 
 import '../../../qiniu_sdk_base_diox.dart';
-import '../config/config.dart';
 
 part 'request_task_controller.dart';
 part 'request_task_manager.dart';
