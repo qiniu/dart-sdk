@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:meta/meta.dart';
 
-import '../../../qiniu_sdk_base_diox.dart';
+import '../../../qiniu_sdk_base.dart';
 
 export 'request_task.dart';
 export 'task_manager.dart';

@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:qiniu_sdk_base_diox/src/auth/auth.dart';
+import 'package:qiniu_sdk_base/src/auth/auth.dart';
 import 'package:test/test.dart';
 
 class UploadTokenTestData {

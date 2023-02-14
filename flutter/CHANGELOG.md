@@ -1,6 +1,6 @@
 ## 0.4.1
 
-* upgrade diox to 5.0.0
+* upgrade dio to 5.0.0
 
 ## 0.4.0
 

@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:diox/diox.dart';
+import 'package:dio/dio.dart';
 
-import '../../../../../qiniu_sdk_base_diox.dart';
+import '../../../../../qiniu_sdk_base.dart';
 import '../../../resource/resource.dart';
 
 part 'cache_mixin.dart';
