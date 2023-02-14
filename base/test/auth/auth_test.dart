@@ -39,13 +39,13 @@ class AccessTokenTestData {
 
 void main() {
   group('Auth', () {
-    var auth = Auth(
+    final auth = Auth(
       accessKey: 'iN7NgwM31j4-BZacMjPrOQBs34UG1maYCAQmhdCV',
       secretKey: '6QTOr2Jg1gcZEWDQXKOGZh5PziC2MCV5KsntT70j',
     );
 
     test('GenerateUploadToken and parseToken should all well', () {
-      var testDataTable = <UploadTokenTestData>[
+      final testDataTable = <UploadTokenTestData>[
         UploadTokenTestData(
           PutPolicy(
             scope: 'testBucket',
@@ -70,10 +70,11 @@ void main() {
         ),
         UploadTokenTestData(
           PutPolicy(
-              scope: 'testBucket',
-              deadline: 1600000000,
-              returnBody: '{"key": \$(key)}',
-              callbackUrl: 'http://test.qiniu.com'),
+            scope: 'testBucket',
+            deadline: 1600000000,
+            returnBody: '{"key": \$(key)}',
+            callbackUrl: 'http://test.qiniu.com',
+          ),
           'iN7NgwM31j4-BZacMjPrOQBs34UG1maYCAQmhdCV:noK7jkMNZbw-padaaHy71buHpy8=:eyJzY29wZSI6InRlc3RCdWNrZXQiLCJkZWFkbGluZSI6MTYwMDAwMDAwMCwicmV0dXJuQm9keSI6IntcImtleVwiOiAkKGtleSl9IiwiY2FsbGJhY2tVcmwiOiJodHRwOi8vdGVzdC5xaW5pdS5jb20ifQ==',
         ),
         UploadTokenTestData(
@@ -86,10 +87,10 @@ void main() {
       ];
 
       for (final testData in testDataTable) {
-        var token = auth.generateUploadToken(putPolicy: testData.putPolicy);
+        final token = auth.generateUploadToken(putPolicy: testData.putPolicy);
         expect(token, equals(testData.expectedToken));
 
-        var tokenInfo = Auth.parseToken(token);
+        final tokenInfo = Auth.parseToken(token);
         expect(tokenInfo.accessKey, equals(auth.accessKey));
 
         expect(
@@ -100,7 +101,7 @@ void main() {
     });
 
     test('GenerateDownloadToken and parseToken should all well', () {
-      var testDataTable = <DownloadTokenTestData>[
+      final testDataTable = <DownloadTokenTestData>[
         DownloadTokenTestData(
           'testFileName',
           1600000000,
@@ -128,21 +129,21 @@ void main() {
       ];
 
       for (final testData in testDataTable) {
-        var token = auth.generateDownloadToken(
+        final token = auth.generateDownloadToken(
           key: testData.key,
           deadline: testData.deadline,
           bucketDomain: testData.bucketDomain,
         );
 
         expect(token, equals(testData.expectedToken));
-        var tokenInfo = Auth.parseToken(token);
+        final tokenInfo = Auth.parseToken(token);
         expect(tokenInfo.accessKey, equals(auth.accessKey));
         expect(tokenInfo.putPolicy, equals(null));
       }
     });
 
     test('GenerateAccessToken and parseToken should all well', () {
-      var testDataTable = <AccessTokenTestData>[
+      final testDataTable = <AccessTokenTestData>[
         AccessTokenTestData(
           utf8.encode('POST /move/test\nHost: rs.qiniu.com\n\n'),
           'iN7NgwM31j4-BZacMjPrOQBs34UG1maYCAQmhdCV:-m6mplPX8YzlVQ-NE08BqHvFC-Y=',
@@ -154,9 +155,9 @@ void main() {
       ];
 
       for (final testData in testDataTable) {
-        var token = auth.generateAccessToken(bytes: testData.bytes);
+        final token = auth.generateAccessToken(bytes: testData.bytes);
         expect(token, equals(testData.expectedToken));
-        var tokenInfo = Auth.parseToken(token);
+        final tokenInfo = Auth.parseToken(token);
         expect(tokenInfo.accessKey, equals(auth.accessKey));
         expect(tokenInfo.putPolicy, equals(null));
       }

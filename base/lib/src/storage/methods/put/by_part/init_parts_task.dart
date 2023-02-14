@@ -64,7 +64,8 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
     final initPartsCache = await getCache();
     if (initPartsCache != null) {
       return InitParts.fromJson(
-          json.decode(initPartsCache) as Map<String, dynamic>);
+        json.decode(initPartsCache) as Map<String, dynamic>,
+      );
     }
 
     final bucket = _tokenInfo.putPolicy.getBucket();

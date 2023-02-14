@@ -42,9 +42,10 @@ class StorageError extends QiniuError {
 
   factory StorageError.fromError(Error error) {
     return StorageError(
-        type: StorageErrorType.UNKNOWN,
-        rawError: error,
-        message: error.toString());
+      type: StorageErrorType.UNKNOWN,
+      rawError: error,
+      message: error.toString(),
+    );
   }
 
   factory StorageError.fromDioError(DioError error) {

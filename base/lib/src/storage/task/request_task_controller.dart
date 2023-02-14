@@ -29,7 +29,8 @@ mixin RequestTaskSendProgressListenersMixin {
   final List<RequestTaskSendProgressListener> _sendProgressListeners = [];
 
   void Function() addSendProgressListener(
-      RequestTaskSendProgressListener listener) {
+    RequestTaskSendProgressListener listener,
+  ) {
     _sendProgressListeners.add(listener);
     return () => removeSendProgressListener(listener);
   }

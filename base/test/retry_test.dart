@@ -15,161 +15,175 @@ void main() {
   configEnv();
 
   test(
-      'putBySingle\'s retry mechanism should throw error directly while cannot connect to host.',
-      () async {
-    final httpAdapter = HttpAdapterTestWithConnectFailedToHost(0);
-    final config = Config(
-      hostProvider: HostProviderTest(),
-      httpClientAdapter: httpAdapter,
-      retryLimit: 3,
-    );
-    final storage = Storage(config: config);
-    final statusList = <StorageStatus>[];
-    final future = storage.putFile(
-      File('test_resource/test_for_put.txt'),
-      token,
-      options: PutOptions(
-        controller: PutController()..addStatusListener(statusList.add),
-      ),
-    );
-    try {
-      await future;
-    } catch (error) {
-      expect(error, isA<StorageError>());
-      expect((error as StorageError).type, StorageErrorType.UNKNOWN);
-    }
-    expect(future, throwsA(isA<StorageError>()));
-    // 初始 1 次 + 重试 3 次
-    expect(httpAdapter.callTimes, 4);
-    expect(statusList, [
-      StorageStatus.Init,
-      StorageStatus.Request,
-      StorageStatus.Retry,
-      StorageStatus.Request,
-      StorageStatus.Retry,
-      StorageStatus.Request,
-      StorageStatus.Retry,
-      StorageStatus.Request,
-      StorageStatus.Error
-    ]);
-  }, skip: !isSensitiveDataDefined);
+    'putBySingle\'s retry mechanism should throw error directly while cannot connect to host.',
+    () async {
+      final httpAdapter = HttpAdapterTestWithConnectFailedToHost(0);
+      final config = Config(
+        hostProvider: HostProviderTest(),
+        httpClientAdapter: httpAdapter,
+        retryLimit: 3,
+      );
+      final storage = Storage(config: config);
+      final statusList = <StorageStatus>[];
+      final future = storage.putFile(
+        File('test_resource/test_for_put.txt'),
+        token,
+        options: PutOptions(
+          controller: PutController()..addStatusListener(statusList.add),
+        ),
+      );
+      try {
+        await future;
+      } catch (error) {
+        expect(error, isA<StorageError>());
+        expect((error as StorageError).type, StorageErrorType.UNKNOWN);
+      }
+      expect(future, throwsA(isA<StorageError>()));
+      // 初始 1 次 + 重试 3 次
+      expect(httpAdapter.callTimes, 4);
+      expect(statusList, [
+        StorageStatus.Init,
+        StorageStatus.Request,
+        StorageStatus.Retry,
+        StorageStatus.Request,
+        StorageStatus.Retry,
+        StorageStatus.Request,
+        StorageStatus.Retry,
+        StorageStatus.Request,
+        StorageStatus.Error
+      ]);
+    },
+    skip: !isSensitiveDataDefined,
+  );
 
   test(
-      'putFileByPart\'s retry mechanism should throw error directly while cannot connect to host.',
-      () async {
-    final httpAdapter = HttpAdapterTestWithConnectFailedToHost(1);
-    final cacheProvider = DefaultCacheProvider();
-    final config = Config(
-      cacheProvider: cacheProvider,
-      hostProvider: HostProviderTest(),
-      httpClientAdapter: httpAdapter,
-    );
-    final storage = Storage(config: config);
-    final file = File('test_resource/test_for_put_parts.mp4');
-    final resource = FileResource(file: file, length: file.lengthSync());
-    final statusList = <StorageStatus>[];
-    // 设置一个假的初始化缓存，让分片上传跳过初始化文件，便于测试后面的上传文件流程
-    await cacheProvider.setItem(InitPartsTask.getCacheKey(resource.id, null),
-        json.encode({'expireAt': 0, 'uploadId': '0'}));
-    final future = storage.putFile(file, token,
+    'putFileByPart\'s retry mechanism should throw error directly while cannot connect to host.',
+    () async {
+      final httpAdapter = HttpAdapterTestWithConnectFailedToHost(1);
+      final cacheProvider = DefaultCacheProvider();
+      final config = Config(
+        cacheProvider: cacheProvider,
+        hostProvider: HostProviderTest(),
+        httpClientAdapter: httpAdapter,
+      );
+      final storage = Storage(config: config);
+      final file = File('test_resource/test_for_put_parts.mp4');
+      final resource = FileResource(file: file, length: file.lengthSync());
+      final statusList = <StorageStatus>[];
+      // 设置一个假的初始化缓存，让分片上传跳过初始化文件，便于测试后面的上传文件流程
+      await cacheProvider.setItem(
+        InitPartsTask.getCacheKey(resource.id, null),
+        json.encode({'expireAt': 0, 'uploadId': '0'}),
+      );
+      final future = storage.putFile(
+        file,
+        token,
         options: PutOptions(
           partSize: 1,
           controller: PutController()..addStatusListener(statusList.add),
-        ));
-    try {
-      await future;
-    } catch (error) {
-      expect(error, isA<StorageError>());
-      expect((error as StorageError).type, StorageErrorType.UNKNOWN);
-    }
-    expect(future, throwsA(isA<StorageError>()));
-    // UploadPartTask 4 次 * 2 个分片
-    expect(httpAdapter.callTimes, 8);
-    expect(statusList,
-        [StorageStatus.Init, StorageStatus.Request, StorageStatus.Error]);
-  }, skip: !isSensitiveDataDefined);
+        ),
+      );
+      try {
+        await future;
+      } catch (error) {
+        expect(error, isA<StorageError>());
+        expect((error as StorageError).type, StorageErrorType.UNKNOWN);
+      }
+      expect(future, throwsA(isA<StorageError>()));
+      // UploadPartTask 4 次 * 2 个分片
+      expect(httpAdapter.callTimes, 8);
+      expect(
+        statusList,
+        [StorageStatus.Init, StorageStatus.Request, StorageStatus.Error],
+      );
+    },
+    skip: !isSensitiveDataDefined,
+  );
 
   test(
-      'retry mechanism should works well with putBySingle while host is unavailable.',
-      () async {
-    final config = Config(
-      hostProvider: HostProviderTest(),
-      httpClientAdapter: HttpAdapterTestWith502(),
-    );
-    final storage = Storage(config: config);
-    final putController = PutController();
-    final statusList = <StorageStatus>[];
-    putController.addStatusListener(statusList.add);
-    final response = await storage.putFile(
-      File('test_resource/test_for_put.txt'),
-      token,
-      options: PutOptions(
-        forceBySingle: true,
-        key: 'test_for_put.txt',
-        controller: putController,
-      ),
-    );
-    expect(statusList, [
-      StorageStatus.Init,
-      StorageStatus.Request,
-      // 重试了 1 次
-      StorageStatus.Retry,
-      // 重试后会重新发请求
-      StorageStatus.Request,
-      StorageStatus.Success
-    ]);
-    expect(response.key, 'test_for_put.txt');
-  }, skip: !isSensitiveDataDefined);
+    'retry mechanism should works well with putBySingle while host is unavailable.',
+    () async {
+      final config = Config(
+        hostProvider: HostProviderTest(),
+        httpClientAdapter: HttpAdapterTestWith502(),
+      );
+      final storage = Storage(config: config);
+      final putController = PutController();
+      final statusList = <StorageStatus>[];
+      putController.addStatusListener(statusList.add);
+      final response = await storage.putFile(
+        File('test_resource/test_for_put.txt'),
+        token,
+        options: PutOptions(
+          forceBySingle: true,
+          key: 'test_for_put.txt',
+          controller: putController,
+        ),
+      );
+      expect(statusList, [
+        StorageStatus.Init,
+        StorageStatus.Request,
+        // 重试了 1 次
+        StorageStatus.Retry,
+        // 重试后会重新发请求
+        StorageStatus.Request,
+        StorageStatus.Success
+      ]);
+      expect(response.key, 'test_for_put.txt');
+    },
+    skip: !isSensitiveDataDefined,
+  );
 
   test(
-      'retry mechanism should works well with putByPart while host is unavailable.',
-      () async {
-    final config = Config(
-      hostProvider: HostProviderTest(),
-      httpClientAdapter: HttpAdapterTestWith502(),
-    );
-    final storage = Storage(config: config);
-    final file = File('test_resource/test_for_put_parts.mp4');
-    final resource = FileResource(file: file, length: file.lengthSync());
-    final key = 'test_for_put_parts.mp4';
-    final initPartsTaskStatusList = <StorageStatus>[];
+    'retry mechanism should works well with putByPart while host is unavailable.',
+    () async {
+      final config = Config(
+        hostProvider: HostProviderTest(),
+        httpClientAdapter: HttpAdapterTestWith502(),
+      );
+      final storage = Storage(config: config);
+      final file = File('test_resource/test_for_put_parts.mp4');
+      final resource = FileResource(file: file, length: file.lengthSync());
+      final key = 'test_for_put_parts.mp4';
+      final initPartsTaskStatusList = <StorageStatus>[];
 
-    // 重试阶段会发生在 InitPartsTask 调用 getUpHost 的时候
-    // 手动初始化一个用于测试
-    final task = InitPartsTask(
+      // 重试阶段会发生在 InitPartsTask 调用 getUpHost 的时候
+      // 手动初始化一个用于测试
+      final task = InitPartsTask(
         token: token,
         resource: resource,
         key: key,
         controller: PutController()
-          ..addStatusListener(initPartsTaskStatusList.add));
-    storage.taskManager.addTask(task);
+          ..addStatusListener(initPartsTaskStatusList.add),
+      );
+      storage.taskManager.addTask(task);
 
-    // 接下来是正常流程
-    final putController = PutController();
-    final statusList = <StorageStatus>[];
-    late double _sendPercent, _totalPercent;
-    putController
-      ..addStatusListener(statusList.add)
-      ..addProgressListener((percent) {
-        _totalPercent = percent;
-      })
-      ..addSendProgressListener((percent) {
-        _sendPercent = percent;
-      });
-    final response = await storage.putFile(
-      file,
-      token,
-      options: PutOptions(
-        key: key,
-        partSize: 1,
-        controller: putController,
-      ),
-    );
-    expect(response, isA<PutResponse>());
+      // 接下来是正常流程
+      final putController = PutController();
+      final statusList = <StorageStatus>[];
+      late double sendPercent, totalPercent;
+      putController
+        ..addStatusListener(statusList.add)
+        ..addProgressListener((percent) {
+          totalPercent = percent;
+        })
+        ..addSendProgressListener((percent) {
+          sendPercent = percent;
+        });
+      final response = await storage.putFile(
+        file,
+        token,
+        options: PutOptions(
+          key: key,
+          partSize: 1,
+          controller: putController,
+        ),
+      );
+      expect(response, isA<PutResponse>());
 
-    expect(_sendPercent, 1);
-    expect(_totalPercent, 1);
-    expect(
+      expect(sendPercent, 1);
+      expect(totalPercent, 1);
+      expect(
         initPartsTaskStatusList,
         equals([
           StorageStatus.Init,
@@ -177,12 +191,15 @@ void main() {
           StorageStatus.Retry,
           StorageStatus.Request,
           StorageStatus.Success
-        ]));
-    expect(statusList[0], StorageStatus.Init);
-    expect(statusList[1], StorageStatus.Request);
-    // 分片上传 PutPartsTask 本身不会重试，子任务会去重试，所以没有 Retry 状态
-    expect(statusList[2], StorageStatus.Success);
-  }, skip: !isSensitiveDataDefined);
+        ]),
+      );
+      expect(statusList[0], StorageStatus.Init);
+      expect(statusList[1], StorageStatus.Request);
+      // 分片上传 PutPartsTask 本身不会重试，子任务会去重试，所以没有 Retry 状态
+      expect(statusList[2], StorageStatus.Success);
+    },
+    skip: !isSensitiveDataDefined,
+  );
 }
 
 // 会扔出 DioError，错误类型是 DioErrorType.other，每个请求调用了 3 次
@@ -198,8 +215,11 @@ class HttpAdapterTestWithConnectFailedToHost implements HttpClientAdapter {
   }
 
   @override
-  Future<ResponseBody> fetch(RequestOptions options,
-      Stream<Uint8List>? requestStream, Future? cancelFuture) async {
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future? cancelFuture,
+  ) async {
     if (options.path.contains('test.com')) {
       if ((type == 0 && options.method == 'POST') ||
           (type == 1 && options.method == 'PUT')) {
@@ -221,8 +241,11 @@ class HttpAdapterTestWith502 implements HttpClientAdapter {
   }
 
   @override
-  Future<ResponseBody> fetch(RequestOptions options,
-      Stream<Uint8List>? requestStream, Future? cancelFuture) async {
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future? cancelFuture,
+  ) async {
     if (options.path.contains('test.com') && options.method == 'POST') {
       return ResponseBody.fromString('', 502);
     }
@@ -238,8 +261,10 @@ class HostProviderTest extends HostProvider {
   }
 
   @override
-  Future<String> getUpHost(
-      {required String accessKey, required String bucket}) async {
+  Future<String> getUpHost({
+    required String accessKey,
+    required String bucket,
+  }) async {
     if (isFrozen('https://test.com')) {
       return _hostProvider.getUpHost(accessKey: accessKey, bucket: bucket);
     }

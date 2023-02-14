@@ -125,22 +125,22 @@ class PutByPartTask extends RequestTask<PutResponse> {
 
   /// 初始化上传信息，分片上传的第一步
   InitPartsTask _createInitParts() {
-    final _controller = PutController();
+    final controller = PutController();
 
     final task = InitPartsTask(
       resource: resource,
       token: token,
       key: options.key,
-      controller: _controller,
+      controller: controller,
     );
 
     manager.addTask(task);
-    _currentWorkingTaskController = _controller;
+    _currentWorkingTaskController = controller;
     return task;
   }
 
   UploadPartsTask _createUploadParts(String uploadId) {
-    final _controller = PutController();
+    final controller = PutController();
 
     final task = UploadPartsTask(
       token: token,
@@ -148,13 +148,13 @@ class PutByPartTask extends RequestTask<PutResponse> {
       uploadId: uploadId,
       maxPartsRequestNumber: options.maxPartsRequestNumber,
       resource: resource,
-      controller: _controller,
+      controller: controller,
     );
 
-    _controller.addSendProgressListener(onSendProgress);
+    controller.addSendProgressListener(onSendProgress);
 
     manager.addTask(task);
-    _currentWorkingTaskController = _controller;
+    _currentWorkingTaskController = controller;
     return task;
   }
 
@@ -163,18 +163,18 @@ class PutByPartTask extends RequestTask<PutResponse> {
     String uploadId,
     List<Part> parts,
   ) {
-    final _controller = PutController();
+    final controller = PutController();
     final task = CompletePartsTask(
       token: token,
       uploadId: uploadId,
       parts: parts,
       key: resource.name,
       customVars: options.customVars,
-      controller: _controller,
+      controller: controller,
     );
 
     manager.addTask(task);
-    _currentWorkingTaskController = _controller;
+    _currentWorkingTaskController = controller;
     return task;
   }
 }

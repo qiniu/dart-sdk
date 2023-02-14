@@ -67,8 +67,11 @@ class HttpAdapterTestWith612 implements HttpClientAdapter {
   }
 
   @override
-  Future<ResponseBody> fetch(RequestOptions options,
-      Stream<Uint8List>? requestStream, Future? cancelFuture) async {
+  Future<ResponseBody> fetch(
+    RequestOptions options,
+    Stream<Uint8List>? requestStream,
+    Future? cancelFuture,
+  ) async {
     /// 如果是 CompletePartsTask 发出去的请求，则返回 612
     if (options.path.contains('uploads/') &&
         options.method == 'POST' &&

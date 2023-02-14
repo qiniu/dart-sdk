@@ -42,9 +42,9 @@ class Auth {
   String generateUploadToken({
     required PutPolicy putPolicy,
   }) {
-    var data = jsonEncode(putPolicy);
-    var encodedPutPolicy = base64Url.encode(utf8.encode(data));
-    var baseToken = generateAccessToken(bytes: utf8.encode(encodedPutPolicy));
+    final data = jsonEncode(putPolicy);
+    final encodedPutPolicy = base64Url.encode(utf8.encode(data));
+    final baseToken = generateAccessToken(bytes: utf8.encode(encodedPutPolicy));
     return '$baseToken:$encodedPutPolicy';
   }
 
@@ -58,7 +58,7 @@ class Auth {
     required int deadline,
     required String bucketDomain,
   }) {
-    var downloadURL = '$bucketDomain/$key?e=$deadline';
+    final downloadURL = '$bucketDomain/$key?e=$deadline';
     return generateAccessToken(bytes: utf8.encode(downloadURL));
   }
 
@@ -66,10 +66,10 @@ class Auth {
   ///
   /// 访问七牛的接口需要对请求进行签名, 该方法提供 Token 签发服务
   String generateAccessToken({required List<int> bytes}) {
-    var hmacEncoder = Hmac(sha1, utf8.encode(secretKey));
+    final hmacEncoder = Hmac(sha1, utf8.encode(secretKey));
 
-    var sign = hmacEncoder.convert(bytes);
-    var encodedSign = base64Url.encode(sign.bytes);
+    final sign = hmacEncoder.convert(bytes);
+    final encodedSign = base64Url.encode(sign.bytes);
     return '$accessKey:$encodedSign';
   }
 
@@ -79,13 +79,13 @@ class Auth {
   static TokenInfo parseToken(String token) {
     assert(token != '');
 
-    var segments = token.split(':');
+    final segments = token.split(':');
     if (segments.length < 2) {
       throw ArgumentError('invalid token');
     }
 
     PutPolicy? putPolicy;
-    var accessKey = segments.first;
+    final accessKey = segments.first;
 
     /// 具体的 token 信息可以参考这里。
     /// [内部文档](https://github.com/qbox/product/blob/master/kodo/auths/UpToken.md#admin-uptoken-authorization)
@@ -94,13 +94,15 @@ class Auth {
         throw ArgumentError('invalid token');
       }
 
-      putPolicy = PutPolicy.fromJson(jsonDecode(
-        String.fromCharCodes(
-          base64Url.decode(
-            segments.last,
+      putPolicy = PutPolicy.fromJson(
+        jsonDecode(
+          String.fromCharCodes(
+            base64Url.decode(
+              segments.last,
+            ),
           ),
-        ),
-      ) as Map<String, dynamic>);
+        ) as Map<String, dynamic>,
+      );
     }
 
     return TokenInfo(accessKey, putPolicy);

@@ -17,10 +17,14 @@ export 'package:qiniu_sdk_base/qiniu_sdk_base.dart'
 
 export './controller.dart';
 
+/// Storage
 class Storage {
-  final base.Storage _baseStorage;
+  /// Storage
   Storage({base.Config? config}) : _baseStorage = base.Storage(config: config);
 
+  final base.Storage _baseStorage;
+
+  /// putFile
   Future<base.PutResponse> putFile(
     File file,
     String token, {
@@ -29,6 +33,7 @@ class Storage {
     return _baseStorage.putFile(file, token, options: options);
   }
 
+  /// putBytes
   Future<base.PutResponse> putBytes(
     Uint8List bytes,
     String token, {
