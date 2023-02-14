@@ -1,4 +1,4 @@
-# 七牛云存储 Flutter SDK [![qiniu_flutter_sdk_diox](https://img.shields.io/pub/v/qiniu_flutter_sdk.svg?label=qiniu_flutter_sdk_diox)](https://pub.dev/packages/qiniu_flutter_sdk_diox)
+# 七牛云存储 Flutter SDK [![qiniu_flutter_sdk](https://img.shields.io/pub/v/qiniu_flutter_sdk.svg?label=qiniu_flutter_sdk)](https://pub.dev/packages/qiniu_flutter_sdk)
 
 七牛云存储的 Flutter SDK。
 基于七牛云 API 实现，封装了七牛云存储系统的的客户端操作。
@@ -24,18 +24,18 @@ Qiniu-Flutter-SDK 为客户端 SDK，没有包含 `token` 生成实现，为了�
 
 ## 快速开始
 
-编辑你的 `pubspec.yaml` 文件，在 `dependencies` 添加  `qiniu-flutter-sdk_diox`，如下：
+编辑你的 `pubspec.yaml` 文件，在 `dependencies` 添加  `qiniu-flutter-sdk`，如下：
 
 ```yaml
 dependencies:
   ...
-  qiniu_flutter_sdk_diox: // 这里输入你需要的版本
+  qiniu_flutter_sdk: // 这里输入你需要的版本
 ```
 
 在你需要使用的地方 `import`，如下：
 
 ```dart
-import 'package:qiniu_flutter_sdk_diox/qiniu_flutter_sdk_diox.dart';
+import 'package:qiniu_flutter_sdk/qiniu_flutter_sdk.dart';
 ```
 
 ### 快速使用
