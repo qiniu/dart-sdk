@@ -2,14 +2,17 @@ import 'package:flutter/material.dart';
 
 class StringInput extends StatelessWidget {
   final String label;
+  final String value;
   final void Function(String token) onChange;
-  const StringInput(this.onChange, {Key? key, required this.label})
+  const StringInput(this.onChange,
+      {Key? key, required this.label, this.value = ''})
       : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return TextField(
       onSubmitted: onChange,
+      controller: TextEditingController(text: value),
       decoration: InputDecoration(
         labelText: label,
         contentPadding: const EdgeInsets.all(20.0),
