@@ -62,7 +62,10 @@ class UploadPartTask extends RequestTask<UploadPart> {
       data: Stream.fromIterable([bytes.cast<int>()]),
       // 在 data 是 stream 的场景下， interceptor 传入 cancelToken 这里不传会有 bug
       cancelToken: controller?.cancelToken,
-      options: Options(headers: headers),
+      options: Options(
+        headers: headers,
+        contentType: 'application/octet-stream',
+      ),
     );
 
     return UploadPart.fromJson(response.data!);
