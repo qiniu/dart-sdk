@@ -83,7 +83,10 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
 
       /// 这里 data 不传，dio 不会触发 cancel 事件
       data: <String, dynamic>{},
-      options: Options(headers: headers),
+      options: Options(
+        headers: headers,
+        contentType: 'application/json',
+      ),
     );
 
     return InitParts.fromJson(response.data!);
