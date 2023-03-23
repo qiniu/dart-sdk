@@ -9,11 +9,13 @@ import 'methods/put/by_single/put_by_single_task.dart';
 import 'methods/put/put.dart';
 import 'resource/resource.dart';
 import 'task/task.dart';
+
 export 'error/error.dart';
 export 'methods/put/put.dart';
 export 'status/status.dart';
 export 'task/request_task.dart';
 export 'task/task.dart';
+export 'config/config.dart';
 
 /// 客户端
 class Storage {

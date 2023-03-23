@@ -142,7 +142,7 @@ class BaseState extends DisposableState<Base> {
         printToConsole('上传已完成: 原始响应数据: ${jsonEncode(response.rawData)}');
         printToConsole('------------------------');
       })
-      ..catchError((dynamic error) async {
+      ..catchError((dynamic error) {
         if (error is StorageError) {
           switch (error.type) {
             case StorageErrorType.CONNECT_TIMEOUT:

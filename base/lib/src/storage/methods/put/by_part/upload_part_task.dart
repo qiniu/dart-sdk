@@ -8,7 +8,7 @@ class UploadPartTask extends RequestTask<UploadPart> {
   final int partSize;
 
   // 如果 data 是 Stream 的话，Dio 需要判断 content-length 才会调用 onSendProgress
-  // https://github.com/flutterchina/dio/blob/21136168ab39a7536835c7a59ce0465bb05feed4/dio/lib/src/dio.dart#L1000
+  // https://github.com/cfug/dio/blob/v5.0.0/dio/lib/src/dio_mixin.dart#L633
   final int byteLength;
 
   final int partNumber;
