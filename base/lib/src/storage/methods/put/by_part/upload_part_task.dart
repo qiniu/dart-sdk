@@ -64,7 +64,6 @@ class UploadPartTask extends RequestTask<UploadPart> {
       cancelToken: controller?.cancelToken,
       options: Options(
         headers: headers,
-        contentType: 'application/octet-stream',
       ),
     );
 

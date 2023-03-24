@@ -62,6 +62,14 @@ abstract class RequestTask<T> extends Task<T> {
             ..onSendProgress = (sent, total) => onSendProgress(sent / total);
           options.headers['User-Agent'] = _getUserAgent();
 
+          if (options.contentType == null) {
+            if (options.data is Stream) {
+              options.contentType = 'application/octet-stream';
+            } else {
+              options.contentType = 'application/json';
+            }
+          }
+
           handler.next(options);
         },
       ),

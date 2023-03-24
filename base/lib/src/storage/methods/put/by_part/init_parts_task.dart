@@ -85,7 +85,6 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
       data: <String, dynamic>{},
       options: Options(
         headers: headers,
-        contentType: 'application/json',
       ),
     );
 

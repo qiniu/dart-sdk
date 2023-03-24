@@ -55,7 +55,6 @@ class CompletePartsTask extends RequestTask<PutResponse> {
       data: data,
       options: Options(
         headers: headers,
-        contentType: 'application/json',
       ),
     );
 
