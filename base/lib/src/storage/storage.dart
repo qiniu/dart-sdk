@@ -10,6 +10,7 @@ import 'methods/put/put.dart';
 import 'resource/resource.dart';
 import 'task/task.dart';
 
+export 'package:dio/dio.dart' show HttpClientAdapter;
 export 'error/error.dart';
 export 'methods/put/put.dart';
 export 'status/status.dart';
