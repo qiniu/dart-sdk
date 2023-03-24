@@ -10,6 +10,7 @@ export 'package:qiniu_sdk_base/qiniu_sdk_base.dart'
         PutResponse,
         HostProvider,
         CacheProvider,
+        HttpClientAdapter,
         QiniuError,
         StorageError,
         StorageErrorType,
