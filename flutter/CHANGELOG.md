@@ -1,6 +1,9 @@
-## 0.4.1
+## 0.5.0
 
-* upgrade dio to 5.0.0
+* Upgrade dio to 5.0.0
+
+Breaking Changes 
+* Dart >= 2.15 & Flutter >= 2.8.0
 
 ## 0.4.0
 
