@@ -4,6 +4,8 @@
 
 Breaking Changes 
 * Dart >= 2.15 & Flutter >= 2.8.0
+* Deprecated `PutByPartOptions`
+* Deprecated `PutBySingleOptions`
 
 ## 0.4.0
 
