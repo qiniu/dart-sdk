@@ -96,8 +96,8 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
       var cachedList = <Part>[];
 
       try {
-        final _cachedList = json.decode(cachedData) as List<dynamic>;
-        cachedList = _cachedList
+        final cachedList0 = json.decode(cachedData) as List<dynamic>;
+        cachedList = cachedList0
             .map((dynamic item) => Part.fromJson(item as Map<String, dynamic>))
             .toList();
       } catch (error) {
@@ -131,7 +131,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
 
   // 从指定的分片位置往后上传切片
   Future<void> _uploadParts() async {
-    final taskFutures = <Future<Null>>[];
+    final taskFutures = <Future<void>>[];
     final tasksLength =
         min(_idleRequestNumber, _totalPartCount - _uploadingPartIndex);
 
@@ -141,8 +141,8 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
       final partNumber = ++_uploadingPartIndex;
 
       // 跳过上传过的分片
-      final _uploadedPart = _uploadedPartMap[partNumber];
-      if (_uploadedPart != null) {
+      final uploadedPart = _uploadedPartMap[partNumber];
+      if (uploadedPart != null) {
         _sentPartCount++;
         _sentPartToServerCount++;
         notifySendProgress();
@@ -159,14 +159,16 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
       }
     }
 
-    await Future.wait<Null>(taskFutures);
+    await Future.wait<void>(taskFutures);
   }
 
-  Future<Null> _createUploadPartTaskFutureByPartNumber(
-      List<int> bytes, int partNumber) async {
+  Future<void> _createUploadPartTaskFutureByPartNumber(
+    List<int> bytes,
+    int partNumber,
+  ) async {
     _idleRequestNumber--;
-    final _controller = PutController();
-    _workingUploadPartTaskControllers.add(_controller);
+    final controller = PutController();
+    _workingUploadPartTaskControllers.add(controller);
 
     final task = UploadPartTask(
       token: token,
@@ -176,10 +178,10 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
       partNumber: partNumber,
       partSize: partSize,
       key: resource.name,
-      controller: _controller,
+      controller: controller,
     );
 
-    _controller
+    controller
       // UploadPartTask 一次上传一个 chunk，通知一次进度
       ..addSendProgressListener((percent) {
         _sentPartCount++;
@@ -198,7 +200,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     _idleRequestNumber++;
     _uploadedPartMap[partNumber] =
         Part(partNumber: partNumber, etag: data.etag);
-    _workingUploadPartTaskControllers.remove(_controller);
+    _workingUploadPartTaskControllers.remove(controller);
 
     await storeUploadedPart();
 
@@ -214,8 +216,10 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   }
 
   void notifyProgress() {
-    controller?.notifyProgressListeners(_sentPartToServerCount /
-        _totalPartCount *
-        RequestTask.onSendProgressTakePercentOfTotal);
+    controller?.notifyProgressListeners(
+      _sentPartToServerCount /
+          _totalPartCount *
+          RequestTask.onSendProgressTakePercentOfTotal,
+    );
   }
 }

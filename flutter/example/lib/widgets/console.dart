@@ -93,8 +93,8 @@ class ConsoleState extends DisposableState<Console> {
         color: Colors.green[800],
       ),
       child: Container(
-        padding: EdgeInsets.all(10),
-        decoration: BoxDecoration(
+        padding: const EdgeInsets.all(10),
+        decoration: const BoxDecoration(
           color: Colors.black87,
           borderRadius: BorderRadius.all(Radius.circular(4)),
         ),

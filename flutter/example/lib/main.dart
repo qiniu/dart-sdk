@@ -16,11 +16,13 @@ import 'widgets/select_file.dart';
 import 'widgets/string_input.dart';
 
 void main() {
-  runApp(App(child: Base()));
+  runApp(const App(child: Base()));
 }
 
 // 基础的上传示例
 class Base extends StatefulWidget implements Example {
+  const Base({Key? key}) : super(key: key);
+
   @override
   String get title => '基础上传示例';
 
@@ -56,16 +58,6 @@ class BaseState extends DisposableState<Base> {
 
   // 控制器，可以用于取消任务、获取上述的状态，进度等信息
   PutController? putController;
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
 
   void onStatus(StorageStatus status) {
     printToConsole('状态变化: 当前任务状态：${status.toString()}');
@@ -107,7 +99,7 @@ class BaseState extends DisposableState<Base> {
     var usedToken = token;
 
     if (token == null || token == '') {
-      if (builtinToken != null && builtinToken != '') {
+      if (builtinToken.isNotEmpty) {
         printToConsole('使用内建 Token 进行上传');
         usedToken = builtinToken;
       }
@@ -183,6 +175,7 @@ class BaseState extends DisposableState<Base> {
         }
 
         printToConsole('------------------------');
+        return PutResponse.fromJson({'error': error});
       });
   }
 
@@ -240,24 +233,21 @@ class BaseState extends DisposableState<Base> {
   Widget get cancelButton {
     if (statusValue == StorageStatus.Request) {
       return Padding(
-        padding: EdgeInsets.all(10),
-        child: RaisedButton(
-          child: Text('取消上传'),
+        padding: const EdgeInsets.all(10),
+        child: ElevatedButton(
+          child: const Text('取消上传'),
           onPressed: () => putController?.cancel(),
-          padding: EdgeInsets.symmetric(vertical: 10, horizontal: 40),
-          textColor: Colors.white,
-          color: Colors.red,
         ),
       );
     }
-    return SizedBox.shrink();
+    return const SizedBox.shrink();
   }
 
   @override
   Widget build(BuildContext context) {
     return ListView(children: [
       Padding(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: Progress(progressValue),
       ),
       Padding(
@@ -287,10 +277,10 @@ class BaseState extends DisposableState<Base> {
       ),
       // 取消按钮
       cancelButton,
-      Padding(
+      const Padding(
         key: Key('console'),
-        child: const Console(),
         padding: EdgeInsets.all(8.0),
+        child: Console(),
       ),
     ]);
   }

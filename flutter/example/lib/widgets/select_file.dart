@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 typedef OnSelected = void Function(PlatformFile file);
 
 class SelectFile extends StatefulWidget {
+  const SelectFile(this.onSelected, {Key? key}) : super(key: key);
+
   final OnSelected onSelected;
-  const SelectFile(this.onSelected);
 
   @override
   State<StatefulWidget> createState() {
@@ -23,15 +24,12 @@ class SelectFileState extends State<SelectFile> {
   }
 
   Widget get selectButton {
-    return Container(
+    return SizedBox(
       width: double.maxFinite,
-      child: RaisedButton.icon(
-        label: Text('点击选择文件'),
-        icon: Icon(Icons.folder),
+      child: ElevatedButton.icon(
+        label: const Text('点击选择文件'),
+        icon: const Icon(Icons.folder),
         onPressed: openSelectFileWindow,
-        padding: EdgeInsets.symmetric(vertical: 10, horizontal: 40),
-        textColor: Colors.white,
-        color: Colors.blue,
       ),
     );
   }

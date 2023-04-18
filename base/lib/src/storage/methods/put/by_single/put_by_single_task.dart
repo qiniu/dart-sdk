@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
-import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
 
+import '../../../../../qiniu_sdk_base.dart';
 import '../../../resource/resource.dart';
 
 // 直传任务

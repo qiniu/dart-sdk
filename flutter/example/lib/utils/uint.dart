@@ -31,12 +31,12 @@ String humanizeBigNumber(
     displayValue = value.toStringAsFixed(decimal);
   }
 
-  return displayValue + ' ' + units[index];
+  return '$displayValue ${units[index]}';
 }
 
 String humanizeFileSize(
   double value, {
   int decimal = 2,
 }) {
-  return humanizeBigNumber(value, decimal: decimal, radix: 1024) + 'B';
+  return '${humanizeBigNumber(value, decimal: decimal, radix: 1024)}B';
 }

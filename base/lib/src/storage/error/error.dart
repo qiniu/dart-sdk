@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
-import 'package:qiniu_sdk_base/src/error/error.dart';
+
+import '../../error/error.dart';
 
 enum StorageErrorType {
   /// 连接超时
@@ -41,9 +42,10 @@ class StorageError extends QiniuError {
 
   factory StorageError.fromError(Error error) {
     return StorageError(
-        type: StorageErrorType.UNKNOWN,
-        rawError: error,
-        message: error.toString());
+      type: StorageErrorType.UNKNOWN,
+      rawError: error,
+      message: error.toString(),
+    );
   }
 
   factory StorageError.fromDioError(DioError error) {
@@ -65,17 +67,17 @@ class StorageError extends QiniuError {
 
 StorageErrorType _mapDioErrorType(DioErrorType type) {
   switch (type) {
-    case DioErrorType.connectTimeout:
+    case DioErrorType.connectionTimeout:
       return StorageErrorType.CONNECT_TIMEOUT;
     case DioErrorType.sendTimeout:
       return StorageErrorType.SEND_TIMEOUT;
     case DioErrorType.receiveTimeout:
       return StorageErrorType.RECEIVE_TIMEOUT;
-    case DioErrorType.response:
+    case DioErrorType.badResponse:
       return StorageErrorType.RESPONSE;
     case DioErrorType.cancel:
       return StorageErrorType.CANCEL;
-    case DioErrorType.other:
+    case DioErrorType.unknown:
     default:
       return StorageErrorType.UNKNOWN;
   }

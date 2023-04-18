@@ -25,7 +25,7 @@ class App extends StatelessWidget {
           appBar: AppBar(
             title: Text(
               child.title,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),

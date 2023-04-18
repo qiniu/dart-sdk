@@ -30,9 +30,9 @@ class DefaultHostProvider extends HostProvider {
     // 解冻需要被解冻的 host
     _frozenUpDomains.removeWhere((domain) => !domain.isFrozen());
 
-    var _upDomains = <_Domain>[];
+    final upDomains = <_Domain>[];
     if ('$accessKey:$bucket' == _cacheKey && _stashedUpDomains.isNotEmpty) {
-      _upDomains.addAll(_stashedUpDomains);
+      upDomains.addAll(_stashedUpDomains);
     } else {
       final url =
           '$protocol://api.qiniu.com/v4/query?ak=$accessKey&bucket=$bucket';
@@ -47,21 +47,21 @@ class DefaultHostProvider extends HostProvider {
       for (var host in hosts) {
         final domainList = host.up['domains'].cast<String>() as List<String>;
         final domains = domainList.map((domain) => _Domain(domain));
-        _upDomains.addAll(domains);
+        upDomains.addAll(domains);
       }
 
       _cacheKey = '$accessKey:$bucket';
-      _stashedUpDomains.addAll(_upDomains);
+      _stashedUpDomains.addAll(upDomains);
     }
 
     // 每次都从头遍历一遍，最合适的 host 总是会排在最前面
-    for (var index = 0; index < _upDomains.length; index++) {
-      final availableDomain = _upDomains.elementAt(index);
+    for (var index = 0; index < upDomains.length; index++) {
+      final availableDomain = upDomains.elementAt(index);
       // 检查看起来可用的 host 是否之前被冻结过
-      final frozen = isFrozen(protocol + '://' + availableDomain.value);
+      final frozen = isFrozen('$protocol://${availableDomain.value}');
 
       if (!frozen) {
-        return protocol + '://' + availableDomain.value;
+        return '$protocol://${availableDomain.value}';
       }
     }
     // 全部被冻结，几乎不存在的情况

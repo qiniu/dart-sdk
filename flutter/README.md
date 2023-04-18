@@ -152,6 +152,11 @@ import 'package:qiniu_flutter_sdk/qiniu_flutter_sdk.dart';
 ### 其他说明
 
 1. 如果您想了解更多七牛的上传策略，建议您仔细阅读 [七牛官方文档-上传](https://developer.qiniu.com/kodo/manual/upload-types)。另外，七牛的上传策略是在后端服务指定的.
+2. 如果Flutter SDK版本低于 3.0.0，需要override flutter_lints版本
+```yaml
+dependency_overrides: 
+  flutter_lints: ^1.0.0
+```
 
 ## 功能列表
 

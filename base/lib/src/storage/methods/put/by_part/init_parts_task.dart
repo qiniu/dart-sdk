@@ -64,7 +64,8 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
     final initPartsCache = await getCache();
     if (initPartsCache != null) {
       return InitParts.fromJson(
-          json.decode(initPartsCache) as Map<String, dynamic>);
+        json.decode(initPartsCache) as Map<String, dynamic>,
+      );
     }
 
     final bucket = _tokenInfo.putPolicy.getBucket();
@@ -82,7 +83,9 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
 
       /// 这里 data 不传，dio 不会触发 cancel 事件
       data: <String, dynamic>{},
-      options: Options(headers: headers),
+      options: Options(
+        headers: headers,
+      ),
     );
 
     return InitParts.fromJson(response.data!);

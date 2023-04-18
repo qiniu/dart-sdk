@@ -1,23 +1,22 @@
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:path/path.dart' show basename;
 
-import 'package:qiniu_sdk_base/src/storage/resource/resource.dart';
+import 'package:path/path.dart' show basename;
 
 import 'config/config.dart';
 import 'methods/put/by_part/put_parts_task.dart';
 import 'methods/put/by_single/put_by_single_task.dart';
 import 'methods/put/put.dart';
+import 'resource/resource.dart';
 import 'task/task.dart';
 
 export 'package:dio/dio.dart' show HttpClientAdapter;
-
-export 'config/config.dart';
 export 'error/error.dart';
 export 'methods/put/put.dart';
 export 'status/status.dart';
 export 'task/request_task.dart';
 export 'task/task.dart';
+export 'config/config.dart';
 
 /// 客户端
 class Storage {

@@ -53,7 +53,9 @@ class CompletePartsTask extends RequestTask<PutResponse> {
     final response = await client.post<Map<String, dynamic>>(
       paramUrl,
       data: data,
-      options: Options(headers: headers),
+      options: Options(
+        headers: headers,
+      ),
     );
 
     return PutResponse.fromJson(response.data!);

@@ -1,4 +1,4 @@
-package com.qiniu.flutter_sdk_example
+package com.qiniu.example
 
 import io.flutter.embedding.android.FlutterActivity
 
