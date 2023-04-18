@@ -26,7 +26,7 @@ dart pub run coverage:collect_coverage \
   --resume-isolates
 
 echo "Generating LCOV report..."
-pub run coverage:format_coverage \
+dart pub run coverage:format_coverage \
   --lcov \
   --in=coverage/coverage.json \
   --out=coverage/lcov.info \
