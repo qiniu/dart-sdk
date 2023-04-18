@@ -19,16 +19,15 @@ dart \
 
 # Run the coverage collector to generate the JSON coverage report.
 echo "Collecting coverage..."
-nohup dart pub run coverage:collect_coverage \
+dart pub run coverage:collect_coverage \
   --port=$OBS_PORT \
   --out=coverage/coverage.json \
   --wait-paused \
   --resume-isolates
 
 echo "Generating LCOV report..."
-dart pub run coverage:format_coverage \
+pub run coverage:format_coverage \
   --lcov \
   --in=coverage/coverage.json \
   --out=coverage/lcov.info \
-  --packages=.packages \
   --report-on=lib
