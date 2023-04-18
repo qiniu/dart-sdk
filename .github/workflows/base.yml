@@ -29,4 +29,6 @@ jobs:
         run: dart analyze --fatal-warnings --fatal-infos
 
       - name: Run tests
-        run: coverage.sh && bash <(curl -s https://codecov.io/bash)
+        run: |
+          echo pwd \
+          coverage.sh && bash <(curl -s https://codecov.io/bash)
