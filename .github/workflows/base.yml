@@ -3,7 +3,7 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Dart
+name: Base
 
 on:
   push:
@@ -12,7 +12,7 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build:
+  base:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -29,4 +29,4 @@ jobs:
         run: dart analyze --fatal-warnings --fatal-infos
 
       - name: Run tests
-        run: coverage.sh && bash <(curl -s https://codecov.io/bash)
+        run: bash ./coverage.sh && bash <(curl -s https://codecov.io/bash)
