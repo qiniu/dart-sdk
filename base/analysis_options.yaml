@@ -5,7 +5,6 @@ analyzer:
     # - non-nullable
 
   strong-mode:
-    implicit-casts: false
     implicit-dynamic: false
 
 linter:

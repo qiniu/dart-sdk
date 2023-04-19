@@ -11,16 +11,29 @@ on:
   pull_request:
     branches: [ "master" ]
 
+env:
+  QINIU_DART_SDK_ACCESS_KEY: ${{ secrets.QINIU_DART_SDK_ACCESS_KEY }}
+  QINIU_DART_SDK_SECRET_KEY: ${{ secrets.QINIU_DART_SDK_SECRET_KEY }}
+  QINIU_DART_SDK_TOKEN_SCOPE:  ${{ secrets.QINIU_DART_SDK_TOKEN_SCOPE }}
+
 jobs:
   base:
+    strategy:
+      matrix:
+        sdk: [2.18.0, stable, beta]
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./base
+        working-directory: base
 
     steps:
       - uses: actions/checkout@v3
       - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ matrix.sdk }}
+
+      - name: Print test env
+        run: env
 
       - name: Install dependencies
         run: dart pub get
