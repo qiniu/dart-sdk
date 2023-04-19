@@ -20,7 +20,7 @@ jobs:
   base:
     strategy:
       matrix:
-        sdk: [2.18.0, stable, beta]
+        sdk: [2.18.0, stable]
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -32,8 +32,14 @@ jobs:
         with:
           sdk: ${{ matrix.sdk }}
 
-      - name: Print test env
-        run: env
+      - if: true
+        run: echo "Test if"
+
+      - if: startsWith(env.QINIU_DART_SDK_TOKEN_SCOPE, 'dart-sdk-test')
+        run: echo "QINIU_DART_SDK_TOKEN_SCOPE is dart-sdk-test"
+
+      - if: startsWith(env.QINIU_DART_SDK_ACCESS_KEY, 'IAM')
+        run: echo "QINIU_DART_SDK_ACCESS_KEY is IAM"
 
       - name: Install dependencies
         run: dart pub get
