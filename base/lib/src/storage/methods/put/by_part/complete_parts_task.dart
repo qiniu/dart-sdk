@@ -6,6 +6,7 @@ class CompletePartsTask extends RequestTask<PutResponse> {
   final String uploadId;
   final List<Part> parts;
   final String? key;
+  final String? mimeType;
 
   late final UpTokenInfo _tokenInfo;
 
@@ -17,6 +18,7 @@ class CompletePartsTask extends RequestTask<PutResponse> {
     required this.uploadId,
     required this.parts,
     this.key,
+    this.mimeType,
     this.customVars,
     PutController? controller,
   }) : super(controller: controller);
@@ -48,6 +50,10 @@ class CompletePartsTask extends RequestTask<PutResponse> {
 
     if (customVars != null) {
       data['customVars'] = customVars;
+    }
+
+    if (mimeType != null) {
+      data['mimeType'] = mimeType;
     }
 
     final response = await client.post<Map<String, dynamic>>(

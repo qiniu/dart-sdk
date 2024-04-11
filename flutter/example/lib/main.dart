@@ -38,6 +38,9 @@ class BaseState extends DisposableState<Base> {
   // 用户输入的文件名
   String? key;
 
+  // 用户输入的 mimeType
+  String? mimeType;
+
   // 用户输入的 partSize
   int partSize = 4;
 
@@ -119,6 +122,7 @@ class BaseState extends DisposableState<Base> {
 
     final putOptions = PutOptions(
       key: key,
+      mimeType: mimeType,
       partSize: partSize,
       controller: putController,
     );
@@ -180,7 +184,7 @@ class BaseState extends DisposableState<Base> {
   }
 
   void onSelectedFile(PlatformFile file) {
-    printToConsole('选中文件: ${file.path}');
+    printToConsole('选中文件: path: ${file.path}, filename: ${file.name}, size: ${file.size}');
     // ignore: unnecessary_null_comparison
     if (file.size != null) {
       // 一般在非 web 平台上可以直接读取 size 属性
@@ -230,6 +234,18 @@ class BaseState extends DisposableState<Base> {
     this.key = key;
   }
 
+
+  void onMimeTypeChange(String mimeType) {
+    if (mimeType == '') {
+      printToConsole('清除 mimeType');
+      this.mimeType = null;
+      return;
+    }
+
+    printToConsole('设置 mimeType: $mimeType');
+    this.mimeType = mimeType;
+  }
+
   Widget get cancelButton {
     if (statusValue == StorageStatus.Request) {
       return Padding(
@@ -255,6 +271,13 @@ class BaseState extends DisposableState<Base> {
         child: StringInput(
           onKeyChange,
           label: '请输入 Key（可选）回车确认',
+        ),
+      ),
+      Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: StringInput(
+          onMimeTypeChange,
+          label: '请输入 MimeType（可选）回车确认',
         ),
       ),
       Padding(
