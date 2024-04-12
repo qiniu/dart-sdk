@@ -12,7 +12,7 @@ final env = DotEnv(includePlatformEnvironment: true)..load();
 final isSensitiveDataDefined = env.isEveryDefined([
   'QINIU_DART_SDK_ACCESS_KEY',
   'QINIU_DART_SDK_SECRET_KEY',
-  'QINIU_DART_SDK_TOKEN_SCOPE'
+  'QINIU_DART_SDK_TOKEN_SCOPE',
 ]);
 
 void configEnv() {

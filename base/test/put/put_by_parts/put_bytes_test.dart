@@ -205,7 +205,7 @@ void main() {
         targetStatusList: [
           StorageStatus.Init,
           StorageStatus.Request,
-          StorageStatus.Cancel
+          StorageStatus.Cancel,
         ],
         targetProgressList: [
           0.001,

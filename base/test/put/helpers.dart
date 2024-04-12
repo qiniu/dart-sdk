@@ -48,7 +48,7 @@ class PutControllerBuilder {
     targetStatusList ??= [
       StorageStatus.Init,
       StorageStatus.Request,
-      StorageStatus.Success
+      StorageStatus.Success,
     ];
     targetProgressList ??= [0.001, 0.99, 1];
     expect(statusList, equals(targetStatusList));

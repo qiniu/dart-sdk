@@ -169,6 +169,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
       uploadId: uploadId,
       parts: parts,
       key: resource.name,
+      mimeType: options.mimeType,
       customVars: options.customVars,
       controller: controller,
     );

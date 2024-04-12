@@ -50,7 +50,7 @@ void main() {
         StorageStatus.Request,
         StorageStatus.Retry,
         StorageStatus.Request,
-        StorageStatus.Error
+        StorageStatus.Error,
       ]);
     },
     skip: !isSensitiveDataDefined,
@@ -127,7 +127,7 @@ void main() {
         StorageStatus.Retry,
         // 重试后会重新发请求
         StorageStatus.Request,
-        StorageStatus.Success
+        StorageStatus.Success,
       ]);
       expect(response.key, 'test_for_put.txt');
     },
@@ -190,7 +190,7 @@ void main() {
           StorageStatus.Request,
           StorageStatus.Retry,
           StorageStatus.Request,
-          StorageStatus.Success
+          StorageStatus.Success,
         ]),
       );
       expect(statusList[0], StorageStatus.Init);

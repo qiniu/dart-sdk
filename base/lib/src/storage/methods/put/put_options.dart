@@ -6,6 +6,11 @@ class PutOptions {
   /// 如果不传则后端自动生成
   final String? key;
 
+  /// mimeType
+  /// 
+  /// 资源的 MIME 类型，如 image/jpeg
+  final String? mimeType;
+
   /// 强制使用单文件上传，不使用分片，默认值 false
   ///
   /// 如果使用 putStream, 这个值会被忽略
@@ -25,6 +30,7 @@ class PutOptions {
 
   const PutOptions({
     this.key,
+    this.mimeType,
     this.forceBySingle = false,
     this.partSize = 4,
     this.maxPartsRequestNumber = 5,
