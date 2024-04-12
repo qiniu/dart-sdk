@@ -83,7 +83,7 @@ void main() {
             deadline: 0,
           ),
           'iN7NgwM31j4-BZacMjPrOQBs34UG1maYCAQmhdCV:QtVzBdciokbNk10yD9R11yI1DYU=:eyJzY29wZSI6InRlc3RCdWNrZXQiLCJkZWFkbGluZSI6MH0=',
-        )
+        ),
       ];
 
       for (final testData in testDataTable) {
