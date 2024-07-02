@@ -8,11 +8,10 @@ class FileResource extends Resource {
   final String id;
   FileResource({
     required this.file,
-    required int length,
-    String? name,
-    int? partSize,
-  })  : id = 'path_${file.path}_size_${file.lengthSync()}',
-        super(name: name, length: length, partSize: partSize);
+    required super.length,
+    super.name,
+    super.partSize,
+  }) : id = 'path_${file.path}_size_${file.lengthSync()}';
 
   late StreamController<List<int>> _controller;
 

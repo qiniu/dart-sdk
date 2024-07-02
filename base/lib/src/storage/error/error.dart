@@ -36,9 +36,9 @@ class StorageError extends QiniuError {
   StorageError({
     required this.type,
     this.code,
-    dynamic rawError,
-    String? message,
-  }) : super(rawError: rawError, message: message);
+    super.rawError,
+    super.message,
+  });
 
   factory StorageError.fromError(Error error) {
     return StorageError(
