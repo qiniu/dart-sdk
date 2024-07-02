@@ -6,11 +6,10 @@ class BytesResource extends Resource {
   final String id;
   BytesResource({
     required this.bytes,
-    required int length,
-    String? name,
-    int? partSize,
-  })  : id = md5.convert(bytes).toString(),
-        super(name: name, length: length, partSize: partSize);
+    required super.length,
+    super.name,
+    super.partSize,
+  }) : id = md5.convert(bytes).toString();
 
   late StreamController<List<int>> _controller;
 
