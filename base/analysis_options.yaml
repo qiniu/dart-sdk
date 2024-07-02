@@ -1,16 +1,8 @@
 include: package:lints/recommended.yaml
-
-analyzer:
-  # enable-experiment:
-    # - non-nullable
-
-  strong-mode:
-    implicit-casts: false
-    implicit-dynamic: false
-
 linter:
   rules:
     constant_identifier_names: false
+    library_annotations: false
     prefer_final_locals: true
     prefer_single_quotes: true
     always_declare_return_types: true

@@ -48,7 +48,7 @@ class StorageError extends QiniuError {
     );
   }
 
-  factory StorageError.fromDioError(DioError error) {
+  factory StorageError.fromDioError(DioException error) {
     return StorageError(
       type: _mapDioErrorType(error.type),
       code: error.response?.statusCode,
@@ -65,19 +65,19 @@ class StorageError extends QiniuError {
   }
 }
 
-StorageErrorType _mapDioErrorType(DioErrorType type) {
+StorageErrorType _mapDioErrorType(DioExceptionType type) {
   switch (type) {
-    case DioErrorType.connectionTimeout:
+    case DioExceptionType.connectionTimeout:
       return StorageErrorType.CONNECT_TIMEOUT;
-    case DioErrorType.sendTimeout:
+    case DioExceptionType.sendTimeout:
       return StorageErrorType.SEND_TIMEOUT;
-    case DioErrorType.receiveTimeout:
+    case DioExceptionType.receiveTimeout:
       return StorageErrorType.RECEIVE_TIMEOUT;
-    case DioErrorType.badResponse:
+    case DioExceptionType.badResponse:
       return StorageErrorType.RESPONSE;
-    case DioErrorType.cancel:
+    case DioExceptionType.cancel:
       return StorageErrorType.CANCEL;
-    case DioErrorType.unknown:
+    case DioExceptionType.unknown:
     default:
       return StorageErrorType.UNKNOWN;
   }

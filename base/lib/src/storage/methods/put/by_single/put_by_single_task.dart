@@ -55,8 +55,8 @@ class PutBySingleTask extends RequestTask<PutResponse> {
     }
     await resource.open();
 
-    final multipartFile = MultipartFile(
-      resource.stream,
+    final multipartFile = MultipartFile.fromStream(
+      resource.getStream,
       resource.length,
       // 与其他 sdk 保持一致，没有 filename 就是问号
       filename: filename ?? '?',
