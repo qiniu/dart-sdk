@@ -9,7 +9,7 @@ part 'request_task_manager.dart';
 String _getUserAgent() {
   return [
     // TODO version
-    'QiniuDart'
+    'QiniuDart',
   ].join(' ');
 }
 
@@ -104,7 +104,7 @@ abstract class RequestTask<T> extends Task<T> {
   @mustCallSuper
   void postError(Object error) async {
     // 处理 Dio 异常
-    if (error is DioError) {
+    if (error is DioException) {
       if (_checkIfNeedRetry(error)) {
         if (_isHostUnavailable(error)) {
           config.hostProvider.freezeHost(error.requestOptions.path);
@@ -120,7 +120,7 @@ abstract class RequestTask<T> extends Task<T> {
       final storageError = StorageError.fromDioError(error);
 
       // 通知状态
-      if (error.type == DioErrorType.cancel) {
+      if (error.type == DioExceptionType.cancel) {
         postCancel(storageError);
       } else {
         controller?.notifyStatusListeners(StorageStatus.Error);
@@ -161,11 +161,11 @@ abstract class RequestTask<T> extends Task<T> {
         ?.notifyProgressListeners(percent * onSendProgressTakePercentOfTotal);
   }
 
-  bool _checkIfNeedRetry(DioError error) {
+  bool _checkIfNeedRetry(DioException error) {
     if (!_canConnectToHost(error) || _isHostUnavailable(error)) {
       return true;
     }
-    if (error.type == DioErrorType.badResponse) {
+    if (error.type == DioExceptionType.badResponse) {
       if (error.response?.statusCode == 612) {
         return true;
       }
@@ -175,15 +175,15 @@ abstract class RequestTask<T> extends Task<T> {
 
   // host 是否可以连接上
   bool _canConnectToHost(Object error) {
-    if (error is DioError) {
-      if (error.type == DioErrorType.badResponse) {
+    if (error is DioException) {
+      if (error.type == DioExceptionType.badResponse) {
         final statusCode = error.response?.statusCode;
         if (statusCode is int && statusCode > 99) {
           return true;
         }
       }
 
-      if (error.type == DioErrorType.cancel) {
+      if (error.type == DioExceptionType.cancel) {
         return true;
       }
     }
@@ -193,8 +193,8 @@ abstract class RequestTask<T> extends Task<T> {
 
   // host 是否不可用
   bool _isHostUnavailable(Object error) {
-    if (error is DioError) {
-      if (error.type == DioErrorType.badResponse) {
+    if (error is DioException) {
+      if (error.type == DioExceptionType.badResponse) {
         final statusCode = error.response?.statusCode;
         if (statusCode == 502) {
           return true;

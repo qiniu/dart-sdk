@@ -43,6 +43,10 @@ abstract class Resource {
     stream = createStream();
   }
 
+  Stream<List<int>> getStream() {
+    return stream;
+  }
+
   @override
   String toString() {
     return id;

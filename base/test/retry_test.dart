@@ -202,7 +202,7 @@ void main() {
   );
 }
 
-// 会扔出 DioError，错误类型是 DioErrorType.other，每个请求调用了 3 次
+// 会扔出 DioException，错误类型是 DioExceptionType.other，每个请求调用了 3 次
 class HttpAdapterTestWithConnectFailedToHost implements HttpClientAdapter {
   int callTimes = 0;
   final HttpClientAdapter _adapter = HttpClientAdapter();
@@ -225,7 +225,7 @@ class HttpAdapterTestWithConnectFailedToHost implements HttpClientAdapter {
           (type == 1 && options.method == 'PUT')) {
         callTimes++;
         // 尝试扔出一个会触发连不上 host 的 错误
-        throw DioError(requestOptions: options);
+        throw DioException(requestOptions: options);
       }
     }
     return _adapter.fetch(options, requestStream, cancelFuture);

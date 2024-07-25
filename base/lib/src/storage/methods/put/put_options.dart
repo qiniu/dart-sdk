@@ -7,7 +7,7 @@ class PutOptions {
   final String? key;
 
   /// mimeType
-  /// 
+  ///
   /// 资源的 MIME 类型，如 image/jpeg
   final String? mimeType;
 
