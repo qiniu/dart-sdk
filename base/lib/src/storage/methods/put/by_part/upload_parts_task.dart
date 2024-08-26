@@ -140,21 +140,20 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
       // partNumber 按照后端要求必须从 1 开始
       final partNumber = ++_uploadingPartIndex;
 
-      // 跳过上传过的分片
-      final uploadedPart = _uploadedPartMap[partNumber];
-      if (uploadedPart != null) {
-        _sentPartCount++;
-        _sentPartToServerCount++;
-        notifySendProgress();
-        notifyProgress();
-        continue;
-      }
-
       await for (var bytes in resource.stream) {
-        final future =
-            _createUploadPartTaskFutureByPartNumber(bytes, partNumber);
+        // 跳过上传过的分片
+        final uploadedPart = _uploadedPartMap[partNumber];
+        if (uploadedPart != null) {
+          _sentPartCount++;
+          _sentPartToServerCount++;
+          notifySendProgress();
+          notifyProgress();
+        } else {
+          final future =
+              _createUploadPartTaskFutureByPartNumber(bytes, partNumber);
 
-        taskFutures.add(future);
+          taskFutures.add(future);
+        }
         break;
       }
     }
