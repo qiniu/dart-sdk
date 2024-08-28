@@ -1,6 +1,6 @@
 name: qiniu_flutter_sdk
 description: Qiniu Flutter sdk
-version: 0.6.0
+version: 0.6.1
 homepage: https://github.com/qiniu/dart-sdk/tree/master/flutter
 
 environment:
@@ -10,8 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  dio: ^5.4.0
-  qiniu_sdk_base: ^0.6.0
+  qiniu_sdk_base: ^0.6.1
 
 dev_dependencies:
   flutter_lints:

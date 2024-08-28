@@ -1,3 +1,7 @@
+## 0.6.1
+
+* 移除冗余的 dio 依赖声明
+
 ## 0.6.0
 
 Breaking Changes

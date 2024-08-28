@@ -1,5 +1,5 @@
 name: qiniu_sdk_base
-version: 0.6.1
+version: 0.6.2
 homepage: https://github.com/qiniu/dart-sdk
 description: The sdk basic of Qiniu products
 
@@ -13,11 +13,10 @@ dependencies:
   dio: ^5.4.0
   crypto: ^3.0.0
   meta: ^1.10.0
-  uuid: ^4.4.0
   path: ^1.8.0
 
 dev_dependencies:
-  test:
-  lints:
+  test: any
+  lints: any
   dotenv: ^4.1.0
   coverage: "^1.6.3"
