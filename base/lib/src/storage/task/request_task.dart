@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
+import 'package:system_info2/system_info2.dart';
 
 import '../../../qiniu_sdk_base.dart';
 
@@ -7,10 +8,9 @@ part 'request_task_controller.dart';
 part 'request_task_manager.dart';
 
 String _getUserAgent() {
-  return [
-    // TODO version
-    'QiniuDart',
-  ].join(' ');
+  final userAgent =
+      'QiniuDart/v$currentVersion (${SysInfo.kernelName} ${SysInfo.kernelVersion} ${SysInfo.kernelArchitecture}; ${SysInfo.operatingSystemName} ${SysInfo.operatingSystemVersion};)';
+  return userAgent;
 }
 
 abstract class RequestTask<T> extends Task<T> {
@@ -43,7 +43,7 @@ abstract class RequestTask<T> extends Task<T> {
 
   @override
   @mustCallSuper
-  void preStart() {
+  void preStart() async {
     // 如果已经取消了，直接报错
     if (controller != null && controller!.cancelToken.isCancelled) {
       throw StorageError(type: StorageErrorType.CANCEL);
@@ -53,6 +53,11 @@ abstract class RequestTask<T> extends Task<T> {
     controller?.notifyProgressListeners(preStartTakePercentOfTotal);
     retryLimit = config.retryLimit;
     client.httpClientAdapter = config.httpClientAdapter;
+    var userAgent = _getUserAgent();
+    final appUserAgent = await config.appUserAgent;
+    if (appUserAgent != '') {
+      userAgent += ' $appUserAgent';
+    }
     client.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
@@ -60,7 +65,7 @@ abstract class RequestTask<T> extends Task<T> {
           options
             ..cancelToken = controller?.cancelToken
             ..onSendProgress = (sent, total) => onSendProgress(sent / total);
-          options.headers['User-Agent'] = _getUserAgent();
+          options.headers['User-Agent'] = userAgent;
 
           if (options.contentType == null) {
             if (options.data is Stream) {

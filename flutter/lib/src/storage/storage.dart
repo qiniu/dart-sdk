@@ -5,7 +5,6 @@ import 'package:qiniu_sdk_base/qiniu_sdk_base.dart' as base;
 
 export 'package:qiniu_sdk_base/qiniu_sdk_base.dart'
     show
-        Config,
         PutOptions,
         PutResponse,
         HostProvider,
@@ -17,11 +16,15 @@ export 'package:qiniu_sdk_base/qiniu_sdk_base.dart'
         StorageStatus;
 
 export './controller.dart';
+export './config.dart' show Config;
+
+import './config.dart';
 
 /// Storage
 class Storage {
   /// Storage
-  Storage({base.Config? config}) : _baseStorage = base.Storage(config: config);
+  Storage({Config? config})
+      : _baseStorage = base.Storage(config: config ?? Config());
 
   final base.Storage _baseStorage;
 

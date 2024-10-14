@@ -24,4 +24,6 @@ class Config {
   })  : hostProvider = hostProvider ?? DefaultHostProvider(),
         cacheProvider = cacheProvider ?? DefaultCacheProvider(),
         httpClientAdapter = httpClientAdapter ?? HttpClientAdapter();
+
+  Future<String> get appUserAgent async => '';
 }
