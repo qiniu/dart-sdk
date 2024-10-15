@@ -12,7 +12,12 @@ abstract class HostProvider {
 }
 
 class DefaultHostProvider extends HostProvider {
-  final protocol = Protocol.Https.value;
+  var protocol = Protocol.Https.value;
+  var bucketHosts = [
+    'uc.qiniuapi.com',
+    'kodo-config.qiniuapi.com',
+    'uc.qbox.me',
+  ];
 
   final _http = Dio();
   // 缓存的上传区域
@@ -31,15 +36,13 @@ class DefaultHostProvider extends HostProvider {
     _frozenUpDomains.removeWhere((domain) => !domain.isFrozen());
 
     final upDomains = <_Domain>[];
-    if ('$accessKey:$bucket' == _cacheKey && _stashedUpDomains.isNotEmpty) {
+    final cacheKey = '$accessKey:$bucket:${_getHostsMD5(bucketHosts)}';
+    if (cacheKey == _cacheKey && _stashedUpDomains.isNotEmpty) {
       upDomains.addAll(_stashedUpDomains);
     } else {
-      final url =
-          '$protocol://api.qiniu.com/v4/query?ak=$accessKey&bucket=$bucket';
-
-      final res = await _http.get<Map>(url);
-
-      final hosts = res.data!['hosts']
+      final data =
+          await _getUrl(bucketHosts, 'v4/query?ak=$accessKey&bucket=$bucket');
+      final hosts = data['hosts']
           .map((dynamic json) => _Host.fromJson(json as Map))
           .cast<_Host>()
           .toList() as List<_Host>;
@@ -50,7 +53,7 @@ class DefaultHostProvider extends HostProvider {
         upDomains.addAll(domains);
       }
 
-      _cacheKey = '$accessKey:$bucket';
+      _cacheKey = cacheKey;
       _stashedUpDomains.addAll(upDomains);
     }
 
@@ -87,6 +90,25 @@ class DefaultHostProvider extends HostProvider {
     final uri = Uri.parse(host);
     _frozenUpDomains.add(_Domain(uri.host)..freeze());
   }
+
+  Future<Map> _getUrl(List<String> domains, String path) async {
+    DioException? err;
+    for (final domain in domains) {
+      final url = '$protocol://$domain/$path';
+      try {
+        final resp = await _http.get<Map>(url);
+        return resp.data!;
+      } on DioException catch (e) {
+        if (e.response?.statusCode != null &&
+            e.response!.statusCode! >= 400 &&
+            e.response!.statusCode! < 500) {
+          rethrow;
+        }
+        err = e;
+      }
+    }
+    throw err!;
+  }
 }
 
 class _Host {
@@ -120,4 +142,15 @@ class _Domain {
   }
 
   _Domain(this.value);
+}
+
+String _getHostsMD5(List<String> hosts) {
+  final output = AccumulatorSink<Digest>();
+  final input = md5.startChunkedConversion(output);
+
+  for (final host in hosts) {
+    input.add(utf8.encode(host));
+  }
+  input.close();
+  return output.events.single.toString();
 }

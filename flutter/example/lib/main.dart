@@ -21,7 +21,7 @@ void main() {
 
 // 基础的上传示例
 class Base extends StatefulWidget implements Example {
-  const Base({Key? key}) : super(key: key);
+  const Base({super.key});
 
   @override
   String get title => '基础上传示例';
@@ -184,7 +184,8 @@ class BaseState extends DisposableState<Base> {
   }
 
   void onSelectedFile(PlatformFile file) {
-    printToConsole('选中文件: path: ${file.path}, filename: ${file.name}, size: ${file.size}');
+    printToConsole(
+        '选中文件: path: ${file.path}, filename: ${file.name}, size: ${file.size}');
     // ignore: unnecessary_null_comparison
     if (file.size != null) {
       // 一般在非 web 平台上可以直接读取 size 属性
@@ -233,7 +234,6 @@ class BaseState extends DisposableState<Base> {
     printToConsole('设置 key: $key');
     this.key = key;
   }
-
 
   void onMimeTypeChange(String mimeType) {
     if (mimeType == '') {
