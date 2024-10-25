@@ -13,7 +13,7 @@ abstract class HostProvider {
 
 class DefaultHostProvider extends HostProvider {
   var protocol = Protocol.Https.value;
-  var bucketHosts = [
+  final bucketHosts = [
     'uc.qiniuapi.com',
     'kodo-config.qiniuapi.com',
     'uc.qbox.me',
