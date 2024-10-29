@@ -56,4 +56,63 @@ void main() {
     },
     skip: !isSensitiveDataDefined,
   );
+
+  test('Region should works well', () async {
+    final region = Region.getByID('z0');
+    expect(region.bucket.toList(), [
+      'https://uc.qiniuapi.com',
+      'https://kodo-config.qiniuapi.com',
+      'https://uc.qbox.me',
+    ]);
+    expect(region.up.toList(), [
+      'https://upload-z0.qiniup.com',
+      'https://up-z0.qiniup.com',
+    ]);
+  });
+
+  test('Endpoints should works well', () async {
+    var endpoint = Endpoints(
+      accelerated: ['domain1'],
+      preferred: ['domain2', 'domain3'],
+      alternative: ['domain4'],
+    );
+    expect(endpoint.length, 4);
+    expect(endpoint.first, 'domain1');
+    expect(endpoint.last, 'domain4');
+    expect(endpoint.toList(), ['domain1', 'domain2', 'domain3', 'domain4']);
+    expect(endpoint.isEmpty, false);
+    expect(endpoint.isNotEmpty, true);
+
+    endpoint = Endpoints(
+      preferred: ['domain1', 'domain2'],
+      alternative: ['domain3'],
+    );
+    expect(endpoint.length, 3);
+    expect(endpoint.first, 'domain1');
+    expect(endpoint.last, 'domain3');
+    expect(endpoint.toList(), ['domain1', 'domain2', 'domain3']);
+    expect(endpoint.isEmpty, false);
+    expect(endpoint.isNotEmpty, true);
+
+    endpoint = Endpoints(
+      accelerated: ['domain1'],
+      preferred: ['domain2', 'domain3'],
+    );
+    expect(endpoint.length, 3);
+    expect(endpoint.first, 'domain1');
+    expect(endpoint.last, 'domain3');
+    expect(endpoint.toList(), ['domain1', 'domain2', 'domain3']);
+    expect(endpoint.isEmpty, false);
+    expect(endpoint.isNotEmpty, true);
+
+    endpoint = Endpoints(
+      preferred: ['domain1', 'domain2'],
+    );
+    expect(endpoint.length, 2);
+    expect(endpoint.first, 'domain1');
+    expect(endpoint.last, 'domain2');
+    expect(endpoint.toList(), ['domain1', 'domain2']);
+    expect(endpoint.isEmpty, false);
+    expect(endpoint.isNotEmpty, true);
+  });
 }

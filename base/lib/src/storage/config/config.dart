@@ -3,12 +3,12 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:crypto/crypto.dart';
 import 'package:convert/convert.dart';
-
-import '../../storage/error/error.dart';
+import 'package:qiniu_sdk_base/src/storage/storage.dart';
 
 part 'cache.dart';
 part 'host.dart';
 part 'protocol.dart';
+part 'region.dart';
 
 class Config {
   final HostProvider hostProvider;
