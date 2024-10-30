@@ -1,14 +1,19 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:crypto/crypto.dart';
 import 'package:convert/convert.dart';
 import 'package:qiniu_sdk_base/src/storage/storage.dart';
+import 'package:cache_provider/cache_provider.dart' as cache_provider;
+import 'package:singleflight/singleflight.dart' as singleflight;
+import 'package:path/path.dart' show join;
 
 part 'cache.dart';
 part 'host.dart';
 part 'protocol.dart';
 part 'region.dart';
+part 'query.dart';
 
 class Config {
   final HostProvider hostProvider;
@@ -25,7 +30,7 @@ class Config {
     CacheProvider? cacheProvider,
     HttpClientAdapter? httpClientAdapter,
     this.retryLimit = 3,
-  })  : hostProvider = hostProvider ?? DefaultHostProvider(),
+  })  : hostProvider = hostProvider ?? DefaultHostProviderV2(),
         cacheProvider = cacheProvider ?? DefaultCacheProvider(),
         httpClientAdapter = httpClientAdapter ?? HttpClientAdapter();
 

@@ -17,9 +17,13 @@ dependencies:
   version: ^3.0.2
   system_info2: ^4.0.0
   convert: ^3.1.1
+  cache_provider: ^1.0.1
+  singleflight: ^1.0.2
 
 dev_dependencies:
   test: any
   lints: any
   dotenv: ^4.1.0
   coverage: "^1.6.3"
+  shelf: ^1.4.1
+  shelf_router: ^1.1.4

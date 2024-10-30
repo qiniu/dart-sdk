@@ -4,6 +4,7 @@ abstract class HostProvider {
   Future<String> getUpHost({
     required String accessKey,
     required String bucket,
+    bool accelerateUploading = false,
   });
 
   bool isFrozen(String host);
@@ -11,13 +12,15 @@ abstract class HostProvider {
   void freezeHost(String host);
 }
 
+List<String> _defaultBucketHosts = [
+  'uc.qiniuapi.com',
+  'kodo-config.qiniuapi.com',
+  'uc.qbox.me',
+];
+
 class DefaultHostProvider extends HostProvider {
   var protocol = Protocol.Https.value;
-  final bucketHosts = [
-    'uc.qiniuapi.com',
-    'kodo-config.qiniuapi.com',
-    'uc.qbox.me',
-  ];
+  var bucketHosts = _defaultBucketHosts;
 
   final _http = Dio();
   // 缓存的上传区域
@@ -31,17 +34,23 @@ class DefaultHostProvider extends HostProvider {
   Future<String> getUpHost({
     required String accessKey,
     required String bucket,
+    bool accelerateUploading = false,
   }) async {
     // 解冻需要被解冻的 host
     _frozenUpDomains.removeWhere((domain) => !domain.isFrozen());
 
     final upDomains = <_Domain>[];
-    final cacheKey = '$accessKey:$bucket:${_getHostsMD5(bucketHosts)}';
+    final cacheKey =
+        '$accessKey:$bucket:${accelerateUploading ? '1' : '0'}:${_getHostsMD5(bucketHosts)}';
     if (cacheKey == _cacheKey && _stashedUpDomains.isNotEmpty) {
       upDomains.addAll(_stashedUpDomains);
     } else {
-      final data =
-          await _getUrl(bucketHosts, 'v4/query?ak=$accessKey&bucket=$bucket');
+      final data = await _getUrl(
+        bucketHosts,
+        'v4/query?ak=$accessKey&bucket=$bucket',
+        protocol,
+        _http,
+      );
       final hosts = data['hosts']
           .map((dynamic json) => _Host.fromJson(json as Map))
           .cast<_Host>()
@@ -90,25 +99,6 @@ class DefaultHostProvider extends HostProvider {
     final uri = Uri.parse(host);
     _frozenUpDomains.add(_Domain(uri.host)..freeze());
   }
-
-  Future<Map> _getUrl(List<String> domains, String path) async {
-    DioException? err;
-    for (final domain in domains) {
-      final url = '$protocol://$domain/$path';
-      try {
-        final resp = await _http.get<Map>(url);
-        return resp.data!;
-      } on DioException catch (e) {
-        if (e.response?.statusCode != null &&
-            e.response!.statusCode! >= 400 &&
-            e.response!.statusCode! < 500) {
-          rethrow;
-        }
-        err = e;
-      }
-    }
-    throw err!;
-  }
 }
 
 class _Host {
@@ -133,9 +123,8 @@ class _Domain {
   final _lockTime = 1000 * 60 * 10;
   final String value;
 
-  bool isFrozen() {
-    return frozenTime + _lockTime > DateTime.now().millisecondsSinceEpoch;
-  }
+  bool isFrozen() =>
+      frozenTime + _lockTime > DateTime.now().millisecondsSinceEpoch;
 
   void freeze() {
     frozenTime = DateTime.now().millisecondsSinceEpoch;
@@ -153,4 +142,114 @@ String _getHostsMD5(List<String> hosts) {
   }
   input.close();
   return output.events.single.toString();
+}
+
+Future<Map> _getUrl(
+  Iterable<String> domains,
+  String path,
+  String protocol,
+  Dio http,
+) async {
+  DioException? err;
+  for (var domain in domains) {
+    late final String url;
+    if (domain.contains('://')) {
+      url = '$domain/$path';
+    } else {
+      url = '$protocol://$domain/$path';
+    }
+    try {
+      final resp = await http.get<Map>(url);
+      return resp.data!;
+    } on DioException catch (e) {
+      if (e.response?.statusCode != null &&
+          e.response!.statusCode! >= 400 &&
+          e.response!.statusCode! < 500) {
+        rethrow;
+      }
+      err = e;
+    }
+  }
+  throw err!;
+}
+
+class DefaultHostProviderV2 implements HostProvider {
+  BucketRegionsQuery? _query;
+  final Endpoints _bucketHosts;
+  final bool _useHttps;
+  final _group = singleflight.Group.create<BucketRegionsQuery>();
+  final _frozenUpDomains = <_Domain>[];
+
+  DefaultHostProviderV2()
+      : _bucketHosts = Endpoints._defaultBucketEndpoints(),
+        _useHttps = true;
+
+  DefaultHostProviderV2.from({
+    required Endpoints bucketHosts,
+    bool useHttps = true,
+  })  : _bucketHosts = bucketHosts,
+        _useHttps = useHttps;
+
+  @override
+  Future<String> getUpHost({
+    required String accessKey,
+    required String bucket,
+    bool accelerateUploading = false,
+  }) async {
+    final query = await _getQuery();
+    final regionsProvider = await query.query(
+      accessKey: accessKey,
+      bucketName: bucket,
+      accelerateUploading: accelerateUploading,
+    );
+    for (final region in regionsProvider.regions) {
+      final unfrozenDomain = region.up
+          .map((domain) => _makeHost(domain, useHttps: _useHttps))
+          .firstWhere(
+            (domain) => !isFrozen(domain),
+            orElse: () => '',
+          );
+      if (unfrozenDomain != '') {
+        return unfrozenDomain;
+      }
+    }
+    // 全部被冻结，几乎不存在的情况
+    throw StorageError(
+      type: StorageErrorType.NO_AVAILABLE_HOST,
+      message: '没有可用的上传域名',
+    );
+  }
+
+  Future<BucketRegionsQuery> _getQuery() async {
+    if (_query != null) {
+      return _query!;
+    }
+    _query = await _group.doGroup(
+      '',
+      () async => BucketRegionsQuery.create(
+        bucketHosts: _bucketHosts,
+        useHttps: _useHttps,
+        persistentFilePath: join(
+          Directory.systemTemp.path,
+          'qiniu-dart-sdk',
+          'regions_v4_01.cache.json',
+        ),
+      ),
+    );
+    return _query!;
+  }
+
+  @override
+  bool isFrozen(String host) {
+    final uri = Uri.parse(host);
+    final frozenDomain = _frozenUpDomains
+        .where((domain) => domain.isFrozen() && domain.value == uri.host);
+    return frozenDomain.isNotEmpty;
+  }
+
+  @override
+  void freezeHost(String host) {
+    final uri = Uri.parse(host);
+    _frozenUpDomains.add(_Domain(uri.host)..freeze());
+  }
 }

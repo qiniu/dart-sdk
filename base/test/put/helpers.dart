@@ -88,6 +88,7 @@ class HostProviderTest extends HostProvider {
   Future<String> getUpHost({
     required String accessKey,
     required String bucket,
+    bool accelerateUploading = false,
   }) async {
     // token 中 bucket 对应的地区
     return 'https://upload-na0.qiniup.com';

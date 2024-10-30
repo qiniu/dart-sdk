@@ -1,7 +1,7 @@
 part of 'config.dart';
 
 abstract class RegionsProvider {
-  List<Region> getRegions();
+  List<Region> get regions;
 }
 
 final class Region implements RegionsProvider {
@@ -15,16 +15,24 @@ final class Region implements RegionsProvider {
   Endpoints get bucket => _bucket;
 
   @override
-  List<Region> getRegions() {
-    return [this];
-  }
+  List<Region> get regions => [this];
 
   Region.getByID(String regionId, {bool useHttps = true})
       : this(up: Endpoints._getUpEndpointsByID(regionId, useHttps: useHttps));
+
+  factory Region._fromMap(Map<String, dynamic> map) => Region(
+        up: Endpoints._fromMap(map['up']),
+        bucket: Endpoints._fromMap(map['bucket']),
+      );
+
+  Map<String, dynamic> _toMap() => {
+        'up': _up._toMap(),
+        'bucket': _bucket._toMap(),
+      };
 }
 
 abstract class EndpointsProvider {
-  Endpoints getEndpoints();
+  Endpoints get endpoints;
 }
 
 final class Endpoints extends Iterable<String> implements EndpointsProvider {
@@ -43,9 +51,19 @@ final class Endpoints extends Iterable<String> implements EndpointsProvider {
   List<String> get accelerated => _accelerated;
 
   @override
-  Endpoints getEndpoints() {
-    return this;
-  }
+  Endpoints get endpoints => this;
+
+  factory Endpoints._fromMap(Map<String, dynamic> map) => Endpoints(
+        accelerated: _toStringList(map['accelerated']),
+        preferred: _toStringList(map['preferred']),
+        alternative: _toStringList(map['alternative']),
+      );
+
+  Map<String, dynamic> _toMap() => {
+        'accelerated': _accelerated,
+        'preferred': _preferred,
+        'alternative': _alternative,
+      };
 
   Endpoints._getUpEndpointsByID(String regionId, {bool useHttps = true})
       : _preferred = [
@@ -59,36 +77,27 @@ final class Endpoints extends Iterable<String> implements EndpointsProvider {
   int get length =>
       _accelerated.length + _preferred.length + _alternative.length;
 
-  static String _makeHost(String domain, {bool useHttps = true}) {
-    if (useHttps) {
-      return 'https://$domain';
-    } else {
-      return 'http://$domain';
-    }
-  }
-
-  static Endpoints _defaultBucketEndpoints() {
-    return Endpoints(
-      preferred: [
-        _makeHost('uc.qiniuapi.com'),
-        _makeHost('kodo-config.qiniuapi.com'),
-      ],
-      alternative: [
-        _makeHost('uc.qbox.me'),
-      ],
-    );
-  }
+  static Endpoints _defaultBucketEndpoints() => Endpoints(
+        preferred: [
+          _makeHost('uc.qiniuapi.com'),
+          _makeHost('kodo-config.qiniuapi.com'),
+        ],
+        alternative: [
+          _makeHost('uc.qbox.me'),
+        ],
+      );
 
   @override
   Iterator<String> get iterator => _EndpointsIterator(this);
 
-  Endpoints operator +(Endpoints right) {
-    return Endpoints(
-      accelerated: _accelerated + right._accelerated,
-      preferred: _preferred + right.preferred,
-      alternative: right.alternative,
-    );
-  }
+  Endpoints operator +(Endpoints right) => Endpoints(
+        accelerated: _accelerated + right._accelerated,
+        preferred: _preferred + right.preferred,
+        alternative: right.alternative,
+      );
+
+  String get _cacheKey =>
+      '${_getHostsMD5(_accelerated)}:${_getHostsMD5(_preferred)}:${_getHostsMD5(_alternative)}';
 }
 
 enum _EndpointsIteratorStatus {
@@ -145,5 +154,27 @@ final class _EndpointsIterator implements Iterator<String> {
           return true;
       }
     }
+  }
+}
+
+List<String>? _toStringList(dynamic raw) {
+  final ls = <String>[];
+  if (raw == null) {
+    return null;
+  }
+  for (final rawElement in raw) {
+    ls.add(rawElement);
+  }
+  return ls;
+}
+
+String _makeHost(String domain, {bool useHttps = true}) {
+  if (domain.contains('://')) {
+    return domain;
+  }
+  if (useHttps) {
+    return 'https://$domain';
+  } else {
+    return 'http://$domain';
   }
 }

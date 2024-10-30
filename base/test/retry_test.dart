@@ -264,6 +264,7 @@ class HostProviderTest extends HostProvider {
   Future<String> getUpHost({
     required String accessKey,
     required String bucket,
+    bool accelerateUploading = false,
   }) async {
     if (isFrozen('https://test.com')) {
       return _hostProvider.getUpHost(accessKey: accessKey, bucket: bucket);
