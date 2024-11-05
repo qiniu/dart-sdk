@@ -132,6 +132,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
       token: token,
       key: options.key,
       controller: controller,
+      accelerateUploading: options.accelerateUploading,
     );
 
     manager.addTask(task);
@@ -149,6 +150,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
       maxPartsRequestNumber: options.maxPartsRequestNumber,
       resource: resource,
       controller: controller,
+      accelerateUploading: options.accelerateUploading,
     );
 
     controller.addSendProgressListener(onSendProgress);
@@ -172,6 +174,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
       mimeType: options.mimeType,
       customVars: options.customVars,
       controller: controller,
+      accelerateUploading: options.accelerateUploading,
     );
 
     manager.addTask(task);

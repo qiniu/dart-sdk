@@ -80,6 +80,7 @@ class PutBySingleTask extends RequestTask<PutResponse> {
     final host = await config.hostProvider.getUpHost(
       accessKey: _tokenInfo.accessKey,
       bucket: _tokenInfo.putPolicy.getBucket(),
+      accelerateUploading: options.accelerateUploading,
     );
 
     final response = await client.post<Map<String, dynamic>>(

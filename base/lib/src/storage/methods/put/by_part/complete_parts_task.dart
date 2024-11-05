@@ -7,6 +7,7 @@ class CompletePartsTask extends RequestTask<PutResponse> {
   final List<Part> parts;
   final String? key;
   final String? mimeType;
+  final bool accelerateUploading;
 
   late final UpTokenInfo _tokenInfo;
 
@@ -21,6 +22,7 @@ class CompletePartsTask extends RequestTask<PutResponse> {
     this.mimeType,
     this.customVars,
     PutController? controller,
+    this.accelerateUploading = false,
   }) : super(controller: controller);
 
   @override
@@ -36,6 +38,7 @@ class CompletePartsTask extends RequestTask<PutResponse> {
     final host = await config.hostProvider.getUpHost(
       bucket: bucket,
       accessKey: _tokenInfo.accessKey,
+      accelerateUploading: accelerateUploading,
     );
     final headers = <String, dynamic>{'Authorization': 'UpToken $token'};
     final encodedKey = key != null ? base64Url.encode(utf8.encode(key!)) : '~';

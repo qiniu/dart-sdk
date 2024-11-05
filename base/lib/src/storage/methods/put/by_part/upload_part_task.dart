@@ -6,6 +6,7 @@ class UploadPartTask extends RequestTask<UploadPart> {
   final String uploadId;
   final List<int> bytes;
   final int partSize;
+  final bool accelerateUploading;
 
   // 如果 data 是 Stream 的话，Dio 需要判断 content-length 才会调用 onSendProgress
   // https://github.com/cfug/dio/blob/v5.0.0/dio/lib/src/dio_mixin.dart#L633
@@ -26,6 +27,7 @@ class UploadPartTask extends RequestTask<UploadPart> {
     required this.partSize,
     this.key,
     PutController? controller,
+    this.accelerateUploading = false,
   }) : super(controller: controller);
 
   @override
@@ -52,6 +54,7 @@ class UploadPartTask extends RequestTask<UploadPart> {
     final host = await config.hostProvider.getUpHost(
       bucket: bucket,
       accessKey: _tokenInfo.accessKey,
+      accelerateUploading: accelerateUploading,
     );
 
     final encodedKey = key != null ? base64Url.encode(utf8.encode(key!)) : '~';

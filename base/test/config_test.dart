@@ -58,7 +58,6 @@ void main() {
       );
 
       // getUpHost 会返回至少2个host，不用担心会少于两个
-      print('*** hostA = $hostA, hostB = $hostB');
       expect(hostA == hostB, false);
     },
     skip: !isSensitiveDataDefined,

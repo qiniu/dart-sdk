@@ -4,6 +4,7 @@ part of 'put_parts_task.dart';
 class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   final String token;
   final String uploadId;
+  final bool accelerateUploading;
 
   final int partSize;
   final int maxPartsRequestNumber;
@@ -42,6 +43,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     required this.maxPartsRequestNumber,
     required this.resource,
     PutController? controller,
+    this.accelerateUploading = false,
   }) : super(controller: controller);
 
   static String getCacheKey(
@@ -178,6 +180,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
       partSize: partSize,
       key: resource.name,
       controller: controller,
+      accelerateUploading: accelerateUploading,
     );
 
     controller
