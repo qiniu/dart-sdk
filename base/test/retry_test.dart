@@ -90,8 +90,8 @@ void main() {
         expect((error as StorageError).type, StorageErrorType.UNKNOWN);
       }
       expect(future, throwsA(isA<StorageError>()));
-      // UploadPartTask 4 次 * 2 个分片
-      expect(httpAdapter.callTimes, 8);
+      // UploadPartTask 11 次 * 2 个分片
+      expect(httpAdapter.callTimes, 22);
       expect(
         statusList,
         [StorageStatus.Init, StorageStatus.Request, StorageStatus.Error],
@@ -265,6 +265,8 @@ class HostProviderTest extends HostProvider {
     required String accessKey,
     required String bucket,
     bool accelerateUploading = false,
+    bool transregional = false,
+    int regionIndex = 0,
   }) async {
     if (isFrozen('https://test.com')) {
       return _hostProvider.getUpHost(accessKey: accessKey, bucket: bucket);

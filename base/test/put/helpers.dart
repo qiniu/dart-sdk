@@ -89,6 +89,8 @@ class HostProviderTest extends HostProvider {
     required String accessKey,
     required String bucket,
     bool accelerateUploading = false,
+    bool transregional = false,
+    int regionIndex = 0,
   }) async {
     // token 中 bucket 对应的地区
     return 'https://upload-na0.qiniup.com';

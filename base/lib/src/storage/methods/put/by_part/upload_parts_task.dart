@@ -5,6 +5,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
   final String token;
   final String uploadId;
   final bool accelerateUploading;
+  final int regionIndex;
 
   final int partSize;
   final int maxPartsRequestNumber;
@@ -44,6 +45,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     required this.resource,
     PutController? controller,
     this.accelerateUploading = false,
+    this.regionIndex = 0,
   }) : super(controller: controller);
 
   static String getCacheKey(
@@ -181,6 +183,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
       key: resource.name,
       controller: controller,
       accelerateUploading: accelerateUploading,
+      regionIndex: regionIndex,
     );
 
     controller

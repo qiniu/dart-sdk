@@ -81,6 +81,7 @@ class PutBySingleTask extends RequestTask<PutResponse> {
       accessKey: _tokenInfo.accessKey,
       bucket: _tokenInfo.putPolicy.getBucket(),
       accelerateUploading: options.accelerateUploading,
+      transregional: true,
     );
 
     final response = await client.post<Map<String, dynamic>>(

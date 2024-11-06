@@ -34,7 +34,7 @@ abstract class RequestTask<T> extends Task<T> {
   int retryCount = 0;
 
   // 最大重试次数
-  int retryLimit = 3;
+  int retryLimit = 10;
 
   bool _isRetrying = false;
   bool get isRetrying => _isRetrying;
@@ -199,23 +199,22 @@ abstract class RequestTask<T> extends Task<T> {
   // host 是否不可用
   bool _isHostUnavailable(Object error) {
     if (error is DioException) {
-      if (error.type == DioExceptionType.badResponse) {
-        final statusCode = error.response?.statusCode;
-        if (statusCode == 502) {
+      switch (error.type) {
+        case DioExceptionType.badResponse:
+          final statusCode = error.response?.statusCode;
+          switch (statusCode) {
+            case 502 || 503 || 504 || 599:
+              return true;
+            default:
+            // do nothing
+          }
+        case DioExceptionType.connectionError ||
+              DioExceptionType.connectionTimeout ||
+              DioExceptionType.badCertificate:
           return true;
-        }
-        if (statusCode == 503) {
-          return true;
-        }
-        if (statusCode == 504) {
-          return true;
-        }
-        if (statusCode == 599) {
-          return true;
-        }
+        default:
+        // do nothing
       }
-      // ignore: todo
-      // TODO 更详细的信息 SocketException
     }
 
     return false;

@@ -5,6 +5,8 @@ abstract class HostProvider {
     required String accessKey,
     required String bucket,
     bool accelerateUploading = false,
+    bool transregional = false,
+    int regionIndex = 0,
   });
 
   bool isFrozen(String host);
@@ -18,7 +20,36 @@ List<String> _defaultBucketHosts = [
   'uc.qbox.me',
 ];
 
-class DefaultHostProvider extends HostProvider {
+abstract class HostFreezer extends HostProvider {
+  // 冻结的上传区域
+  final List<_Domain> _frozenUpDomains = [];
+
+  @override
+  bool isFrozen(String host) {
+    final uri = Uri.parse(host);
+    final frozenDomain = _frozenUpDomains.where(
+      (domain) =>
+          domain.isFrozen() && domain.value == '${uri.host}:${uri.port}',
+    );
+    return frozenDomain.isNotEmpty;
+  }
+
+  @override
+  void freezeHost(String host) {
+    // http://example.org
+    // scheme: http
+    // host: example.org
+    final uri = Uri.parse(host);
+    _frozenUpDomains.add(_Domain('${uri.host}:${uri.port}')..freeze());
+  }
+
+  void _unfreezeUpDomains() {
+    // 解冻需要被解冻的 host
+    _frozenUpDomains.removeWhere((domain) => !domain.isFrozen());
+  }
+}
+
+class DefaultHostProvider extends HostFreezer {
   var protocol = Protocol.Https.value;
   var bucketHosts = _defaultBucketHosts;
 
@@ -27,18 +58,16 @@ class DefaultHostProvider extends HostProvider {
   final _stashedUpDomains = <_Domain>[];
   // accessKey:bucket 用此 key 判断是否 up host 需要走缓存
   String? _cacheKey;
-  // 冻结的上传区域
-  final List<_Domain> _frozenUpDomains = [];
 
   @override
   Future<String> getUpHost({
     required String accessKey,
     required String bucket,
     bool accelerateUploading = false,
+    bool transregional = false,
+    int regionIndex = 0,
   }) async {
-    // 解冻需要被解冻的 host
-    _frozenUpDomains.removeWhere((domain) => !domain.isFrozen());
-
+    _unfreezeUpDomains();
     final upDomains = <_Domain>[];
     final cacheKey =
         '$accessKey:$bucket:${accelerateUploading ? '1' : '0'}:${_getHostsMD5(bucketHosts)}';
@@ -51,12 +80,19 @@ class DefaultHostProvider extends HostProvider {
         protocol,
         _http,
       );
-      final hosts = data['hosts']
+      Iterable<_Host> hosts = data['hosts']
           .map((dynamic json) => _Host.fromJson(json as Map))
-          .cast<_Host>()
-          .toList() as List<_Host>;
+          .cast<_Host>();
 
-      for (var host in hosts) {
+      if (!transregional) {
+        final host = hosts.elementAtOrNull(regionIndex);
+        if (host == null) {
+          _throwNoAvailableRegionError();
+        }
+        hosts = [host];
+      }
+
+      for (final host in hosts) {
         final domainList = host.up['domains'].cast<String>() as List<String>;
         final domains = domainList.map((domain) => _Domain(domain));
         upDomains.addAll(domains);
@@ -76,28 +112,7 @@ class DefaultHostProvider extends HostProvider {
         return '$protocol://${availableDomain.value}';
       }
     }
-    // 全部被冻结，几乎不存在的情况
-    throw StorageError(
-      type: StorageErrorType.NO_AVAILABLE_HOST,
-      message: '没有可用的上传域名',
-    );
-  }
-
-  @override
-  bool isFrozen(String host) {
-    final uri = Uri.parse(host);
-    final frozenDomain = _frozenUpDomains
-        .where((domain) => domain.isFrozen() && domain.value == uri.host);
-    return frozenDomain.isNotEmpty;
-  }
-
-  @override
-  void freezeHost(String host) {
-    // http://example.org
-    // scheme: http
-    // host: example.org
-    final uri = Uri.parse(host);
-    _frozenUpDomains.add(_Domain(uri.host)..freeze());
+    _throwNoAvailableHostError();
   }
 }
 
@@ -131,6 +146,84 @@ class _Domain {
   }
 
   _Domain(this.value);
+}
+
+class DefaultHostProviderV2 extends HostFreezer {
+  BucketRegionsQuery? _query;
+  final Endpoints _bucketHosts;
+  final bool _useHttps;
+  final _group = singleflight.Group.create<BucketRegionsQuery>();
+
+  DefaultHostProviderV2()
+      : _bucketHosts = Endpoints._defaultBucketEndpoints(),
+        _useHttps = true;
+
+  DefaultHostProviderV2.from({
+    required Endpoints bucketHosts,
+    bool useHttps = true,
+  })  : _bucketHosts = bucketHosts,
+        _useHttps = useHttps;
+
+  @override
+  Future<String> getUpHost({
+    required String accessKey,
+    required String bucket,
+    bool accelerateUploading = false,
+    bool transregional = false,
+    int regionIndex = 0,
+  }) async {
+    _unfreezeUpDomains();
+
+    final query = await _getQuery();
+    final regionsProvider = await query.query(
+      accessKey: accessKey,
+      bucketName: bucket,
+      accelerateUploading: accelerateUploading,
+    );
+    final regions = <Region>[];
+    if (transregional) {
+      regions.addAll(regionsProvider.regions);
+    } else {
+      final region = regionsProvider.regions.elementAtOrNull(regionIndex);
+      if (region == null) {
+        _throwNoAvailableRegionError();
+      }
+      regions.add(region);
+    }
+    for (final region in regions) {
+      final unfrozenDomain = region.up
+          .map((domain) => _makeHost(domain, useHttps: _useHttps))
+          .firstWhere(
+            (domain) => !isFrozen(domain),
+            orElse: () => '',
+          );
+      if (unfrozenDomain != '') {
+        return unfrozenDomain;
+      }
+    }
+    _throwNoAvailableHostError();
+  }
+
+  Future<BucketRegionsQuery> get query => _getQuery();
+
+  Future<BucketRegionsQuery> _getQuery() async {
+    if (_query != null) {
+      return _query!;
+    }
+    _query = await _group.doGroup(
+      '',
+      () async => BucketRegionsQuery.create(
+        bucketHosts: _bucketHosts,
+        useHttps: _useHttps,
+        persistentFilePath: join(
+          Directory.systemTemp.path,
+          'qiniu-dart-sdk',
+          'regions_v4_01.cache.json',
+        ),
+      ),
+    );
+    return _query!;
+  }
 }
 
 String _getHostsMD5(List<String> hosts) {
@@ -173,83 +266,16 @@ Future<Map> _getUrl(
   throw err!;
 }
 
-class DefaultHostProviderV2 implements HostProvider {
-  BucketRegionsQuery? _query;
-  final Endpoints _bucketHosts;
-  final bool _useHttps;
-  final _group = singleflight.Group.create<BucketRegionsQuery>();
-  final _frozenUpDomains = <_Domain>[];
+Never _throwNoAvailableHostError() {
+  throw StorageError(
+    type: StorageErrorType.NO_AVAILABLE_HOST,
+    message: '没有可用的上传域名',
+  );
+}
 
-  DefaultHostProviderV2()
-      : _bucketHosts = Endpoints._defaultBucketEndpoints(),
-        _useHttps = true;
-
-  DefaultHostProviderV2.from({
-    required Endpoints bucketHosts,
-    bool useHttps = true,
-  })  : _bucketHosts = bucketHosts,
-        _useHttps = useHttps;
-
-  @override
-  Future<String> getUpHost({
-    required String accessKey,
-    required String bucket,
-    bool accelerateUploading = false,
-  }) async {
-    final query = await _getQuery();
-    final regionsProvider = await query.query(
-      accessKey: accessKey,
-      bucketName: bucket,
-      accelerateUploading: accelerateUploading,
-    );
-    for (final region in regionsProvider.regions) {
-      final unfrozenDomain = region.up
-          .map((domain) => _makeHost(domain, useHttps: _useHttps))
-          .firstWhere(
-            (domain) => !isFrozen(domain),
-            orElse: () => '',
-          );
-      if (unfrozenDomain != '') {
-        return unfrozenDomain;
-      }
-    }
-    // 全部被冻结，几乎不存在的情况
-    throw StorageError(
-      type: StorageErrorType.NO_AVAILABLE_HOST,
-      message: '没有可用的上传域名',
-    );
-  }
-
-  Future<BucketRegionsQuery> _getQuery() async {
-    if (_query != null) {
-      return _query!;
-    }
-    _query = await _group.doGroup(
-      '',
-      () async => BucketRegionsQuery.create(
-        bucketHosts: _bucketHosts,
-        useHttps: _useHttps,
-        persistentFilePath: join(
-          Directory.systemTemp.path,
-          'qiniu-dart-sdk',
-          'regions_v4_01.cache.json',
-        ),
-      ),
-    );
-    return _query!;
-  }
-
-  @override
-  bool isFrozen(String host) {
-    final uri = Uri.parse(host);
-    final frozenDomain = _frozenUpDomains
-        .where((domain) => domain.isFrozen() && domain.value == uri.host);
-    return frozenDomain.isNotEmpty;
-  }
-
-  @override
-  void freezeHost(String host) {
-    final uri = Uri.parse(host);
-    _frozenUpDomains.add(_Domain(uri.host)..freeze());
-  }
+Never _throwNoAvailableRegionError() {
+  throw StorageError(
+    type: StorageErrorType.NO_AVAILABLE_REGION,
+    message: '没有可用的上传区域',
+  );
 }

@@ -29,7 +29,7 @@ class Config {
     HostProvider? hostProvider,
     CacheProvider? cacheProvider,
     HttpClientAdapter? httpClientAdapter,
-    this.retryLimit = 3,
+    this.retryLimit = 10,
   })  : hostProvider = hostProvider ?? DefaultHostProviderV2(),
         cacheProvider = cacheProvider ?? DefaultCacheProvider(),
         httpClientAdapter = httpClientAdapter ?? HttpClientAdapter();

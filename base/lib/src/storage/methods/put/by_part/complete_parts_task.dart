@@ -8,6 +8,7 @@ class CompletePartsTask extends RequestTask<PutResponse> {
   final String? key;
   final String? mimeType;
   final bool accelerateUploading;
+  final int regionIndex;
 
   late final UpTokenInfo _tokenInfo;
 
@@ -23,6 +24,7 @@ class CompletePartsTask extends RequestTask<PutResponse> {
     this.customVars,
     PutController? controller,
     this.accelerateUploading = false,
+    this.regionIndex = 0,
   }) : super(controller: controller);
 
   @override
@@ -39,6 +41,7 @@ class CompletePartsTask extends RequestTask<PutResponse> {
       bucket: bucket,
       accessKey: _tokenInfo.accessKey,
       accelerateUploading: accelerateUploading,
+      regionIndex: regionIndex,
     );
     final headers = <String, dynamic>{'Authorization': 'UpToken $token'};
     final encodedKey = key != null ? base64Url.encode(utf8.encode(key!)) : '~';
