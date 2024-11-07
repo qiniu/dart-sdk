@@ -164,7 +164,10 @@ void main() {
       upload1Called += 1;
       return shelf.Response(
         599,
-        headers: {'content-type': 'application/json'},
+        headers: {
+          'content-type': 'application/json',
+          'x-reqid': 'fakeReqid',
+        },
         body: jsonEncode({'error': 'fakeError'}),
       );
     }
@@ -184,7 +187,10 @@ void main() {
       upload2Called += 1;
       return shelf.Response(
         200,
-        headers: {'content-type': 'application/json'},
+        headers: {
+          'content-type': 'application/json',
+          'x-reqid': 'fakeReqid',
+        },
         body: jsonEncode({'key': fileKeyForSingle}),
       );
     }
@@ -228,6 +234,7 @@ void main() {
         ),
         headers: {
           'content-type': 'application/json',
+          'x-reqid': 'fakeReqid',
         },
       );
     }

@@ -69,6 +69,7 @@ class CompletePartsTask extends RequestTask<PutResponse> {
         headers: headers,
       ),
     );
+    checkResponse(response);
 
     return PutResponse.fromJson(response.data!);
   }

@@ -74,6 +74,7 @@ class UploadPartTask extends RequestTask<UploadPart> {
         contentType: 'application/octet-stream',
       ),
     );
+    checkResponse(response);
 
     return UploadPart.fromJson(response.data!);
   }

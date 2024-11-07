@@ -94,6 +94,7 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
         contentType: Headers.textPlainContentType,
       ),
     );
+    checkResponse(response);
 
     return InitParts.fromJson(response.data!);
   }

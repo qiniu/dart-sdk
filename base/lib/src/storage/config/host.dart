@@ -253,6 +253,7 @@ Future<Map> _getUrl(
     }
     try {
       final resp = await http.get<Map>(url);
+      _checkResponse(resp);
       return resp.data!;
     } on DioException catch (e) {
       if (e.response?.statusCode != null &&
@@ -264,6 +265,16 @@ Future<Map> _getUrl(
     }
   }
   throw err!;
+}
+
+void _checkResponse(Response response) {
+  if (response.headers['x-reqid'] == null &&
+      response.headers['x-log'] == null) {
+    throw DioException.connectionError(
+      requestOptions: response.requestOptions,
+      reason: 'response might be malicious',
+    );
+  }
 }
 
 Never _throwNoAvailableHostError() {

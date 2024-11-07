@@ -413,7 +413,10 @@ void main() {
       upload1InitPartsCalled += 1;
       return shelf.Response(
         200,
-        headers: {'content-type': 'application/json'},
+        headers: {
+          'content-type': 'application/json',
+          'x-reqid': 'fakeReqid',
+        },
         body: jsonEncode({
           'uploadId': 'testUploadId',
           'expireAt': (DateTime.now().millisecondsSinceEpoch / 1000).ceil(),
@@ -427,7 +430,10 @@ void main() {
       upload1UploadPartCalled += 1;
       return shelf.Response(
         599,
-        headers: {'content-type': 'application/json'},
+        headers: {
+          'content-type': 'application/json',
+          'x-reqid': 'fakeReqid',
+        },
         body: jsonEncode({'error': 'test error'}),
       );
     }
@@ -459,7 +465,10 @@ void main() {
       upload2InitPartsCalled += 1;
       return shelf.Response(
         200,
-        headers: {'content-type': 'application/json'},
+        headers: {
+          'content-type': 'application/json',
+          'x-reqid': 'fakeReqid',
+        },
         body: jsonEncode({
           'uploadId': 'testUploadId2',
           'expireAt': (DateTime.now().millisecondsSinceEpoch / 1000).ceil(),
@@ -473,7 +482,10 @@ void main() {
       upload2UploadPartCalled += 1;
       return shelf.Response(
         200,
-        headers: {'content-type': 'application/json'},
+        headers: {
+          'content-type': 'application/json',
+          'x-reqid': 'fakeReqid',
+        },
         body: jsonEncode({
           'etag': 'fakeEtag$upload2UploadPartCalled',
           'md5': 'fakeMd5$upload2UploadPartCalled',
@@ -487,7 +499,10 @@ void main() {
       upload2CompletePartsCalled += 1;
       return shelf.Response(
         200,
-        headers: {'content-type': 'application/json'},
+        headers: {
+          'content-type': 'application/json',
+          'x-reqid': 'fakeReqid',
+        },
         body: jsonEncode({'key': fileKeyForPart}),
       );
     }
@@ -543,6 +558,7 @@ void main() {
         ),
         headers: {
           'content-type': 'application/json',
+          'x-reqid': 'fakeReqid',
         },
       );
     }

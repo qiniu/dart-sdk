@@ -89,6 +89,7 @@ class PutBySingleTask extends RequestTask<PutResponse> {
       data: formData,
       cancelToken: controller?.cancelToken,
     );
+    checkResponse(response);
 
     return PutResponse.fromJson(response.data!);
   }

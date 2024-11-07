@@ -219,4 +219,14 @@ abstract class RequestTask<T> extends Task<T> {
 
     return false;
   }
+
+  void checkResponse(Response response) {
+    if (response.headers['x-reqid'] == null &&
+        response.headers['x-log'] == null) {
+      throw DioException.connectionError(
+        requestOptions: response.requestOptions,
+        reason: 'response might be malicious',
+      );
+    }
+  }
 }

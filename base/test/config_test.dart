@@ -246,6 +246,7 @@ void main() {
         ),
         headers: {
           'content-type': 'application/json',
+          'x-reqid': 'fakeReqid',
         },
       );
     }
