@@ -24,6 +24,7 @@ void main() {
         retryLimit: 3,
       );
       final storage = Storage(config: config);
+      final token = generateUploadToken('test');
       final statusList = <StorageStatus>[];
       final future = storage.putFile(
         File('test_resource/test_for_put.txt'),
@@ -34,9 +35,9 @@ void main() {
       );
       try {
         await future;
-      } catch (error) {
-        expect(error, isA<StorageError>());
-        expect((error as StorageError).type, StorageErrorType.UNKNOWN);
+        fail('expected to throw StorageError');
+      } on StorageError catch (error) {
+        expect(error.type, StorageErrorType.UNKNOWN);
       }
       expect(future, throwsA(isA<StorageError>()));
       // 初始 1 次 + 重试 3 次
@@ -67,6 +68,7 @@ void main() {
         httpClientAdapter: httpAdapter,
       );
       final storage = Storage(config: config);
+      final token = generateUploadToken('test');
       final file = File('test_resource/test_for_put_parts.mp4');
       final resource = FileResource(file: file, length: file.lengthSync());
       final statusList = <StorageStatus>[];
@@ -85,9 +87,9 @@ void main() {
       );
       try {
         await future;
-      } catch (error) {
-        expect(error, isA<StorageError>());
-        expect((error as StorageError).type, StorageErrorType.UNKNOWN);
+        fail('expected to throw StorageError');
+      } on StorageError catch (error) {
+        expect(error.type, StorageErrorType.UNKNOWN);
       }
       expect(future, throwsA(isA<StorageError>()));
       // UploadPartTask 11 次 * 2 个分片
@@ -108,6 +110,7 @@ void main() {
         httpClientAdapter: HttpAdapterTestWith502(),
       );
       final storage = Storage(config: config);
+      final token = generateUploadToken('test_for_put.txt');
       final putController = PutController();
       final statusList = <StorageStatus>[];
       putController.addStatusListener(statusList.add);
@@ -142,6 +145,7 @@ void main() {
         httpClientAdapter: HttpAdapterTestWith502(),
       );
       final storage = Storage(config: config);
+      final token = generateUploadToken('test_for_put_parts.mp4');
       final file = File('test_resource/test_for_put_parts.mp4');
       final resource = FileResource(file: file, length: file.lengthSync());
       final key = 'test_for_put_parts.mp4';

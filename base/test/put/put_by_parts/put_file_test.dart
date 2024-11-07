@@ -21,16 +21,11 @@ void main() {
     'customVars&returnBody should works well.',
     () async {
       final storage = Storage();
-
-      final auth = Auth(
-        accessKey: env['QINIU_DART_SDK_ACCESS_KEY']!,
-        secretKey: env['QINIU_DART_SDK_SECRET_KEY']!,
-      );
-
-      final token = auth.generateUploadToken(
+      final token = generateUploadToken(
+        fileKeyForPart,
         putPolicy: PutPolicy(
           insertOnly: 0,
-          scope: env['QINIU_DART_SDK_TOKEN_SCOPE']!,
+          scope: "${env['QINIU_DART_SDK_TOKEN_SCOPE']!}:$fileKeyForPart",
           returnBody: '{"key":"\$(key)","type":"\$(x:type)","ext":"\$(x:ext)"}',
           deadline: DateTime.now().millisecondsSinceEpoch + 3600,
         ),
@@ -65,6 +60,7 @@ void main() {
     () async {
       final storage = Storage();
       final pcb = PutControllerBuilder();
+      final token = generateUploadToken(fileKeyForPart);
       var callnumber = 0;
       pcb.putController.addSendProgressListener((percent) {
         callnumber++;
@@ -88,6 +84,9 @@ void main() {
       final responseNoOps = await storage.putFile(
         fileForPart,
         token,
+        options: PutOptions(
+          key: fileKeyForPart,
+        ),
       );
 
       expect(responseNoOps, isA<PutResponse>());
@@ -99,6 +98,7 @@ void main() {
     'putFile should throw error with incorrect partSize.',
     () async {
       final storage = Storage();
+      final token = generateUploadToken(fileKeyForPart);
       try {
         await storage.putFile(
           fileForPart,
@@ -128,6 +128,7 @@ void main() {
       final httpAdapterTest = HttpAdapterTestWith612();
       final storage =
           Storage(config: Config(httpClientAdapter: httpAdapterTest));
+      final token = generateUploadToken(fileKeyForPart);
       final response = await storage.putFile(
         fileForPart,
         token,
@@ -144,44 +145,18 @@ void main() {
   test(
     'putFile can be cancelled.',
     () async {
-      final pcb = PutControllerBuilder();
       final storage = Storage(config: Config(hostProvider: HostProviderTest()));
       final key = fileKeyForPart;
-      pcb.putController.addSendProgressListener((percent) {
-        // 开始上传并且 InitPartsTask 设置完缓存后取消
-        if (percent > 0.1) {
-          pcb.putController.cancel();
-        }
-      });
-      final future = storage.putFile(
-        fileForPart,
-        token,
-        options: PutOptions(
-          key: key,
-          partSize: 1,
-          controller: pcb.putController,
-        ),
-      );
-      try {
-        await future;
-      } catch (error) {
-        expect((error as StorageError).type, StorageErrorType.CANCEL);
-      }
-      expect(future, throwsA(TypeMatcher<StorageError>()));
-      pcb.testStatus(
-        targetStatusList: [
-          StorageStatus.Init,
-          StorageStatus.Request,
-          StorageStatus.Cancel,
-        ],
-        targetProgressList: [
-          0.001,
-          0.002,
-        ],
-      );
-
-      try {
-        await storage.putFile(
+      final token = generateUploadToken(key);
+      {
+        final pcb = PutControllerBuilder();
+        pcb.putController.addSendProgressListener((percent) {
+          // 开始上传并且 InitPartsTask 设置完缓存后取消
+          if (percent > 0.1) {
+            pcb.putController.cancel();
+          }
+        });
+        final future = storage.putFile(
           fileForPart,
           token,
           options: PutOptions(
@@ -190,13 +165,49 @@ void main() {
             controller: pcb.putController,
           ),
         );
-      } catch (error) {
-        // 复用了相同的 controller，所以也会触发取消的错误
-        expect(error, isA<StorageError>());
-        expect((error as StorageError).type, StorageErrorType.CANCEL);
+        try {
+          await future;
+        } on StorageError catch (error) {
+          expect(error.type, StorageErrorType.CANCEL);
+        }
+        expect(future, throwsA(TypeMatcher<StorageError>()));
+        pcb.testStatus(
+          targetStatusList: [
+            StorageStatus.Init,
+            StorageStatus.Request,
+            StorageStatus.Cancel,
+          ],
+          targetProgressList: [
+            0.001,
+            0.002,
+          ],
+        );
       }
 
-      expect(future, throwsA(isA<StorageError>()));
+      {
+        final pcb = PutControllerBuilder();
+        pcb.putController.addSendProgressListener((percent) {
+          // 开始上传并且 InitPartsTask 设置完缓存后取消
+          if (percent > 0.1) {
+            pcb.putController.cancel();
+          }
+        });
+        try {
+          await storage.putFile(
+            fileForPart,
+            token,
+            options: PutOptions(
+              key: key,
+              partSize: 1,
+              controller: pcb.putController,
+            ),
+          );
+          fail('expected to throw StorageError');
+        } on StorageError catch (error) {
+          // 复用了相同的 controller，所以也会触发取消的错误
+          expect(error.type, StorageErrorType.CANCEL);
+        }
+      }
 
       final response = await storage.putFile(
         fileForPart,
@@ -213,6 +224,7 @@ void main() {
     () async {
       final storage = Storage(config: Config(hostProvider: HostProviderTest()));
       final putController = PutController();
+      final token = generateUploadToken(fileKeyForPart);
       putController.addSendProgressListener((percent) {
         // 开始上传了取消
         if (percent > 0.1) {
@@ -232,9 +244,9 @@ void main() {
 
       try {
         await future;
-      } catch (error) {
-        expect(error, isA<StorageError>());
-        expect((error as StorageError).type, StorageErrorType.CANCEL);
+        fail('expected to throw StorageError');
+      } on StorageError catch (error) {
+        expect(error.type, StorageErrorType.CANCEL);
       }
 
       expect(future, throwsA(TypeMatcher<StorageError>()));
@@ -257,6 +269,7 @@ void main() {
       final config = Config(cacheProvider: cacheProvider);
       final storage = Storage(config: config);
       final key = fileKeyForPart;
+      final token = generateUploadToken(key);
       final resource =
           FileResource(file: fileForPart, length: fileForPart.lengthSync());
 
@@ -300,9 +313,9 @@ void main() {
 
       try {
         await future;
-      } catch (error) {
-        expect(error, isA<StorageError>());
-        expect((error as StorageError).type, StorageErrorType.CANCEL);
+        fail('expected to throw StorageError');
+      } on StorageError catch (error) {
+        expect(error.type, StorageErrorType.CANCEL);
         // 每个分片完成后会保存一次
         // init 一次，仅有的一个分片完成后一次共 2 次
         expect(cacheProvider.callNumber, 2);
@@ -332,6 +345,7 @@ void main() {
     () async {
       final storage = Storage();
       final key = fileKeyForPart;
+      final token = generateUploadToken(key);
 
       var errorOccurred = false;
 
@@ -355,10 +369,10 @@ void main() {
             partSize: 1,
           ),
         );
-      } catch (e) {
+        fail('expected to throw StorageError');
+      } on StorageError catch (error) {
         errorOccurred = true;
-        expect(e, isA<StorageError>());
-        expect((e as StorageError).type, StorageErrorType.IN_PROGRESS);
+        expect(error.type, StorageErrorType.IN_PROGRESS);
       }
       expect(errorOccurred, true);
     },
@@ -370,6 +384,7 @@ void main() {
     () async {
       final storage = Storage();
       final pcb = PutControllerBuilder();
+      final token = generateUploadToken(fileKeyForPart);
 
       final response = await storage.putFile(
         fileForPart,
@@ -550,6 +565,7 @@ void main() {
           ),
         ),
       );
+      final token = generateUploadToken(fileKeyForPart);
       final response = await storage.putFile(
         fileForPart,
         token,

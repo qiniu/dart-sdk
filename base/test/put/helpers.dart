@@ -114,3 +114,15 @@ class CacheProviderForTest extends DefaultCacheProvider {
     return super.setItem(key, item);
   }
 }
+
+(PutController, List<StorageStatus>) newCancelledPutController() {
+  final putController = PutController();
+  final statusList = <StorageStatus>[];
+  putController.addStatusListener((status) {
+    statusList.add(status);
+    if (status == StorageStatus.Request) {
+      putController.cancel();
+    }
+  });
+  return (putController, statusList);
+}

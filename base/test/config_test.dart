@@ -15,6 +15,7 @@ void main() {
     'RegionProvider should works well.',
     () async {
       final hostProvider = DefaultHostProvider();
+      final token = generateUploadToken('test');
       final tokenInfo = Auth.parseUpToken(token);
       final putPolicy = tokenInfo.putPolicy;
 
