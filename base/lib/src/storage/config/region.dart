@@ -5,14 +5,10 @@ abstract class RegionsProvider {
 }
 
 final class Region implements RegionsProvider {
-  final Endpoints _up, _bucket;
+  final Endpoints up, bucket;
 
-  Region({required Endpoints up, Endpoints? bucket})
-      : _up = up,
-        _bucket = bucket ?? Endpoints._defaultBucketEndpoints();
-
-  Endpoints get up => _up;
-  Endpoints get bucket => _bucket;
+  Region({required this.up, Endpoints? bucket})
+      : bucket = bucket ?? Endpoints._defaultBucketEndpoints();
 
   @override
   List<Region> get regions => [this];
@@ -26,8 +22,8 @@ final class Region implements RegionsProvider {
       );
 
   Map<String, dynamic> _toMap() => {
-        'up': _up._toMap(),
-        'bucket': _bucket._toMap(),
+        'up': up._toMap(),
+        'bucket': bucket._toMap(),
       };
 }
 
@@ -46,9 +42,9 @@ final class Endpoints extends Iterable<String> implements EndpointsProvider {
         _alternative = alternative ?? [],
         _accelerated = accelerated ?? [];
 
-  List<String> get preferred => _preferred;
-  List<String> get alternative => _alternative;
-  List<String> get accelerated => _accelerated;
+  List<String> get preferred => List.unmodifiable(_preferred);
+  List<String> get alternative => List.unmodifiable(_alternative);
+  List<String> get accelerated => List.unmodifiable(_accelerated);
 
   @override
   Endpoints get endpoints => this;

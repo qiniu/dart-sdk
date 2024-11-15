@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:qiniu_sdk_base/qiniu_sdk_base.dart' as base;
+import 'package:qiniu_sdk_base/qiniu_sdk_base.dart' as qiniu_sdk_base;
 
 export 'package:qiniu_sdk_base/qiniu_sdk_base.dart'
     show
@@ -24,24 +24,24 @@ import './config.dart';
 class Storage {
   /// Storage
   Storage({Config? config})
-      : _baseStorage = base.Storage(config: config ?? Config());
+      : _baseStorage = qiniu_sdk_base.Storage(config: config ?? Config());
 
-  final base.Storage _baseStorage;
+  final qiniu_sdk_base.Storage _baseStorage;
 
   /// putFile
-  Future<base.PutResponse> putFile(
+  Future<qiniu_sdk_base.PutResponse> putFile(
     File file,
     String token, {
-    base.PutOptions? options,
+    qiniu_sdk_base.PutOptions? options,
   }) {
     return _baseStorage.putFile(file, token, options: options);
   }
 
   /// putBytes
-  Future<base.PutResponse> putBytes(
+  Future<qiniu_sdk_base.PutResponse> putBytes(
     Uint8List bytes,
     String token, {
-    base.PutOptions? options,
+    qiniu_sdk_base.PutOptions? options,
   }) {
     return _baseStorage.putBytes(bytes, token, options: options);
   }

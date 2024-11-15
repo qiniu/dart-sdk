@@ -112,8 +112,9 @@ class PutByPartTask extends RequestTask<PutResponse> {
             /// 1、如果服务端文件被删除了，清除本地缓存
             /// 2、如果 PartNumber 不符合要求，顺序不对等原因导致的参数不对(400)
             if (error.code == 400 || error.code == 612) {
-              await initPartsTask.clearCache();
-              await uploadPartsTask.clearCache();
+              await Future.wait(
+                [initPartsTask.clearCache(), uploadPartsTask.clearCache()],
+              );
             }
 
             /// 如果服务端文件被删除了，重新上传
@@ -129,8 +130,10 @@ class PutByPartTask extends RequestTask<PutResponse> {
       } on StorageError catch (error) {
         if (error.type == StorageErrorType.NO_AVAILABLE_HOST) {
           regionIndex += 1;
-          await initPartsTask?.clearCache();
-          await uploadPartsTask?.clearCache();
+          await Future.wait([
+            if (initPartsTask != null) initPartsTask.clearCache(),
+            if (uploadPartsTask != null) uploadPartsTask.clearCache(),
+          ]);
         } else {
           rethrow;
         }

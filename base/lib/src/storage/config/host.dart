@@ -245,12 +245,8 @@ Future<Map> _getUrl(
 ) async {
   DioException? err;
   for (var domain in domains) {
-    late final String url;
-    if (domain.contains('://')) {
-      url = '$domain/$path';
-    } else {
-      url = '$protocol://$domain/$path';
-    }
+    final url =
+        domain.contains('://') ? '$domain/$path' : '$protocol://$domain/$path';
     try {
       final resp = await http.get<Map>(url);
       _checkResponse(resp);

@@ -1,6 +1,6 @@
 import '../version.dart';
 
-import 'package:qiniu_sdk_base/qiniu_sdk_base.dart' as base;
+import 'package:qiniu_sdk_base/qiniu_sdk_base.dart' as qiniu_sdk_base;
 import 'package:device_info_plus/device_info_plus.dart';
 
 export 'package:qiniu_sdk_base/qiniu_sdk_base.dart'
@@ -8,7 +8,7 @@ export 'package:qiniu_sdk_base/qiniu_sdk_base.dart'
 
 import 'dart:io' show Platform;
 
-class Config extends base.Config {
+class Config extends qiniu_sdk_base.Config {
   Config({
     super.hostProvider,
     super.cacheProvider,
