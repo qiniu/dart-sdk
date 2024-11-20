@@ -170,6 +170,9 @@ class BaseState extends DisposableState<Base> {
             case StorageErrorType.NO_AVAILABLE_HOST:
               printToConsole('发生错误: 无可用 Host');
               break;
+            case StorageErrorType.NO_AVAILABLE_REGION:
+              printToConsole('发生错误: 无可用 Region');
+              break;
             case StorageErrorType.IN_PROGRESS:
               printToConsole('发生错误: 已在队列中');
               break;

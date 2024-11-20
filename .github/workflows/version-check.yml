@@ -1,4 +1,4 @@
-name: Golang SDK Version Check
+name: Dart / Flutter SDK Version Check
 on:
   push:
     tags:
@@ -20,5 +20,5 @@ jobs:
           set -e
           grep -qF "## ${BASE_VERSION}" base/CHANGELOG.md
           grep -qF "final Version currentVersion = Version.parse('${BASE_VERSION}');" base/lib/src/version.dart
-          grep -qF "## ${FLUTTER_VERSION}" base/CHANGELOG.md
+          grep -qF "## ${FLUTTER_VERSION}" flutter/CHANGELOG.md
           grep -qF "final Version currentVersion = Version.parse('${FLUTTER_VERSION}');" flutter/lib/src/version.dart
