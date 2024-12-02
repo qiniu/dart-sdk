@@ -17,6 +17,8 @@ dart \
   --enable-vm-service=$OBS_PORT \
   test/test_coverage.dart &
 
+pid="$!"
+
 # Run the coverage collector to generate the JSON coverage report.
 echo "Collecting coverage..."
 dart pub run coverage:collect_coverage \
@@ -31,3 +33,5 @@ dart pub run coverage:format_coverage \
   --in=coverage/coverage.json \
   --out=coverage/lcov.info \
   --report-on=lib
+
+wait "$pid"

@@ -14,15 +14,11 @@ void main() {
   test(
     'customVars&returnBody should works well.',
     () async {
-      final auth = Auth(
-        accessKey: env['QINIU_DART_SDK_ACCESS_KEY']!,
-        secretKey: env['QINIU_DART_SDK_SECRET_KEY']!,
-      );
-
-      final token = auth.generateUploadToken(
+      final token = generateUploadToken(
+        fileKeyForSingle,
         putPolicy: PutPolicy(
           insertOnly: 0,
-          scope: env['QINIU_DART_SDK_TOKEN_SCOPE']!,
+          scope: "${env['QINIU_DART_SDK_TOKEN_SCOPE']!}:$fileKeyForSingle",
           returnBody: '{"key":"\$(key)","type":"\$(x:type)","ext":"\$(x:ext)"}',
           deadline: DateTime.now().millisecondsSinceEpoch + 3600,
         ),
@@ -56,6 +52,7 @@ void main() {
     'putBytes should works well.',
     () async {
       final pcb = PutControllerBuilder();
+      final token = generateUploadToken(fileKeyForSingle);
       final response = await storage.putBytes(
         bytes,
         token,
@@ -75,38 +72,12 @@ void main() {
   test(
     'putBytes can be cancelled.',
     () async {
-      final putController = PutController();
       final key = fileKeyForSingle;
+      final token = generateUploadToken(key);
 
-      final statusList = <StorageStatus>[];
-      putController.addStatusListener((status) {
-        statusList.add(status);
-        if (status == StorageStatus.Request) {
-          putController.cancel();
-        }
-      });
-      final future = storage.putBytes(
-        bytes,
-        token,
-        options: PutOptions(
-          forceBySingle: true,
-          key: key,
-          controller: putController,
-        ),
-      );
-      try {
-        await future;
-      } catch (error) {
-        expect(error, isA<StorageError>());
-        expect((error as StorageError).type, StorageErrorType.CANCEL);
-      }
-      expect(future, throwsA(TypeMatcher<StorageError>()));
-      expect(statusList[0], StorageStatus.Init);
-      expect(statusList[1], StorageStatus.Request);
-      expect(statusList[2], StorageStatus.Cancel);
-
-      try {
-        await storage.putBytes(
+      {
+        final (putController, statusList) = newCancelledPutController();
+        final future = storage.putBytes(
           bytes,
           token,
           options: PutOptions(
@@ -115,13 +86,39 @@ void main() {
             controller: putController,
           ),
         );
-      } catch (error) {
-        // 复用了相同的 controller，所以也会触发取消的错误
-        expect(error, isA<StorageError>());
-        expect((error as StorageError).type, StorageErrorType.CANCEL);
+        try {
+          await future;
+          fail('expected to throw StorageError');
+        } on StorageError catch (error) {
+          expect(error.type, StorageErrorType.CANCEL);
+        }
+        expect(future, throwsA(TypeMatcher<StorageError>()));
+        expect(statusList[0], StorageStatus.Init);
+        expect(statusList[1], StorageStatus.Request);
+        expect(statusList[2], StorageStatus.Cancel);
       }
 
-      expect(future, throwsA(TypeMatcher<StorageError>()));
+      {
+        final (putController, statusList) = newCancelledPutController();
+        try {
+          await storage.putBytes(
+            bytes,
+            token,
+            options: PutOptions(
+              forceBySingle: true,
+              key: key,
+              controller: putController,
+            ),
+          );
+          fail('expected to throw StorageError');
+        } on StorageError catch (error) {
+          // 复用了相同的 controller，所以也会触发取消的错误
+          expect(error.type, StorageErrorType.CANCEL);
+        }
+        expect(statusList[0], StorageStatus.Init);
+        expect(statusList[1], StorageStatus.Request);
+        expect(statusList[2], StorageStatus.Cancel);
+      }
 
       final response = await storage.putBytes(
         bytes,
@@ -138,6 +135,7 @@ void main() {
     'putBytes\'s status and progress should works well.',
     () async {
       final pcb = PutControllerBuilder();
+      final token = generateUploadToken(fileKeyForSingle);
 
       final response = await storage.putBytes(
         bytes,

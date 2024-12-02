@@ -1,10 +1,19 @@
-import 'package:dio/dio.dart';
+import 'dart:convert';
+import 'dart:io';
 
-import '../../storage/error/error.dart';
+import 'package:dio/dio.dart';
+import 'package:crypto/crypto.dart';
+import 'package:convert/convert.dart';
+import 'package:qiniu_sdk_base/src/storage/storage.dart';
+import 'package:cache_provider/cache_provider.dart' as cache_provider;
+import 'package:singleflight/singleflight.dart' as singleflight;
+import 'package:path/path.dart' show join;
 
 part 'cache.dart';
 part 'host.dart';
 part 'protocol.dart';
+part 'region.dart';
+part 'query.dart';
 
 class Config {
   final HostProvider hostProvider;
@@ -20,8 +29,10 @@ class Config {
     HostProvider? hostProvider,
     CacheProvider? cacheProvider,
     HttpClientAdapter? httpClientAdapter,
-    this.retryLimit = 3,
-  })  : hostProvider = hostProvider ?? DefaultHostProvider(),
+    this.retryLimit = 10,
+  })  : hostProvider = hostProvider ?? DefaultHostProviderV2(),
         cacheProvider = cacheProvider ?? DefaultCacheProvider(),
         httpClientAdapter = httpClientAdapter ?? HttpClientAdapter();
+
+  Future<String> get appUserAgent async => '';
 }

@@ -30,6 +30,8 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
   final Resource resource;
   final String token;
   final String? key;
+  final bool accelerateUploading;
+  final int regionIndex;
 
   @override
   late final String _cacheKey;
@@ -40,6 +42,8 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
     required this.token,
     this.key,
     PutController? controller,
+    this.accelerateUploading = false,
+    this.regionIndex = 0,
   }) : super(controller: controller);
 
   static String getCacheKey(String resourceId, String? key) {
@@ -73,6 +77,8 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
     final host = await config.hostProvider.getUpHost(
       bucket: bucket,
       accessKey: _tokenInfo.accessKey,
+      accelerateUploading: accelerateUploading,
+      regionIndex: regionIndex,
     );
 
     final encodedKey = key != null ? base64Url.encode(utf8.encode(key!)) : '~';
@@ -88,6 +94,7 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
         contentType: Headers.textPlainContentType,
       ),
     );
+    checkResponse(response);
 
     return InitParts.fromJson(response.data!);
   }

@@ -20,6 +20,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
   final Resource resource;
 
   final PutOptions options;
+  int regionIndex = 0;
 
   /// 设置为 0，避免子任务重试失败后 [PutByPartTask] 继续重试
   @override
@@ -72,51 +73,72 @@ class PutByPartTask extends RequestTask<PutResponse> {
   Future<PutResponse> createTask() async {
     controller?.notifyStatusListeners(StorageStatus.Request);
 
-    await resource.open();
+    return await _doUploading();
+  }
 
-    final initPartsTask = _createInitParts();
-    final initParts = await initPartsTask.future;
+  Future<PutResponse> _doUploading() async {
+    InitPartsTask? initPartsTask;
+    InitParts? initParts;
+    UploadPartsTask? uploadPartsTask;
+    while (true) {
+      try {
+        await resource.open();
 
-    // 初始化任务完成后也告诉外部一个进度
-    controller?.notifyProgressListeners(0.002);
+        initPartsTask = _createInitParts();
+        initParts = await initPartsTask.future;
 
-    final uploadParts = _createUploadParts(initParts.uploadId);
+        // 初始化任务完成后也告诉外部一个进度
+        controller?.notifyProgressListeners(0.002);
 
-    PutResponse putResponse;
-    try {
-      final parts = await uploadParts.future;
-      putResponse =
-          await _createCompleteParts(initParts.uploadId, parts).future;
-    } catch (error) {
-      // 拿不到 initPartsTask 和 uploadParts 的引用，所以不放到 postError 去
-      if (error is StorageError) {
-        /// 满足以下两种情况清理缓存：
-        /// 1、如果服务端文件被删除了，清除本地缓存
-        /// 2、如果 PartNumber 不符合要求，顺序不对等原因导致的参数不对(400)
-        if (error.code == 400 || error.code == 612) {
+        uploadPartsTask = _createUploadParts(
+          initParts.uploadId,
+        );
+
+        try {
+          final parts = await uploadPartsTask.future;
+          final putResponse = await _createCompleteParts(
+            initParts.uploadId,
+            parts,
+          ).future;
+
+          /// 上传完成，清除缓存
           await initPartsTask.clearCache();
-          await uploadParts.clearCache();
-        }
+          await uploadPartsTask.clearCache();
+          return putResponse;
+        } catch (error) {
+          // 拿不到 initPartsTask 和 uploadParts 的引用，所以不放到 postError 去
+          if (error is StorageError) {
+            /// 满足以下两种情况清理缓存：
+            /// 1、如果服务端文件被删除了，清除本地缓存
+            /// 2、如果 PartNumber 不符合要求，顺序不对等原因导致的参数不对(400)
+            if (error.code == 400 || error.code == 612) {
+              await Future.wait(
+                [initPartsTask.clearCache(), uploadPartsTask.clearCache()],
+              );
+            }
 
-        /// 如果服务端文件被删除了，重新上传
-        if (error.code == 612) {
-          controller?.notifyStatusListeners(StorageStatus.Retry);
-          await resource.close();
-          // TODO 调整为重试机制，而不是在这里 rerun，以降低复杂度
-          // 记录下子任务，可以解决引用问题
-          // 子任务关闭重试机制，重试改为从头开始
-          return createTask();
+            /// 如果服务端文件被删除了，重新上传
+            if (error.code == 612) {
+              controller?.notifyStatusListeners(StorageStatus.Retry);
+              await resource.close();
+              continue;
+            }
+          }
+
+          rethrow;
+        }
+      } on StorageError catch (error) {
+        if (error.type == StorageErrorType.NO_AVAILABLE_HOST) {
+          regionIndex += 1;
+          await Future.wait([
+            if (initPartsTask != null) initPartsTask.clearCache(),
+            if (uploadPartsTask != null) uploadPartsTask.clearCache(),
+          ]);
+        } else {
+          rethrow;
         }
       }
-
-      rethrow;
     }
-
-    /// 上传完成，清除缓存
-    await initPartsTask.clearCache();
-    await uploadParts.clearCache();
-
-    return putResponse;
   }
 
   bool isEquals(PutByPartTask target) {
@@ -132,6 +154,8 @@ class PutByPartTask extends RequestTask<PutResponse> {
       token: token,
       key: options.key,
       controller: controller,
+      accelerateUploading: options.accelerateUploading,
+      regionIndex: regionIndex,
     );
 
     manager.addTask(task);
@@ -149,6 +173,8 @@ class PutByPartTask extends RequestTask<PutResponse> {
       maxPartsRequestNumber: options.maxPartsRequestNumber,
       resource: resource,
       controller: controller,
+      accelerateUploading: options.accelerateUploading,
+      regionIndex: regionIndex,
     );
 
     controller.addSendProgressListener(onSendProgress);
@@ -159,10 +185,7 @@ class PutByPartTask extends RequestTask<PutResponse> {
   }
 
   /// 创建文件，分片上传的最后一步
-  CompletePartsTask _createCompleteParts(
-    String uploadId,
-    List<Part> parts,
-  ) {
+  CompletePartsTask _createCompleteParts(String uploadId, List<Part> parts) {
     final controller = PutController();
     final task = CompletePartsTask(
       token: token,
@@ -172,6 +195,8 @@ class PutByPartTask extends RequestTask<PutResponse> {
       mimeType: options.mimeType,
       customVars: options.customVars,
       controller: controller,
+      accelerateUploading: options.accelerateUploading,
+      regionIndex: regionIndex,
     );
 
     manager.addTask(task);

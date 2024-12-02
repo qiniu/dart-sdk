@@ -80,6 +80,8 @@ class PutBySingleTask extends RequestTask<PutResponse> {
     final host = await config.hostProvider.getUpHost(
       accessKey: _tokenInfo.accessKey,
       bucket: _tokenInfo.putPolicy.getBucket(),
+      accelerateUploading: options.accelerateUploading,
+      transregional: true,
     );
 
     final response = await client.post<Map<String, dynamic>>(
@@ -87,6 +89,7 @@ class PutBySingleTask extends RequestTask<PutResponse> {
       data: formData,
       cancelToken: controller?.cancelToken,
     );
+    checkResponse(response);
 
     return PutResponse.fromJson(response.data!);
   }

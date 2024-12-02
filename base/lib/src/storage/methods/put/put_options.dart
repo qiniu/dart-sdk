@@ -28,6 +28,9 @@ class PutOptions {
   /// 控制器
   final PutController? controller;
 
+  /// 上传加速
+  final bool accelerateUploading;
+
   const PutOptions({
     this.key,
     this.mimeType,
@@ -36,6 +39,7 @@ class PutOptions {
     this.maxPartsRequestNumber = 5,
     this.customVars,
     this.controller,
+    this.accelerateUploading = false,
   }) : assert(
           partSize >= 1 && partSize <= 1024,
           'partSize must be greater than or equal to 1 and less than or equal to 1024',

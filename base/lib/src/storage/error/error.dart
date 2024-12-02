@@ -21,6 +21,9 @@ enum StorageErrorType {
   /// 没有可用的服务器
   NO_AVAILABLE_HOST,
 
+  /// 没有可用的区域
+  NO_AVAILABLE_REGION,
+
   /// 已在处理队列中
   IN_PROGRESS,
 

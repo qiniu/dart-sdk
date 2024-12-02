@@ -8,22 +8,29 @@ on: [push, pull_request]
 
 jobs:
   flutter:
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
         flutter_version: ['3.16.x', '3.19.x', '3.22.x']
+    runs-on: ${{ matrix.os }}
     defaults:
       run:
         working-directory: ./flutter
-
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: subosito/flutter-action@v2
       with:
         channel: stable
         flutter-version: ${{ matrix.flutter_version }}
 
     - run: flutter pub add 'qiniu_sdk_base:{"path":"../base"}' -C .
+      if: ${{ runner.os == 'Linux' || runner.os == 'macOS' }}
+    - run: |
+        echo 'dependency_overrides:' >> pubspec.yaml
+        echo '  qiniu_sdk_base:'     >> pubspec.yaml
+        echo '    path: ../base'     >> pubspec.yaml
+      shell: bash
+      if: ${{ runner.os == 'Windows' }}
     - run: flutter pub get
     - run: flutter test

@@ -6,6 +6,8 @@ class UploadPartTask extends RequestTask<UploadPart> {
   final String uploadId;
   final List<int> bytes;
   final int partSize;
+  final bool accelerateUploading;
+  final int regionIndex;
 
   // 如果 data 是 Stream 的话，Dio 需要判断 content-length 才会调用 onSendProgress
   // https://github.com/cfug/dio/blob/v5.0.0/dio/lib/src/dio_mixin.dart#L633
@@ -26,6 +28,8 @@ class UploadPartTask extends RequestTask<UploadPart> {
     required this.partSize,
     this.key,
     PutController? controller,
+    this.accelerateUploading = false,
+    this.regionIndex = 0,
   }) : super(controller: controller);
 
   @override
@@ -52,13 +56,16 @@ class UploadPartTask extends RequestTask<UploadPart> {
     final host = await config.hostProvider.getUpHost(
       bucket: bucket,
       accessKey: _tokenInfo.accessKey,
+      accelerateUploading: accelerateUploading,
+      regionIndex: regionIndex,
     );
 
     final encodedKey = key != null ? base64Url.encode(utf8.encode(key!)) : '~';
-    final paramUrl = 'buckets/$bucket/objects/$encodedKey';
+    final paramUrl =
+        '$host/buckets/$bucket/objects/$encodedKey/uploads/$uploadId/$partNumber';
 
     final response = await client.put<Map<String, dynamic>>(
-      '$host/$paramUrl/uploads/$uploadId/$partNumber',
+      paramUrl,
       data: Stream.fromIterable([bytes.cast<int>()]),
       // 在 data 是 stream 的场景下， interceptor 传入 cancelToken 这里不传会有 bug
       cancelToken: controller?.cancelToken,
@@ -67,6 +74,7 @@ class UploadPartTask extends RequestTask<UploadPart> {
         contentType: 'application/octet-stream',
       ),
     );
+    checkResponse(response);
 
     return UploadPart.fromJson(response.data!);
   }

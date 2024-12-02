@@ -1,0 +1,24 @@
+name: Dart / Flutter SDK Version Check
+on:
+  push:
+    tags:
+      - "base-[0-9]+.[0-9]+.[0-9]+"
+      - "flutter-[0-9]+.[0-9]+.[0-9]+"
+jobs:
+  linux:
+    name: Version Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set env
+        run: |
+          echo "BASE_VERSION=${GITHUB_REF#refs/*/base-}" >> $GITHUB_ENV
+          echo "FLUTTER_VERSION=${GITHUB_REF#refs/*/flutter-}" >> $GITHUB_ENV
+      - name: Check
+        run: |
+          set -e
+          grep -qF "## ${BASE_VERSION}" base/CHANGELOG.md
+          grep -qF "final Version currentVersion = Version.parse('${BASE_VERSION}');" base/lib/src/version.dart
+          grep -qF "## ${FLUTTER_VERSION}" flutter/CHANGELOG.md
+          grep -qF "final Version currentVersion = Version.parse('${FLUTTER_VERSION}');" flutter/lib/src/version.dart

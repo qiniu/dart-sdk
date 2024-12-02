@@ -88,6 +88,9 @@ class HostProviderTest extends HostProvider {
   Future<String> getUpHost({
     required String accessKey,
     required String bucket,
+    bool accelerateUploading = false,
+    bool transregional = false,
+    int regionIndex = 0,
   }) async {
     // token 中 bucket 对应的地区
     return 'https://upload-na0.qiniup.com';
@@ -110,4 +113,16 @@ class CacheProviderForTest extends DefaultCacheProvider {
     callNumber++;
     return super.setItem(key, item);
   }
+}
+
+(PutController, List<StorageStatus>) newCancelledPutController() {
+  final putController = PutController();
+  final statusList = <StorageStatus>[];
+  putController.addStatusListener((status) {
+    statusList.add(status);
+    if (status == StorageStatus.Request) {
+      putController.cancel();
+    }
+  });
+  return (putController, statusList);
 }
