@@ -1,0 +1,20 @@
+name: Publish qiniu_sdk_base to pub.dev
+on:
+  push:
+    tags:
+      - "base-[0-9]+.[0-9]+.[0-9]+"
+jobs:
+  publish:
+    permissions:
+      id-token: write # Required for authentication using OIDC
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./base
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+      - name: Install dependencies
+        run: dart pub get
+      - name: Publish
+        run: dart pub publish --force
