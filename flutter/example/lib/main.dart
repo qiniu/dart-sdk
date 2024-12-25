@@ -5,8 +5,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:qiniu_flutter_sdk/qiniu_flutter_sdk.dart';
-
-import 'token.dart';
 import 'utils/uint.dart';
 import 'widgets/app.dart';
 import 'widgets/console.dart';
@@ -100,14 +98,6 @@ class BaseState extends DisposableState<Base> {
     addDisposer(putController!.addStatusListener(onStatus));
 
     var usedToken = token;
-
-    if (token == null || token == '') {
-      if (builtinToken.isNotEmpty) {
-        printToConsole('使用内建 Token 进行上传');
-        usedToken = builtinToken;
-      }
-    }
-
     if (usedToken == null || usedToken == '') {
       printToConsole('token 不能为空');
       return;

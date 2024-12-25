@@ -1,16 +1,17 @@
 import 'package:dio/dio.dart';
 import 'package:meta/meta.dart';
 import 'package:system_info2/system_info2.dart';
+import 'package:platform_info/platform_info.dart';
 
 import '../../../qiniu_sdk_base.dart';
 
 part 'request_task_controller.dart';
 part 'request_task_manager.dart';
 
-String _getUserAgent() {
-  final userAgent =
-      'QiniuDart/v$currentVersion (${SysInfo.kernelName} ${SysInfo.kernelVersion} ${SysInfo.kernelArchitecture}; ${SysInfo.operatingSystemName} ${SysInfo.operatingSystemVersion};)';
-  return userAgent;
+String _getDefaultUserAgent() {
+  return platform.js
+      ? 'QiniuDart/v$currentVersion (Web)'
+      : 'QiniuDart/v$currentVersion (${SysInfo.kernelName} ${SysInfo.kernelVersion} ${SysInfo.kernelArchitecture}; ${SysInfo.operatingSystemName} ${SysInfo.operatingSystemVersion};)';
 }
 
 abstract class RequestTask<T> extends Task<T> {
@@ -53,7 +54,7 @@ abstract class RequestTask<T> extends Task<T> {
     controller?.notifyProgressListeners(preStartTakePercentOfTotal);
     retryLimit = config.retryLimit;
     client.httpClientAdapter = config.httpClientAdapter;
-    var userAgent = _getUserAgent();
+    var userAgent = _getDefaultUserAgent();
     final appUserAgent = await config.appUserAgent;
     if (appUserAgent != '') {
       userAgent += ' $appUserAgent';
