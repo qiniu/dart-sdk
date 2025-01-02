@@ -9,8 +9,8 @@ part 'request_task_controller.dart';
 part 'request_task_manager.dart';
 
 String _getDefaultUserAgent() {
-  return platform.js
-      ? 'QiniuDart/v$currentVersion (Web)'
+  return platform.isWeb
+      ? 'QiniuDart/v$currentVersion (Web;)'
       : 'QiniuDart/v$currentVersion (${SysInfo.kernelName} ${SysInfo.kernelVersion} ${SysInfo.kernelArchitecture}; ${SysInfo.operatingSystemName} ${SysInfo.operatingSystemVersion};)';
 }
 

@@ -19,7 +19,7 @@ dependencies:
   convert: ^3.1.1
   cache_provider: ^1.0.1
   singleflight: ^1.0.2
-  platform_info: ^5.0.0
+  platform_info: ^4.0.0
 
 dev_dependencies:
   test: any
