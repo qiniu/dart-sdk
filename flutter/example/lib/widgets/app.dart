@@ -9,19 +9,13 @@ abstract class Example implements Widget {
 class App extends StatelessWidget {
   final Example child;
 
-  const App({Key? key, required this.child}) : super(key: key);
+  const App({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
     return ConsoleControllerProvider(
       child: MaterialApp(
         home: Scaffold(
-          body: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 10,
-            ),
-            child: child,
-          ),
           appBar: AppBar(
             title: Text(
               child.title,
@@ -30,6 +24,12 @@ class App extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
+          ),
+          body: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 10,
+            ),
+            child: child,
           ),
         ),
       ),

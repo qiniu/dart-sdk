@@ -30,8 +30,12 @@ class Base extends StatefulWidget implements Example {
   }
 }
 
-class BaseState extends DisposableState<Base> {
-  BaseState() : storage = Storage();
+class BaseState extends State<Base> with DisposableState {
+  /// storage 实例
+  final storage = Storage();
+
+  // 控制器，可以用于取消任务、获取上述的状态，进度等信息
+  PutController? putController;
 
   // 用户输入的文件名
   String? key;
@@ -45,9 +49,6 @@ class BaseState extends DisposableState<Base> {
   // 用户输入的 token
   String? token;
 
-  /// storage 实例
-  final Storage storage;
-
   /// 当前选择的文件
   PlatformFile? selectedFile;
 
@@ -56,9 +57,6 @@ class BaseState extends DisposableState<Base> {
 
   // 当前的任务状态
   StorageStatus? statusValue;
-
-  // 控制器，可以用于取消任务、获取上述的状态，进度等信息
-  PutController? putController;
 
   void onStatus(StorageStatus status) {
     printToConsole('状态变化: 当前任务状态：${status.toString()}');
@@ -116,20 +114,18 @@ class BaseState extends DisposableState<Base> {
       partSize: partSize,
       controller: putController,
     );
-    Future<PutResponse> upload;
-    if (kIsWeb) {
-      upload = storage.putBytes(
-        selectedFile!.bytes!,
-        usedToken,
-        options: putOptions,
-      );
-    } else {
-      upload = storage.putFile(
-        File(selectedFile!.path!),
-        usedToken,
-        options: putOptions,
-      );
-    }
+
+    final upload = kIsWeb
+        ? storage.putBytes(
+            selectedFile!.bytes!,
+            usedToken,
+            options: putOptions,
+          )
+        : storage.putFile(
+            File(selectedFile!.path!),
+            usedToken,
+            options: putOptions,
+          );
 
     upload
       ..then((PutResponse response) {
@@ -239,51 +235,38 @@ class BaseState extends DisposableState<Base> {
     this.mimeType = mimeType;
   }
 
-  Widget get cancelButton {
-    if (statusValue == StorageStatus.Request) {
-      return Padding(
-        padding: const EdgeInsets.all(10),
-        child: ElevatedButton(
-          child: const Text('取消上传'),
-          onPressed: () => putController?.cancel(),
-        ),
-      );
-    }
-    return const SizedBox.shrink();
-  }
-
   @override
   Widget build(BuildContext context) {
     return ListView(children: [
       Padding(
         padding: const EdgeInsets.all(20),
-        child: Progress(progressValue),
+        child: Progress(value: progressValue),
       ),
       Padding(
         padding: const EdgeInsets.all(8.0),
         child: StringInput(
-          onKeyChange,
+          onChange: onKeyChange,
           label: '请输入 Key（可选）回车确认',
         ),
       ),
       Padding(
         padding: const EdgeInsets.all(8.0),
         child: StringInput(
-          onMimeTypeChange,
+          onChange: onMimeTypeChange,
           label: '请输入 MimeType（可选）回车确认',
         ),
       ),
       Padding(
         padding: const EdgeInsets.all(8.0),
         child: StringInput(
-          onPartSizeChange,
+          onChange: onPartSizeChange,
           label: '请输入分片尺寸，单位 M（默认 4，可选）回车确认',
         ),
       ),
       Padding(
         padding: const EdgeInsets.all(8.0),
         child: StringInput(
-          onTokenChange,
+          onChange: onTokenChange,
           label: '请输入 Token（可选）回车确认',
         ),
       ),
@@ -291,8 +274,14 @@ class BaseState extends DisposableState<Base> {
         padding: const EdgeInsets.all(8.0),
         child: SelectFile(onSelectedFile),
       ),
-      // 取消按钮
-      cancelButton,
+      if (statusValue == StorageStatus.Request)
+        Padding(
+          padding: const EdgeInsets.all(10),
+          child: ElevatedButton(
+            child: const Text('取消上传'),
+            onPressed: () => putController?.cancel(),
+          ),
+        ),
       const Padding(
         key: Key('console'),
         padding: EdgeInsets.all(8.0),

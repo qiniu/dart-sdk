@@ -12,11 +12,12 @@ class ConsoleController extends ChangeNotifier {
 }
 
 class ConsoleControllerProvider extends InheritedWidget {
-  final ConsoleController controller;
+  final ConsoleController controller = ConsoleController();
 
-  ConsoleControllerProvider({Key? key, required Widget child})
-      : controller = ConsoleController(),
-        super(key: key, child: child);
+  ConsoleControllerProvider({
+    super.key,
+    required super.child,
+  });
 
   static ConsoleController of(BuildContext context) {
     return context
@@ -31,7 +32,7 @@ class ConsoleControllerProvider extends InheritedWidget {
 }
 
 class Console extends StatefulWidget {
-  const Console({Key? key}) : super(key: key);
+  const Console({super.key});
 
   static ConsoleController of(BuildContext context) {
     return ConsoleControllerProvider.of(context);
@@ -43,7 +44,7 @@ class Console extends StatefulWidget {
   }
 }
 
-class ConsoleState extends DisposableState<Console> {
+class ConsoleState extends State<Console> with DisposableState {
   late final ConsoleController controller;
   List<String> messageList = [];
 

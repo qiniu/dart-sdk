@@ -1,18 +1,18 @@
 import 'package:flutter/widgets.dart';
 
-abstract class DisposableState<T extends StatefulWidget> extends State<T> {
-  List<Function> disposerList = [];
+mixin DisposableState<T extends StatefulWidget> on State<T> {
+  List<VoidCallback> disposerList = [];
 
-  void addDisposer(Function disposer) {
+  void addDisposer(VoidCallback disposer) {
     disposerList.add(disposer);
   }
 
   @override
   @mustCallSuper
   void dispose() {
-    for (var disposer in disposerList) {
+    for (final disposer in disposerList) {
       try {
-        disposer.call();
+        disposer();
       } catch (error) {
         rethrow;
       }
