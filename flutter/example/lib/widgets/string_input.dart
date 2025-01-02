@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 class StringInput extends StatelessWidget {
   final String label;
   final String value;
-  final ValueSetter<String> onChange;
+  final ValueSetter<String> onChanged;
   const StringInput({
     super.key,
-    required this.onChange,
+    required this.onChanged,
     required this.label,
     this.value = '',
   });
@@ -14,7 +14,7 @@ class StringInput extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TextField(
-      onSubmitted: onChange,
+      onChanged: onChanged,
       controller: TextEditingController(text: value),
       decoration: InputDecoration(
         labelText: label,

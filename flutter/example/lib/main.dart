@@ -245,29 +245,29 @@ class BaseState extends State<Base> with DisposableState {
       Padding(
         padding: const EdgeInsets.all(8.0),
         child: StringInput(
-          onChange: onKeyChange,
-          label: '请输入 Key（可选）回车确认',
+          onChanged: onKeyChange,
+          label: '请输入 Key（可选）',
         ),
       ),
       Padding(
         padding: const EdgeInsets.all(8.0),
         child: StringInput(
-          onChange: onMimeTypeChange,
-          label: '请输入 MimeType（可选）回车确认',
+          onChanged: onMimeTypeChange,
+          label: '请输入 MimeType（可选）',
         ),
       ),
       Padding(
         padding: const EdgeInsets.all(8.0),
         child: StringInput(
-          onChange: onPartSizeChange,
-          label: '请输入分片尺寸，单位 M（默认 4，可选）回车确认',
+          onChanged: onPartSizeChange,
+          label: '请输入分片尺寸，单位 M（默认 4，可选）',
         ),
       ),
       Padding(
         padding: const EdgeInsets.all(8.0),
         child: StringInput(
-          onChange: onTokenChange,
-          label: '请输入 Token（可选）回车确认',
+          onChanged: onTokenChange,
+          label: '请输入 Token（可选）',
         ),
       ),
       Padding(

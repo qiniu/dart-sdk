@@ -9,9 +9,19 @@ part 'request_task_controller.dart';
 part 'request_task_manager.dart';
 
 String _getDefaultUserAgent() {
-  return platform.isWeb
-      ? 'QiniuDart/v$currentVersion (Web;)'
-      : 'QiniuDart/v$currentVersion (${SysInfo.kernelName} ${SysInfo.kernelVersion} ${SysInfo.kernelArchitecture}; ${SysInfo.operatingSystemName} ${SysInfo.operatingSystemVersion};)';
+  var result = 'QiniuDart/v$currentVersion';
+  try {
+    result = platform.when(
+      web: () => '$result (Web;)',
+      orElse: () =>
+          '$result (${SysInfo.kernelName} ${SysInfo.kernelVersion} ${SysInfo.kernelArchitecture}; ${SysInfo.operatingSystemName} ${SysInfo.operatingSystemVersion};)',
+    )!;
+  } catch (e) {
+    result = '$result (Unknown;)';
+  }
+
+  // 有时候操作系统名称可能会返回中文，这里把所有非ascii字符都过滤掉，防止设置User-Agent时产生报错
+  return String.fromCharCodes(result.runes.where((r) => r <= 127));
 }
 
 abstract class RequestTask<T> extends Task<T> {
