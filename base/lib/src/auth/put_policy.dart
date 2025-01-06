@@ -5,9 +5,9 @@ class PutPolicy {
   /// 指定上传的目标资源空间 Bucket 和资源键 Key（最大为 750 字节）。
   ///
   /// 有三种格式：
-  /// <Bucket> 表示允许用户上传文件到指定的 Bucket，在这种格式下文件只能新增。
-  /// <Bucket>:<Key> 表示只允许用户上传指定 Key 的文件。在这种格式下文件默认允许修改。
-  /// <Bucket>:<KeyPrefix> 表示只允许用户上传指定以 KeyPrefix 为前缀的文件。
+  /// \<Bucket\> 表示允许用户上传文件到指定的 Bucket，在这种格式下文件只能新增。
+  /// \<Bucket\>:\<Key\> 表示只允许用户上传指定 Key 的文件。在这种格式下文件默认允许修改。
+  /// \<Bucket\>:\<KeyPrefix\> 表示只允许用户上传指定以 KeyPrefix 为前缀的文件。
   /// 具体信息一定请查看上述的上传策略文档！
   final String scope;
 
@@ -40,8 +40,8 @@ class PutPolicy {
 
   /// Web 端文件上传成功后，浏览器执行 303 跳转的 URL。
   ///
-  /// 文件上传成功后会跳转到 <[returnUrl]>?upload_ret=<QueryString>
-  /// 其中 <QueryString> 包含 [returnBody] 内容。
+  /// 文件上传成功后会跳转到 \<[returnUrl]\>?upload_ret=\<QueryString\>
+  /// 其中 \<QueryString\> 包含 [returnBody] 内容。
   /// 如不设置 [returnUrl]，则直接将 [returnBody] 的内容返回给客户端。
   final String? returnUrl;
 

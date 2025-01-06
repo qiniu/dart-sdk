@@ -173,10 +173,14 @@ class BaseState extends State<Base> with DisposableState {
   }
 
   void onSelectedFile(PlatformFile file) {
-    printToConsole(
-        '选中文件: path: ${file.path}, filename: ${file.name}, size: ${file.size}');
-    // ignore: unnecessary_null_comparison
-    if (file.size != null) {
+    if (kIsWeb) {
+      printToConsole('选中文件: filename: ${file.name}, size: ${file.size}');
+    } else {
+      printToConsole(
+          '选中文件: path: ${file.path}, filename: ${file.name}, size: ${file.size}');
+    }
+
+    if (file.size != 0) {
       // 一般在非 web 平台上可以直接读取 size 属性
       printToConsole('文件尺寸：${humanizeFileSize(file.size.toDouble())}');
     } else if (file.bytes != null) {
