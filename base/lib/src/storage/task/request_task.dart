@@ -13,6 +13,7 @@ String _getDefaultUserAgent() {
   try {
     result = platform.when(
       web: () => '$result (Web;)',
+      iOS: () => '$result (iOS;)',
       orElse: () =>
           '$result (${SysInfo.kernelName} ${SysInfo.kernelVersion} ${SysInfo.kernelArchitecture}; ${SysInfo.operatingSystemName} ${SysInfo.operatingSystemVersion};)',
     )!;
