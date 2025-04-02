@@ -11,9 +11,9 @@ dependency_overrides:
     path: ../../base/
 
 dependencies:
+  file_picker: ^10.0.0
   flutter:
     sdk: flutter
-  file_picker: ^8.0.0+1
   qiniu_flutter_sdk:
     path: ../
 
