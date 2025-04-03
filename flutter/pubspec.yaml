@@ -11,7 +11,7 @@ dependencies:
   device_info_plus: ^9.1.2
   flutter:
     sdk: flutter
-  qiniu_sdk_base: ^0.7.0
+  qiniu_sdk_base: ^0.7.1
   version: ^3.0.2
 
 dev_dependencies:
