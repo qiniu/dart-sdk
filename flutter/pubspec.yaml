@@ -1,6 +1,6 @@
 name: qiniu_flutter_sdk
 description: Qiniu Flutter sdk
-version: 0.7.0
+version: 0.7.1
 homepage: https://github.com/qiniu/dart-sdk/tree/master/flutter
 
 environment:
