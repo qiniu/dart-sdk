@@ -16,7 +16,7 @@ dependencies:
   # 全平台支持的库
   dio: ^5.4.0
   crypto: ^3.0.3
-  meta: ^1.16.0
+  meta: ^1.15.0
   path: ^1.8.0
   version: ^3.0.2
   convert: ^3.1.1
