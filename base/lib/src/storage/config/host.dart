@@ -215,11 +215,13 @@ class DefaultHostProviderV2 extends HostFreezer {
       () async => BucketRegionsQuery.create(
         bucketHosts: _bucketHosts,
         useHttps: _useHttps,
-        persistentFilePath: join(
-          Directory.systemTemp.path,
-          'qiniu-dart-sdk',
-          'regions_v4_01.cache.json',
-        ),
+        persistentFilePath: platform.isWeb // web端不要持久化到磁盘，内部自动使用内存缓存即可
+            ? null
+            : join(
+                Directory.systemTemp.path,
+                'qiniu-dart-sdk',
+                'regions_v4_01.cache.json',
+              ),
       ),
     );
     return _query!;

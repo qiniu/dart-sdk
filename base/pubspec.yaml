@@ -7,18 +7,24 @@ false_secrets:
   - /test/auth/auth_test.dart
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: ">=3.0.0 <4.0.0"
 
+# 这里引入依赖时，注意依赖需要同时支持Dart和Flutter
+# 同时需要尽量覆盖全平台
+# 对于不能覆盖全平台的依赖，使用时需要写相关代码进行屏蔽或降级处理
 dependencies:
+  # 全平台支持的库
   dio: ^5.4.0
   crypto: ^3.0.3
   meta: ^1.10.0
   path: ^1.8.0
   version: ^3.0.2
-  system_info2: ^4.0.0
   convert: ^3.1.1
-  cache_provider: ^1.0.1
   singleflight: ^1.0.2
+  mutex: ^3.1.0
+  platform_info: ^4.0.0 # 用于实现平台相关feature的判断逻辑
+
+  system_info2: ^4.0.0 # web平台不支持，需要特殊处理
 
 dev_dependencies:
   test: any

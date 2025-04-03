@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
 class Progress extends StatelessWidget {
-  const Progress(this.value, {Key? key}) : super(key: key);
-
   final double value;
+
+  const Progress({
+    super.key,
+    this.value = 0,
+  });
 
   Widget get progress {
     return Container(
@@ -49,7 +52,10 @@ class Progress extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       alignment: AlignmentDirectional.center,
-      children: [progress, progressText],
+      children: [
+        progress,
+        progressText,
+      ],
     );
   }
 }

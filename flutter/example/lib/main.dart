@@ -5,8 +5,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:qiniu_flutter_sdk/qiniu_flutter_sdk.dart';
-
-import 'token.dart';
 import 'utils/uint.dart';
 import 'widgets/app.dart';
 import 'widgets/console.dart';
@@ -32,8 +30,12 @@ class Base extends StatefulWidget implements Example {
   }
 }
 
-class BaseState extends DisposableState<Base> {
-  BaseState() : storage = Storage();
+class BaseState extends State<Base> with DisposableState {
+  /// storage 实例
+  final storage = Storage();
+
+  // 控制器，可以用于取消任务、获取上述的状态，进度等信息
+  PutController? putController;
 
   // 用户输入的文件名
   String? key;
@@ -47,9 +49,6 @@ class BaseState extends DisposableState<Base> {
   // 用户输入的 token
   String? token;
 
-  /// storage 实例
-  final Storage storage;
-
   /// 当前选择的文件
   PlatformFile? selectedFile;
 
@@ -58,9 +57,6 @@ class BaseState extends DisposableState<Base> {
 
   // 当前的任务状态
   StorageStatus? statusValue;
-
-  // 控制器，可以用于取消任务、获取上述的状态，进度等信息
-  PutController? putController;
 
   void onStatus(StorageStatus status) {
     printToConsole('状态变化: 当前任务状态：${status.toString()}');
@@ -100,14 +96,6 @@ class BaseState extends DisposableState<Base> {
     addDisposer(putController!.addStatusListener(onStatus));
 
     var usedToken = token;
-
-    if (token == null || token == '') {
-      if (builtinToken.isNotEmpty) {
-        printToConsole('使用内建 Token 进行上传');
-        usedToken = builtinToken;
-      }
-    }
-
     if (usedToken == null || usedToken == '') {
       printToConsole('token 不能为空');
       return;
@@ -126,20 +114,18 @@ class BaseState extends DisposableState<Base> {
       partSize: partSize,
       controller: putController,
     );
-    Future<PutResponse> upload;
-    if (kIsWeb) {
-      upload = storage.putBytes(
-        selectedFile!.bytes!,
-        usedToken,
-        options: putOptions,
-      );
-    } else {
-      upload = storage.putFile(
-        File(selectedFile!.path!),
-        usedToken,
-        options: putOptions,
-      );
-    }
+
+    final upload = kIsWeb
+        ? storage.putBytes(
+            selectedFile!.bytes!,
+            usedToken,
+            options: putOptions,
+          )
+        : storage.putFile(
+            File(selectedFile!.path!),
+            usedToken,
+            options: putOptions,
+          );
 
     upload
       ..then((PutResponse response) {
@@ -187,10 +173,14 @@ class BaseState extends DisposableState<Base> {
   }
 
   void onSelectedFile(PlatformFile file) {
-    printToConsole(
-        '选中文件: path: ${file.path}, filename: ${file.name}, size: ${file.size}');
-    // ignore: unnecessary_null_comparison
-    if (file.size != null) {
+    if (kIsWeb) {
+      printToConsole('选中文件: filename: ${file.name}, size: ${file.size}');
+    } else {
+      printToConsole(
+          '选中文件: path: ${file.path}, filename: ${file.name}, size: ${file.size}');
+    }
+
+    if (file.size != 0) {
       // 一般在非 web 平台上可以直接读取 size 属性
       printToConsole('文件尺寸：${humanizeFileSize(file.size.toDouble())}');
     } else if (file.bytes != null) {
@@ -249,60 +239,53 @@ class BaseState extends DisposableState<Base> {
     this.mimeType = mimeType;
   }
 
-  Widget get cancelButton {
-    if (statusValue == StorageStatus.Request) {
-      return Padding(
-        padding: const EdgeInsets.all(10),
-        child: ElevatedButton(
-          child: const Text('取消上传'),
-          onPressed: () => putController?.cancel(),
-        ),
-      );
-    }
-    return const SizedBox.shrink();
-  }
-
   @override
   Widget build(BuildContext context) {
     return ListView(children: [
       Padding(
         padding: const EdgeInsets.all(20),
-        child: Progress(progressValue),
+        child: Progress(value: progressValue),
       ),
       Padding(
         padding: const EdgeInsets.all(8.0),
         child: StringInput(
-          onKeyChange,
-          label: '请输入 Key（可选）回车确认',
+          onChanged: onKeyChange,
+          label: '请输入 Key（可选）',
         ),
       ),
       Padding(
         padding: const EdgeInsets.all(8.0),
         child: StringInput(
-          onMimeTypeChange,
-          label: '请输入 MimeType（可选）回车确认',
+          onChanged: onMimeTypeChange,
+          label: '请输入 MimeType（可选）',
         ),
       ),
       Padding(
         padding: const EdgeInsets.all(8.0),
         child: StringInput(
-          onPartSizeChange,
-          label: '请输入分片尺寸，单位 M（默认 4，可选）回车确认',
+          onChanged: onPartSizeChange,
+          label: '请输入分片尺寸，单位 M（默认 4，可选）',
         ),
       ),
       Padding(
         padding: const EdgeInsets.all(8.0),
         child: StringInput(
-          onTokenChange,
-          label: '请输入 Token（可选）回车确认',
+          onChanged: onTokenChange,
+          label: '请输入 Token（可选）',
         ),
       ),
       Padding(
         padding: const EdgeInsets.all(8.0),
         child: SelectFile(onSelectedFile),
       ),
-      // 取消按钮
-      cancelButton,
+      if (statusValue == StorageStatus.Request)
+        Padding(
+          padding: const EdgeInsets.all(10),
+          child: ElevatedButton(
+            child: const Text('取消上传'),
+            onPressed: () => putController?.cancel(),
+          ),
+        ),
       const Padding(
         key: Key('console'),
         padding: EdgeInsets.all(8.0),

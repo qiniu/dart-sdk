@@ -4,8 +4,10 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:crypto/crypto.dart';
 import 'package:convert/convert.dart';
+import 'package:platform_info/platform_info.dart';
 import 'package:qiniu_sdk_base/src/storage/storage.dart';
-import 'package:cache_provider/cache_provider.dart' as cache_provider;
+import 'package:qiniu_sdk_base/src/util/cache_provider_base.dart'
+    as cache_provider;
 import 'package:singleflight/singleflight.dart' as singleflight;
 import 'package:path/path.dart' show join;
 
