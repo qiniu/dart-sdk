@@ -10,7 +10,9 @@ export 'package:qiniu_sdk_base/qiniu_sdk_base.dart'
 
 import 'dart:io' show Platform;
 
+/// 继承自base sdk的扩展配置类
 class Config extends qiniu_sdk_base.Config {
+  /// 继承自base sdk的扩展配置类
   Config({
     super.hostProvider,
     super.cacheProvider,

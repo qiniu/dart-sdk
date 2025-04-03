@@ -8,7 +8,8 @@ import 'dart:io';
 void main() {
   test('MemoryCache should works well', () async {
     final memoryCache = CacheProvider.createInMemoryCache<_MockCacheValue>(
-        Duration(seconds: 1));
+      Duration(seconds: 1),
+    );
     final value = _MockCacheValue(1);
 
     {
@@ -20,7 +21,9 @@ void main() {
 
     {
       final (cacheValue, getResult) = await memoryCache.get(
-          'key_1', () async => fail('expected to get cache, but not'));
+        'key_1',
+        () async => fail('expected to get cache, but not'),
+      );
       expect(cacheValue!.value, 1);
       expect(getResult, GetResult.fromCache);
     }
@@ -29,7 +32,9 @@ void main() {
 
     {
       final (cacheValue, getResult) = await memoryCache.get(
-          'key_1', () async => throw Exception('test error'));
+        'key_1',
+        () async => throw Exception('test error'),
+      );
       expect(cacheValue!.value, 1);
       expect(getResult, GetResult.fromInvalidCache);
     }
@@ -38,7 +43,9 @@ void main() {
 
     {
       final (cacheValue, getResult) = await memoryCache.get(
-          'key_1', () async => throw Exception('test error'));
+        'key_1',
+        () async => throw Exception('test error'),
+      );
       expect(cacheValue!.value, 1);
       expect(getResult, GetResult.fromInvalidCache);
     }
@@ -47,7 +54,9 @@ void main() {
 
     {
       final (cacheValue, getResult) = await memoryCache.get(
-          'key_1', () async => throw Exception('test error'));
+        'key_1',
+        () async => throw Exception('test error'),
+      );
       expect(cacheValue, null);
       expect(getResult, GetResult.none);
     }
@@ -61,7 +70,9 @@ void main() {
 
     {
       final (cacheValue, getResult) = await memoryCache.get(
-          'key_1', () async => fail('expected to get cache, but not'));
+        'key_1',
+        () async => fail('expected to get cache, but not'),
+      );
       expect(cacheValue!.value, 2);
       expect(getResult, GetResult.fromCache);
     }
@@ -88,7 +99,9 @@ void main() {
       }
       {
         final (cacheValue, getResult) = await persistentCache.get(
-            'key_1', () async => fail('expected to get cache, but not'));
+          'key_1',
+          () async => fail('expected to get cache, but not'),
+        );
         expect(cacheValue!.value, 1);
         expect(getResult, GetResult.fromCache);
       }
@@ -97,7 +110,9 @@ void main() {
 
       {
         final (cacheValue, getResult) = await persistentCache.get(
-            'key_1', () async => fail('expected to get cache, but not'));
+          'key_1',
+          () async => fail('expected to get cache, but not'),
+        );
         expect(cacheValue!.value, 1);
         expect(getResult, GetResult.fromCache);
       }
@@ -117,7 +132,9 @@ void main() {
 
         {
           final (cacheValue, getResult) = await persistentCache2.get(
-              'key_1', () async => fail('expected to get cache, but not'));
+            'key_1',
+            () async => fail('expected to get cache, but not'),
+          );
           expect(cacheValue!.value, 1);
           expect(getResult, GetResult.fromCache);
         }
@@ -137,7 +154,9 @@ void main() {
 
       {
         final (cacheValue, getResult) = await persistentCache.get(
-            'key_1', () async => fail('expected to get cache, but not'));
+          'key_1',
+          () async => fail('expected to get cache, but not'),
+        );
         expect(cacheValue!.value, 2);
         expect(getResult, GetResult.fromCache);
       }
@@ -146,7 +165,9 @@ void main() {
 
       {
         final (cacheValue, getResult) = await persistentCache.get(
-            'key_1', () async => throw Exception('test exception'));
+          'key_1',
+          () async => throw Exception('test exception'),
+        );
         expect(cacheValue, null);
         expect(getResult, GetResult.none);
       }
@@ -203,18 +224,21 @@ final class _MockCacheValue extends CacheValue {
   }
 
   static String _serialize(CachePair<_MockCacheValue> pair) {
-    return jsonEncode(pair, toEncodable: (object) {
-      if (object is CachePair<_MockCacheValue>) {
-        return {
-          'k': object.key,
-          'v': object.data.value,
-          'd': object.data.valid,
-          'r': object.data.refresh,
-          'c': object.createdAt.toIso8601String(),
-        };
-      } else {
-        fail('unexpected object type: $object');
-      }
-    });
+    return jsonEncode(
+      pair,
+      toEncodable: (object) {
+        if (object is CachePair<_MockCacheValue>) {
+          return {
+            'k': object.key,
+            'v': object.data.value,
+            'd': object.data.valid,
+            'r': object.data.refresh,
+            'c': object.createdAt.toIso8601String(),
+          };
+        } else {
+          fail('unexpected object type: $object');
+        }
+      },
+    );
   }
 }

@@ -71,8 +71,9 @@ abstract class CacheProvider<V extends CacheValue> {
   // createInMemoryCache creates an in-memory cache with the ability to automatically asynchronously
   // compact the cache when it's invalid.
   static CacheProvider<V> createInMemoryCache<V extends CacheValue>(
-      Duration compactInterval,
-      {Map<String, CacheEntry<V>>? initMap}) {
+    Duration compactInterval, {
+    Map<String, CacheEntry<V>>? initMap,
+  }) {
     return _InMemoryCache(compactInterval, initMap: initMap);
   }
 
@@ -106,9 +107,10 @@ final class _InMemoryCache<V extends CacheValue> implements CacheProvider<V> {
   bool _flushing, _stopFlushing;
   DateTime _lastCompactTime;
 
-  _InMemoryCache(Duration compactInterval,
-      {Map<String, CacheEntry<V>>? initMap})
-      : _compactInterval = compactInterval,
+  _InMemoryCache(
+    Duration compactInterval, {
+    Map<String, CacheEntry<V>>? initMap,
+  })  : _compactInterval = compactInterval,
         _cacheMap = initMap ?? {},
         _lastCompactTime = DateTime.now(),
         _mutex = Mutex(),
