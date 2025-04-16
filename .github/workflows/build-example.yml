@@ -1,4 +1,4 @@
-name: SIT-Board
+name: Build example app and upload to artifact file
 
 on:
   push:
