@@ -23,19 +23,19 @@ jobs:
         run: flutter build apk --split-per-abi --target-platform android-arm64,android-x64,android-arm
 
       - name: Upload armeabi-v7a apk artifact File
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BRANCH_NAME }}-${{ env.SHA }}-app-armeabi-v7a-release.apk
           path: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
 
       - name: Upload arm64-v8a apk artifact File
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BRANCH_NAME }}-${{ env.SHA }}-app-arm64-v8a-release.apk
           path: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
 
       - name: Upload x86_64 apk artifact File
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BRANCH_NAME }}-${{ env.SHA }}-app-x86_64-release.apk
           path: build/app/outputs/flutter-apk/app-x86_64-release.apk
@@ -59,7 +59,7 @@ jobs:
           flutter build windows
 
       - name: Upload Windows build file
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BRANCH_NAME }}-${{ env.SHA }}-windows-x86_64.zip
           path: build/windows/runner/Release
@@ -82,7 +82,7 @@ jobs:
           flutter build linux
 
       - name: Upload linux build File
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BRANCH_NAME }}-${{ env.SHA }}-linux-x86_64.zip
           path: build/linux/x64/release/bundle
@@ -121,7 +121,7 @@ jobs:
           flutter build macos --release
 
       - name: Upload web File
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BRANCH_NAME }}-${{ env.SHA }}-macos.zip
           path: build/macos/Build/Products/Release
@@ -142,7 +142,7 @@ jobs:
           flutter build web --no-source-maps --no-null-assertions --no-native-null-assertions --release
 
       - name: Upload web File
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BRANCH_NAME }}-${{ env.SHA }}-web.zip
           path: build/web
