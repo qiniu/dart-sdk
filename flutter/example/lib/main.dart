@@ -5,6 +5,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:qiniu_flutter_sdk/qiniu_flutter_sdk.dart';
+import 'package:qiniu_sdk_base/src/util/user_agent/user_agent.dart';
+
 import 'utils/uint.dart';
 import 'widgets/app.dart';
 import 'widgets/console.dart';
@@ -290,6 +292,18 @@ class BaseState extends State<Base> with DisposableState {
         key: Key('console'),
         padding: EdgeInsets.all(8.0),
         child: Console(),
+      ),
+      Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          children: [
+            TextButton(
+                onPressed: () {
+                  printToConsole('成功获取上传UA: ${getDefaultUserAgent()}');
+                },
+                child: Text('获取UA'))
+          ],
+        ),
       ),
     ]);
   }
