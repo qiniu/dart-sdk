@@ -22,9 +22,6 @@ dependencies:
   convert: ^3.1.1
   singleflight: ^1.0.2
   mutex: ^3.1.0
-  platform_info: ^4.0.0 # 用于实现平台相关feature的判断逻辑
-
-  system_info2: ^4.0.0 # web平台不支持，需要特殊处理
 
 dev_dependencies:
   test: any
