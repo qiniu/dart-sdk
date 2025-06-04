@@ -128,7 +128,7 @@ jobs:
         with: { channel: stable, cache: true }
       - run: |
           flutter pub get
-          flutter build web --no-source-maps --no-null-assertions --no-native-null-assertions --release
+          flutter build web --no-source-maps --no-native-null-assertions --release
 
       - name: Upload web File
         uses: actions/upload-artifact@v4
