@@ -216,7 +216,7 @@ class DefaultHostProviderV2 extends HostFreezer {
       () async => BucketRegionsQuery.create(
         bucketHosts: _bucketHosts,
         useHttps: _useHttps,
-        persistentFilePath: platform.js // web端不要持久化到磁盘，内部自动使用内存缓存即可
+        persistentFilePath: platform.isWeb // web端不要持久化到磁盘，内部自动使用内存缓存即可
             ? null
             : join(
                 Directory.systemTemp.path,
