@@ -25,19 +25,19 @@ jobs:
       - name: Upload armeabi-v7a apk artifact File
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.BRANCH_NAME }}-${{ env.SHA }}-app-armeabi-v7a-release.apk
+          name: example-app-${{ env.SHA }}-app-armeabi-v7a-release.apk
           path: flutter/example/build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
 
       - name: Upload arm64-v8a apk artifact File
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.BRANCH_NAME }}-${{ env.SHA }}-app-arm64-v8a-release.apk
+          name: example-app-${{ env.SHA }}-app-arm64-v8a-release.apk
           path: flutter/example/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
 
       - name: Upload x86_64 apk artifact File
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.BRANCH_NAME }}-${{ env.SHA }}-app-x86_64-release.apk
+          name: example-app-${{ env.SHA }}-app-x86_64-release.apk
           path: flutter/example/build/app/outputs/flutter-apk/app-x86_64-release.apk
 
   build-windows:
@@ -64,7 +64,7 @@ jobs:
       - name: Upload Windows build file
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.BRANCH_NAME }}-${{ env.SHA }}-windows-x86_64.zip
+          name: example-app-${{ env.SHA }}-windows-x86_64.zip
           path: flutter/example/build/windows/x64/runner/Release
 
   build-ios:
@@ -109,7 +109,7 @@ jobs:
       - name: Upload web File
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.BRANCH_NAME }}-${{ env.SHA }}-macos.zip
+          name: example-app-${{ env.SHA }}-macos.zip
           path: flutter/example/build/macos/Build/Products/Release
 
   build-web:
@@ -133,5 +133,5 @@ jobs:
       - name: Upload web File
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.BRANCH_NAME }}-${{ env.SHA }}-web.zip
+          name: example-app-${{ env.SHA }}-web.zip
           path: flutter/example/build/web
