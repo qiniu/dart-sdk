@@ -210,6 +210,7 @@ class DefaultHostProviderV2 extends HostFreezer {
     if (_query != null) {
       return _query!;
     }
+
     _query = await _group.doGroup(
       '',
       () async => BucketRegionsQuery.create(
