@@ -26,19 +26,19 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BRANCH_NAME }}-${{ env.SHA }}-app-armeabi-v7a-release.apk
-          path: build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+          path: flutter/example/build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
 
       - name: Upload arm64-v8a apk artifact File
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BRANCH_NAME }}-${{ env.SHA }}-app-arm64-v8a-release.apk
-          path: build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+          path: flutter/example/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
 
       - name: Upload x86_64 apk artifact File
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BRANCH_NAME }}-${{ env.SHA }}-app-x86_64-release.apk
-          path: build/app/outputs/flutter-apk/app-x86_64-release.apk
+          path: flutter/example/build/app/outputs/flutter-apk/app-x86_64-release.apk
 
   build-windows:
     runs-on: windows-latest
@@ -65,10 +65,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BRANCH_NAME }}-${{ env.SHA }}-windows-x86_64.zip
-          path: build/windows/runner/Release
+          path: flutter/example/build/windows/x64/runner/Release
 
   build-ios:
-    runs-on: macos-11
+    runs-on: macos-latest
     defaults:
       run:
         working-directory: ./flutter/example
@@ -110,7 +110,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BRANCH_NAME }}-${{ env.SHA }}-macos.zip
-          path: build/macos/Build/Products/Release
+          path: flutter/example/build/macos/Build/Products/Release
 
   build-web:
     runs-on: ubuntu-latest
@@ -134,4 +134,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BRANCH_NAME }}-${{ env.SHA }}-web.zip
-          path: build/web
+          path: flutter/example/build/web
