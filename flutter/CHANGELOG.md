@@ -1,3 +1,7 @@
+## 0.7.2
+
+* 移除 SystemInfo2 依赖，仅使用标准库 Platform 获取平台信息，修复 Android 平台的兼容性问题
+
 ## 0.7.1
 
 * 修复由于 SystemInfo2 引入导致的 Web/iOS/Windows 平台的不兼容问题
