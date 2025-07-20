@@ -20,11 +20,10 @@ export 'config/config.dart';
 
 /// 客户端
 class Storage {
-  late final Config config;
+  final Config config;
   late final RequestTaskManager taskManager;
 
-  Storage({Config? config}) {
-    this.config = config ?? Config();
+  Storage({Config? config}) : config = config ?? Config() {
     taskManager = RequestTaskManager(config: this.config);
   }
 
