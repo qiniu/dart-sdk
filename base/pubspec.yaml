@@ -14,7 +14,7 @@ environment:
 # 对于不能覆盖全平台的依赖，使用时需要写相关代码进行屏蔽或降级处理
 dependencies:
   # 全平台支持的库
-  dio: ^5.4.0
+  dio: ^5.8.0+1
   crypto: ^3.0.3
   meta: ^1.15.0
   path: ^1.8.0
