@@ -1,0 +1,17 @@
+name: qiniu_dart_sdk_example
+description: A sample command-line application.
+version: 1.0.0
+publish_to: none
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  qiniu_sdk_base:
+    path: ../
+  dio: ^5.8.0+1
+  logger: ^2.6.0
+
+dev_dependencies:
+  lints: ^5.0.0
+  test: ^1.24.0
