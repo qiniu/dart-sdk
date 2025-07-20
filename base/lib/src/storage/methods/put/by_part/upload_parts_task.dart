@@ -144,7 +144,7 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
       // partNumber 按照后端要求必须从 1 开始
       final partNumber = ++_uploadingPartIndex;
 
-      await for (var bytes in resource.stream) {
+      await for (final bytes in resource.stream) {
         // 跳过上传过的分片
         final uploadedPart = _uploadedPartMap[partNumber];
         if (uploadedPart != null) {
@@ -189,7 +189,9 @@ class UploadPartsTask extends RequestTask<List<Part>> with CacheMixin {
     controller
       // UploadPartTask 一次上传一个 chunk，通知一次进度
       ..addSendProgressListener((percent) {
-        _sentPartCount++;
+        if (!task.isRetrying) {
+          _sentPartCount++;
+        }
         notifySendProgress();
       })
       // UploadPartTask 上传完成后触发
