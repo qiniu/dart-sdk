@@ -1,12 +1,12 @@
 import 'package:dio/dio.dart';
 
+import '../../../../util/chunk_list.dart' show chunkList;
 import '../../../../../qiniu_sdk_base.dart';
 import '../../../resource/resource.dart';
 
 // 直传任务
 class PutBySingleTask extends RequestTask<PutResponse> {
-  late Resource resource;
-
+  final Resource resource;
   final PutOptions options;
 
   /// 上传凭证
@@ -56,7 +56,11 @@ class PutBySingleTask extends RequestTask<PutResponse> {
     await resource.open();
 
     final multipartFile = MultipartFile.fromStream(
-      resource.getStream,
+      () {
+        return resource
+            .getStream()
+            .expand((data) => chunkList(data, 64 * 1024));
+      },
       resource.length,
       // 与其他 sdk 保持一致，没有 filename 就是问号
       filename: filename ?? '?',

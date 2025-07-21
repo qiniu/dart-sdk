@@ -66,7 +66,7 @@ class UploadPartTask extends RequestTask<UploadPart> {
 
     final response = await client.put<Map<String, dynamic>>(
       paramUrl,
-      data: Stream.fromIterable([bytes.cast<int>()]),
+      data: Stream.value(bytes),
       // 在 data 是 stream 的场景下， interceptor 传入 cancelToken 这里不传会有 bug
       cancelToken: controller?.cancelToken,
       options: Options(
