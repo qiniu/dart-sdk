@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
-import 'package:qiniu_sdk_base/src/util/chunk_list.dart' show chunkList;
 
+import '../../../../util/chunk_list.dart' show chunkList;
 import '../../../../../qiniu_sdk_base.dart';
 import '../../../resource/resource.dart';
 
