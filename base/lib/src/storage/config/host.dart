@@ -112,7 +112,8 @@ class DefaultHostProvider extends HostFreezer {
         return '$protocol://${availableDomain.value}';
       }
     }
-    _throwNoAvailableHostError();
+    // 全都不可用了，随机选择一个域名返回
+    return '$protocol://${upDomains.mustGetRandomElement()}';
   }
 }
 
@@ -201,7 +202,15 @@ class DefaultHostProviderV2 extends HostFreezer {
         return unfrozenDomain;
       }
     }
-    _throwNoAvailableHostError();
+
+    print("全都不可用了，随机选择一个域名返回");
+    // 全都不可用了，随机选择一个域名返回
+    return regions
+        .mustGetRandomElement()
+        .up
+        .map((domain) => _makeHost(domain, useHttps: _useHttps))
+        .toList()
+        .mustGetRandomElement();
   }
 
   Future<BucketRegionsQuery> get query => _getQuery();
@@ -274,13 +283,6 @@ void _checkResponse(Response response) {
       reason: 'response might be malicious',
     );
   }
-}
-
-Never _throwNoAvailableHostError() {
-  throw StorageError(
-    type: StorageErrorType.NO_AVAILABLE_HOST,
-    message: '没有可用的上传域名',
-  );
 }
 
 Never _throwNoAvailableRegionError() {
