@@ -203,7 +203,6 @@ class DefaultHostProviderV2 extends HostFreezer {
       }
     }
 
-    print("全都不可用了，随机选择一个域名返回");
     // 全都不可用了，随机选择一个域名返回
     return regions
         .mustGetRandomElement()
