@@ -155,9 +155,6 @@ class BaseState extends State<Base> with DisposableState {
             case StorageErrorType.UNKNOWN:
               printToConsole('发生错误: 未知错误');
               break;
-            case StorageErrorType.NO_AVAILABLE_HOST:
-              printToConsole('发生错误: 无可用 Host');
-              break;
             case StorageErrorType.NO_AVAILABLE_REGION:
               printToConsole('发生错误: 无可用 Region');
               break;

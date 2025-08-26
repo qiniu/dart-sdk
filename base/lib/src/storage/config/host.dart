@@ -55,24 +55,22 @@ class DefaultHostProvider extends HostFreezer {
 
   final _http = Dio();
   // 缓存的上传区域
-  final _stashedUpDomains = <_Domain>[];
+  final _stashedUpHosts = <_Host>[];
   // accessKey:bucket 用此 key 判断是否 up host 需要走缓存
   String? _cacheKey;
 
-  @override
-  Future<String> getUpHost({
+  Future<List<_Host>> getUpHostsFromV4Query({
     required String accessKey,
     required String bucket,
     bool accelerateUploading = false,
-    bool transregional = false,
-    int regionIndex = 0,
   }) async {
-    _unfreezeUpDomains();
-    final upDomains = <_Domain>[];
-    final cacheKey =
-        '$accessKey:$bucket:${accelerateUploading ? '1' : '0'}:${_getHostsMD5(bucketHosts)}';
-    if (cacheKey == _cacheKey && _stashedUpDomains.isNotEmpty) {
-      upDomains.addAll(_stashedUpDomains);
+    final upHosts = <_Host>[];
+    final cacheKey = '$accessKey:'
+        '$bucket:'
+        '${accelerateUploading ? '1' : '0'}:'
+        '${_getHostsMD5(bucketHosts)}';
+    if (cacheKey == _cacheKey && _stashedUpHosts.isNotEmpty) {
+      upHosts.addAll(_stashedUpHosts);
     } else {
       final data = await _getUrl(
         bucketHosts,
@@ -80,40 +78,70 @@ class DefaultHostProvider extends HostFreezer {
         protocol,
         _http,
       );
-      Iterable<_Host> hosts = data['hosts']
+      final hosts = data['hosts']
           .map((dynamic json) => _Host.fromJson(json as Map))
           .cast<_Host>();
+      if (hosts.isEmpty) _throwNoAvailableRegionError();
 
-      if (!transregional) {
-        final host = hosts.elementAtOrNull(regionIndex);
-        if (host == null) {
-          _throwNoAvailableRegionError();
-        }
-        hosts = [host];
-      }
+      _cacheKey = cacheKey;
+      _stashedUpHosts.addAll(hosts);
+    }
+    return upHosts;
+  }
 
-      for (final host in hosts) {
+  @override
+  Future<String> getUpHost({
+    required String accessKey,
+    required String bucket,
+    bool accelerateUploading = false,
+    // 表单上传这个值为true，则始终在所有可用区域之间选择一个可用域名
+    // 分片上传为false，则始终选择 regionIndex 指定的区域
+    bool transregional = false,
+    int regionIndex = 0,
+  }) async {
+    _unfreezeUpDomains();
+
+    final upHosts = await getUpHostsFromV4Query(
+      accessKey: accessKey,
+      bucket: bucket,
+      accelerateUploading: accelerateUploading,
+    );
+
+    if (transregional) {
+      // 表单上传
+      final upDomains = <_Domain>{};
+      // 全都不可用了，随机选择一个域名返回
+      for (final host in upHosts) {
         final domainList = host.up['domains'].cast<String>() as List<String>;
         final domains = domainList.map((domain) => _Domain(domain));
         upDomains.addAll(domains);
       }
 
-      _cacheKey = cacheKey;
-      _stashedUpDomains.addAll(upDomains);
-    }
+      // 每次都从头遍历一遍，最合适的 host 总是会排在最前面
+      for (var index = 0; index < upDomains.length; index++) {
+        final availableDomain = upDomains.elementAt(index);
+        // 检查看起来可用的 host 是否之前被冻结过
+        final frozen = isFrozen('$protocol://${availableDomain.value}');
 
-    // 每次都从头遍历一遍，最合适的 host 总是会排在最前面
-    for (var index = 0; index < upDomains.length; index++) {
-      final availableDomain = upDomains.elementAt(index);
-      // 检查看起来可用的 host 是否之前被冻结过
-      final frozen = isFrozen('$protocol://${availableDomain.value}');
-
-      if (!frozen) {
-        return '$protocol://${availableDomain.value}';
+        if (!frozen) {
+          return '$protocol://${availableDomain.value}';
+        }
+      }
+      return '$protocol://${upDomains.toList().mustGetRandomElement()}';
+    } else {
+      // 分片上传
+      if (regionIndex < upHosts.length) {
+        // 分片上传不能随机选择一个域名返回，需要上层切换regionIndex
+        _throwNoAvailableHostError();
+      } else {
+        // 已经至少把所有的可用region都尝试过了，直接继续轮转回开头的region
+        final host = upHosts.elementAt(regionIndex % upHosts.length);
+        // 在这个region里面随机选择一个域名返回
+        final domainList = host.up['domains'].cast<String>() as List<String>;
+        final domains = domainList.map((domain) => _Domain(domain));
+        return '$protocol://${domains.toList().mustGetRandomElement()}';
       }
     }
-    // 全都不可用了，随机选择一个域名返回
-    return '$protocol://${upDomains.mustGetRandomElement()}';
   }
 }
 
@@ -170,6 +198,8 @@ class DefaultHostProviderV2 extends HostFreezer {
     required String accessKey,
     required String bucket,
     bool accelerateUploading = false,
+    // 表单上传这个值为true，则始终在所有可用区域之间选择一个可用域名
+    // 分片上传为false，则始终选择 regionIndex 指定的区域
     bool transregional = false,
     int regionIndex = 0,
   }) async {
@@ -181,35 +211,58 @@ class DefaultHostProviderV2 extends HostFreezer {
       bucketName: bucket,
       accelerateUploading: accelerateUploading,
     );
-    final regions = <Region>[];
-    if (transregional) {
-      regions.addAll(regionsProvider.regions);
-    } else {
-      final region = regionsProvider.regions.elementAtOrNull(regionIndex);
-      if (region == null) {
-        _throwNoAvailableRegionError();
-      }
-      regions.add(region);
-    }
-    for (final region in regions) {
-      final unfrozenDomain = region.up
-          .map((domain) => _makeHost(domain, useHttps: _useHttps))
-          .firstWhere(
-            (domain) => !isFrozen(domain),
-            orElse: () => '',
-          );
-      if (unfrozenDomain != '') {
-        return unfrozenDomain;
-      }
-    }
 
-    // 全都不可用了，随机选择一个域名返回
-    return regions
-        .mustGetRandomElement()
-        .up
-        .map((domain) => _makeHost(domain, useHttps: _useHttps))
-        .toList()
-        .mustGetRandomElement();
+    if (transregional) {
+      // 表单上传
+      final regions = regionsProvider.regions;
+      if (regions.isEmpty) _throwNoAvailableRegionError();
+
+      for (final region in regions) {
+        final unfrozenDomain = region.up
+            .map((domain) => _makeHost(domain, useHttps: _useHttps))
+            .firstWhere(
+              (domain) => !isFrozen(domain),
+              orElse: () => '',
+            );
+        if (unfrozenDomain != '') {
+          return unfrozenDomain;
+        }
+      }
+      // 全都不可用了，随机选择一个域名返回
+      return regions
+          .mustGetRandomElement()
+          .up
+          .map((domain) => _makeHost(domain, useHttps: _useHttps))
+          .toList()
+          .mustGetRandomElement();
+    } else {
+      // 分片上传
+      if (regionIndex < regionsProvider.regions.length) {
+        final unfrozenDomain = regionsProvider.regions
+            .elementAt(regionIndex)
+            .up
+            .map((domain) => _makeHost(domain, useHttps: _useHttps))
+            .firstWhere(
+              (domain) => !isFrozen(domain),
+              orElse: () => '',
+            );
+        if (unfrozenDomain != '') {
+          return unfrozenDomain;
+        }
+        // 分片上传不能随机选择一个域名返回，需要上层切换regionIndex
+        _throwNoAvailableHostError();
+      } else {
+        // 已经至少把所有的可用region都尝试过了，直接继续轮转回开头的region
+        final index = regionIndex % regionsProvider.regions.length;
+        // 这里面的域名很可能都是仍然处于冻结状态的，这里随机选择一个返回
+        return regionsProvider.regions
+            .elementAt(index)
+            .up
+            .map((domain) => _makeHost(domain, useHttps: _useHttps))
+            .toList()
+            .mustGetRandomElement();
+      }
+    }
   }
 
   Future<BucketRegionsQuery> get query => _getQuery();
@@ -282,6 +335,13 @@ void _checkResponse(Response response) {
       reason: 'response might be malicious',
     );
   }
+}
+
+Never _throwNoAvailableHostError() {
+  throw StorageError(
+    type: StorageErrorType.NO_AVAILABLE_HOST,
+    message: '没有可用的上传域名',
+  );
 }
 
 Never _throwNoAvailableRegionError() {
