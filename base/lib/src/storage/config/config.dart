@@ -8,6 +8,7 @@ import 'package:platform_info/platform_info.dart';
 import 'package:qiniu_sdk_base/src/storage/storage.dart';
 import 'package:qiniu_sdk_base/src/util/cache_provider_base.dart'
     as cache_provider;
+import 'package:qiniu_sdk_base/src/util/random.dart';
 import 'package:singleflight/singleflight.dart' as singleflight;
 import 'package:path/path.dart' show join;
 
