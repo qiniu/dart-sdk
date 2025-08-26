@@ -59,7 +59,7 @@ class DefaultHostProvider extends HostFreezer {
   // accessKey:bucket 用此 key 判断是否 up host 需要走缓存
   String? _cacheKey;
 
-  Future<List<_Host>> getUpHostsFromV4Query({
+  Future<List<_Host>> _getUpHostsFromV4Query({
     required String accessKey,
     required String bucket,
     bool accelerateUploading = false,
@@ -101,7 +101,7 @@ class DefaultHostProvider extends HostFreezer {
   }) async {
     _unfreezeUpDomains();
 
-    final upHosts = await getUpHostsFromV4Query(
+    final upHosts = await _getUpHostsFromV4Query(
       accessKey: accessKey,
       bucket: bucket,
       accelerateUploading: accelerateUploading,
