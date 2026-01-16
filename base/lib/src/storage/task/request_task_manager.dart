@@ -68,19 +68,17 @@ class RequestTaskManager extends TaskManager {
   late final Config config;
 
   RequestTaskManager({
-    required Config config,
-  }) {
-    this.config = Config(
+    required this.config,
+  });
+
+  @override
+  void addTask(covariant RequestTask task) {
+    task.config = Config(
       hostProvider: _HostProvider(config.hostProvider),
       cacheProvider: config.cacheProvider,
       httpClientAdapter: config.httpClientAdapter,
       retryLimit: config.retryLimit,
     );
-  }
-
-  @override
-  void addTask(covariant RequestTask task) {
-    task.config = config;
     super.addTask(task);
   }
 }
