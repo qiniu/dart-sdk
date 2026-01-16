@@ -9,9 +9,26 @@ abstract class HostProvider {
     int regionIndex = 0,
   });
 
+  /// 判断一个域名是否被冻结
+  ///
+  /// 参数:
+  /// - [host]: 需要检查的域名地址
+  ///
+  /// 返回: 如果域名被冻结返回 true，否则返回 false
   bool isFrozen(String host);
 
+  /// 冻结一个域名
+  ///
+  /// 当域名出现故障或请求失败时，调用此方法将其标记为不可用
   void freezeHost(String host);
+
+  /// 随机解封一个已冻结的域名
+  ///
+  /// **重要**: 如果您的自定义 HostProvider 支持域名冻结功能，
+  /// 必须重写此方法以确保 unfreeze 逻辑正常工作。
+  ///
+  /// 默认实现为空，仅用于不支持冻结功能的简单实现。
+  void unfreezeOne() {}
 }
 
 List<String> _defaultBucketHosts = [
@@ -23,6 +40,7 @@ List<String> _defaultBucketHosts = [
 abstract class HostFreezer extends HostProvider {
   // 冻结的上传区域
   final List<_Domain> _frozenUpDomains = [];
+  static final _random = Random();
 
   @override
   bool isFrozen(String host) {
@@ -47,8 +65,31 @@ abstract class HostFreezer extends HostProvider {
     // 解冻需要被解冻的 host
     _frozenUpDomains.removeWhere((domain) => !domain.isFrozen());
   }
+
+  @override
+  void unfreezeOne() {
+    if (_frozenUpDomains.isEmpty) {
+      return;
+    }
+
+    // 随机解冻一个 host
+    final index = _random.nextInt(_frozenUpDomains.length);
+    _frozenUpDomains.removeAt(index);
+  }
 }
 
+/// @deprecated 请使用 [DefaultHostProviderV2] 替代
+///
+/// 此类已被标记为废弃，将在未来版本中移除。
+///
+/// 迁移说明:
+/// ```dart
+/// // 旧代码
+/// final provider = DefaultHostProvider();
+///
+/// // 新代码
+/// final provider = DefaultHostProviderV2();
+/// ```
 class DefaultHostProvider extends HostFreezer {
   var protocol = Protocol.Https.value;
   var bucketHosts = _defaultBucketHosts;

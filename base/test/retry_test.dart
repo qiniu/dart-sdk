@@ -258,7 +258,7 @@ class HttpAdapterTestWith502 implements HttpClientAdapter {
 }
 
 class HostProviderTest extends HostProvider {
-  final _hostProvider = DefaultHostProvider();
+  final _hostProvider = DefaultHostProviderV2();
   @override
   void freezeHost(String host) {
     _hostProvider.freezeHost(host);
