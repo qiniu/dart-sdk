@@ -38,16 +38,18 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
   late final UpTokenInfo _tokenInfo;
 
   InitPartsTask({
+    required Config config,
     required this.resource,
     required this.token,
     this.key,
     PutController? controller,
     this.accelerateUploading = false,
     this.regionIndex = 0,
-  }) : super(controller: controller);
+  }) : super(config, controller: controller);
 
-  static String getCacheKey(String resourceId, String? key) {
+  static String getCacheKey(int regionIndex, String resourceId, String? key) {
     final keyList = [
+      'region/$regionIndex',
       'resource_id/$resourceId',
       'key/$key',
     ];
@@ -55,10 +57,10 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
   }
 
   @override
-  void preStart() {
+  Future<void> preStart() async {
     _tokenInfo = Auth.parseUpToken(token);
-    _cacheKey = InitPartsTask.getCacheKey(resource.id, key);
-    super.preStart();
+    _cacheKey = InitPartsTask.getCacheKey(regionIndex, resource.id, key);
+    await super.preStart();
   }
 
   @override
@@ -100,8 +102,19 @@ class InitPartsTask extends RequestTask<InitParts> with CacheMixin<InitParts> {
   }
 
   @override
-  void postReceive(data) {
-    setCache(json.encode(data.toJson()));
-    super.postReceive(data);
+  Future<void> postReceive(data) async {
+    // 有效期往前推 3 小时，避免在上传过程中缓存过期导致的 uploadId 无效问题
+    final expireAt = (data.expireAt - 3 * 3600) * 1000;
+    if (expireAt > DateTime.now().millisecondsSinceEpoch) {
+      // 缓存写入失败不应阻止正常上传流程，静默忽略。
+      // uploadId 已成功拿到，缓存只是断点续传的优化手段。
+      try {
+        await setCache(
+          json.encode(data.toJson()),
+          expireAt: expireAt,
+        );
+      } catch (_) {}
+    }
+    await super.postReceive(data);
   }
 }

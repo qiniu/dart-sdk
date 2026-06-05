@@ -19,7 +19,7 @@ class PutOptions {
   /// 使用分片上传时的分片大小，默认值 4，单位为 MB
   final int partSize;
 
-  /// 并发上传的队列长度，默认值为 5
+  /// 并发上传的队列长度，默认值为 3
   final int maxPartsRequestNumber;
 
   /// 自定义变量，key 必须以 x: 开始
@@ -36,7 +36,7 @@ class PutOptions {
     this.mimeType,
     this.forceBySingle = false,
     this.partSize = 4,
-    this.maxPartsRequestNumber = 5,
+    this.maxPartsRequestNumber = 3,
     this.customVars,
     this.controller,
     this.accelerateUploading = false,

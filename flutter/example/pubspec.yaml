@@ -6,9 +6,9 @@ version: 1.0.0+1
 environment:
   sdk: ">=3.0.0 <4.0.0"
 
-dependency_overrides:
-  qiniu_sdk_base:
-    path: ../../base/
+# dependency_overrides:
+#   qiniu_sdk_base:
+#     path: ../../base/
 
 dependencies:
   file_picker: ^8.0.0+1

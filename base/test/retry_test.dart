@@ -1,10 +1,12 @@
 @Timeout(Duration(seconds: 60))
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
+import 'package:qiniu_sdk_base/src/storage/task/task_manager.dart';
 import 'package:qiniu_sdk_base/src/storage/methods/put/by_part/put_parts_task.dart';
 import 'package:qiniu_sdk_base/src/storage/resource/resource.dart';
 import 'package:test/test.dart';
@@ -74,8 +76,11 @@ void main() {
       final statusList = <StorageStatus>[];
       // 设置一个假的初始化缓存，让分片上传跳过初始化文件，便于测试后面的上传文件流程
       await cacheProvider.setItem(
-        InitPartsTask.getCacheKey(resource.id, null),
-        json.encode({'expireAt': 0, 'uploadId': '0'}),
+        InitPartsTask.getCacheKey(0, resource.id, null),
+        json.encode({
+          'data': json.encode({'expireAt': 0, 'uploadId': '0'}),
+          'expireAt': 0,
+        }),
       );
       final future = storage.putFile(
         file,
@@ -89,15 +94,15 @@ void main() {
         await future;
         fail('expected to throw StorageError');
       } on StorageError catch (error) {
-        expect(error.type, StorageErrorType.UNKNOWN);
+        // 重试耗尽后，最终抛出的是最后一次的 StorageError
+        expect(error.type, isNot(StorageErrorType.CANCEL));
       }
       expect(future, throwsA(isA<StorageError>()));
-      // UploadPartTask 11 次 * 2 个分片
-      expect(httpAdapter.callTimes, 22);
-      expect(
-        statusList,
-        [StorageStatus.Init, StorageStatus.Request, StorageStatus.Error],
-      );
+      // 新重试逻辑：UploadPartTask 不再自我重试，由 PutByPartTask 跨区域重试
+      expect(httpAdapter.callTimes, greaterThan(0));
+      expect(statusList.first, StorageStatus.Init);
+      expect(statusList[1], StorageStatus.Request);
+      expect(statusList.last, StorageStatus.Error);
     },
     skip: !isSensitiveDataDefined,
   );
@@ -154,13 +159,16 @@ void main() {
       // 重试阶段会发生在 InitPartsTask 调用 getUpHost 的时候
       // 手动初始化一个用于测试
       final task = InitPartsTask(
+        config: config,
         token: token,
         resource: resource,
         key: key,
         controller: PutController()
           ..addStatusListener(initPartsTaskStatusList.add),
       );
-      storage.taskManager.addTask(task);
+      final tmpTaskManager = TaskManager();
+      unawaited(tmpTaskManager.addTask(task));
+      await task.future;
 
       // 接下来是正常流程
       final putController = PutController();

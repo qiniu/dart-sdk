@@ -5,7 +5,6 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:qiniu_flutter_sdk/qiniu_flutter_sdk.dart';
-import 'package:qiniu_sdk_base/src/util/user_agent/user_agent.dart';
 
 import 'utils/uint.dart';
 import 'widgets/app.dart';
@@ -46,9 +45,11 @@ class BaseState extends State<Base> with DisposableState {
   String? mimeType;
 
   // 用户输入的 partSize
-  int partSize = 4;
+  int partSize = 1;
 
   // 用户输入的 token
+  // 运行示例前请通过界面上方的输入框填入有效的上传 token，
+  // 切勿在源码中硬编码生产环境 token。
   String? token;
 
   /// 当前选择的文件
@@ -111,30 +112,33 @@ class BaseState extends State<Base> with DisposableState {
     printToConsole('开始上传文件');
 
     final putOptions = PutOptions(
-      key: key,
-      mimeType: mimeType,
-      partSize: partSize,
-      controller: putController,
-    );
+        key: key,
+        mimeType: mimeType,
+        partSize: partSize,
+        controller: putController,
+        forceBySingle: false,
+        maxPartsRequestNumber: 3);
 
     final upload = kIsWeb
-        ? storage.putBytes(
-            selectedFile!.bytes!,
-            usedToken,
-            options: putOptions,
-          )
+        ? storage.putBytes(selectedFile!.bytes!, usedToken, options: putOptions)
         : storage.putFile(
             File(selectedFile!.path!),
             usedToken,
             options: putOptions,
           );
 
+    final startTime = DateTime.now();
     upload
       ..then((PutResponse response) {
+        final duration = DateTime.now().difference(startTime);
+        printToConsole(
+            '上传成功，耗时: ${duration.inMilliseconds} 毫秒 速度： ${humanizeFileSize(selectedFile!.size * 1000 / duration.inMilliseconds.toDouble())}/s');
         printToConsole('上传已完成: 原始响应数据: ${jsonEncode(response.rawData)}');
         printToConsole('------------------------');
       })
       ..catchError((dynamic error) {
+        final duration = DateTime.now().difference(startTime);
+        printToConsole('上传失败，耗时: ${duration.inMilliseconds} 毫秒');
         if (error is StorageError) {
           switch (error.type) {
             case StorageErrorType.CONNECT_TIMEOUT:
@@ -151,6 +155,9 @@ class BaseState extends State<Base> with DisposableState {
               break;
             case StorageErrorType.CANCEL:
               printToConsole('发生错误: 请求取消');
+              break;
+            case StorageErrorType.RESOURCE_READ_EXCEPTION:
+              printToConsole('发生错误: 资源读取异常');
               break;
             case StorageErrorType.UNKNOWN:
               printToConsole('发生错误: 未知错误');
@@ -169,7 +176,7 @@ class BaseState extends State<Base> with DisposableState {
           printToConsole('发生错误: ${error.toString()}');
         }
 
-        printToConsole('------------------------');
+        printToConsole('-----------上传结束-------------');
         return PutResponse.fromJson({'error': error});
       });
   }
@@ -179,7 +186,8 @@ class BaseState extends State<Base> with DisposableState {
       printToConsole('选中文件: filename: ${file.name}, size: ${file.size}');
     } else {
       printToConsole(
-          '选中文件: path: ${file.path}, filename: ${file.name}, size: ${file.size}');
+        '选中文件: path: ${file.path}, filename: ${file.name}, size: ${file.size}',
+      );
     }
 
     if (file.size != 0) {
@@ -243,68 +251,57 @@ class BaseState extends State<Base> with DisposableState {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(children: [
-      Padding(
-        padding: const EdgeInsets.all(20),
-        child: Progress(value: progressValue),
-      ),
-      Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: StringInput(
-          onChanged: onKeyChange,
-          label: '请输入 Key（可选）',
-        ),
-      ),
-      Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: StringInput(
-          onChanged: onMimeTypeChange,
-          label: '请输入 MimeType（可选）',
-        ),
-      ),
-      Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: StringInput(
-          onChanged: onPartSizeChange,
-          label: '请输入分片尺寸，单位 M（默认 4，可选）',
-        ),
-      ),
-      Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: StringInput(
-          onChanged: onTokenChange,
-          label: '请输入 Token（可选）',
-        ),
-      ),
-      Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: SelectFile(onSelectedFile),
-      ),
-      if (statusValue == StorageStatus.Request)
+    return ListView(
+      children: [
         Padding(
-          padding: const EdgeInsets.all(10),
-          child: ElevatedButton(
-            child: const Text('取消上传'),
-            onPressed: () => putController?.cancel(),
+          padding: const EdgeInsets.all(20),
+          child: Progress(value: progressValue),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: StringInput(
+              onChanged: onKeyChange, label: '请输入 Key（可选）', value: 'Dart-Text'),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: StringInput(
+            onChanged: onMimeTypeChange,
+            label: '请输入 MimeType（可选）',
           ),
         ),
-      const Padding(
-        key: Key('console'),
-        padding: EdgeInsets.all(8.0),
-        child: Console(),
-      ),
-      Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          children: [
-            TextButton(
-                onPressed: () {
-                  printToConsole('成功获取上传UA: ${getDefaultUserAgent()}');
-                },
-                child: Text('获取UA'))
-          ],
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: StringInput(
+            onChanged: onPartSizeChange,
+            label: '请输入分片尺寸，单位 M（默认 4，可选）',
+          ),
         ),
-      ),
-    ]);
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: StringInput(
+            onChanged: onTokenChange,
+            label: '请输入 Token（可选）',
+            value: token ?? '',
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: SelectFile(onSelectedFile),
+        ),
+        if (statusValue == StorageStatus.Request)
+          Padding(
+            padding: const EdgeInsets.all(10),
+            child: ElevatedButton(
+              child: const Text('取消上传'),
+              onPressed: () => putController?.cancel(),
+            ),
+          ),
+        const Padding(
+          key: Key('console'),
+          padding: EdgeInsets.all(8.0),
+          child: Console(),
+        )
+      ],
+    );
   }
 }

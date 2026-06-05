@@ -3,10 +3,7 @@ import 'package:flutter/material.dart';
 class Progress extends StatelessWidget {
   final double value;
 
-  const Progress({
-    super.key,
-    this.value = 0,
-  });
+  const Progress({super.key, this.value = 0});
 
   Widget get progress {
     return Container(
@@ -27,35 +24,30 @@ class Progress extends StatelessWidget {
     const unit = '%';
 
     return DefaultTextStyle(
-        style: const TextStyle(
-          color: Colors.black87,
-          fontWeight: FontWeight.bold,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              integer.toString(),
-              style: const TextStyle(fontSize: 50),
-            ),
-            Column(
-              children: [
-                Text(unit.toString(), style: const TextStyle(fontSize: 14)),
-                Text('.$decimal', style: const TextStyle(fontSize: 18)),
-              ],
-            )
-          ],
-        ));
+      style: const TextStyle(
+        color: Colors.black87,
+        fontWeight: FontWeight.bold,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(integer.toString(), style: const TextStyle(fontSize: 50)),
+          Column(
+            children: [
+              Text(unit.toString(), style: const TextStyle(fontSize: 14)),
+              Text('.$decimal', style: const TextStyle(fontSize: 18)),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       alignment: AlignmentDirectional.center,
-      children: [
-        progress,
-        progressText,
-      ],
+      children: [progress, progressText],
     );
   }
 }

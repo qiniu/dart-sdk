@@ -1,31 +1,30 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:path/path.dart' show basename;
+import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
 
-import 'config/config.dart';
 import 'methods/put/by_part/put_parts_task.dart';
 import 'methods/put/by_single/put_by_single_task.dart';
-import 'methods/put/put.dart';
 import 'resource/resource.dart';
-import 'task/task.dart';
+import 'task/request_task.dart';
+import 'task/task_manager.dart';
 
 export 'package:dio/dio.dart' show HttpClientAdapter;
 export 'error/error.dart';
 export 'methods/put/put.dart';
 export 'status/status.dart';
-export 'task/request_task.dart';
-export 'task/task.dart';
 export 'config/config.dart';
 
 /// 客户端
 class Storage {
   final Config config;
-  late final RequestTaskManager taskManager;
 
-  Storage({Config? config}) : config = config ?? Config() {
-    taskManager = RequestTaskManager(config: this.config);
-  }
+  /// 任务管理器，负责管理上传任务的执行
+  final TaskManager _taskManager = TaskManager();
+
+  Storage({Config? config}) : config = config ?? Config();
 
   Future<PutResponse> putFile(
     File file,
@@ -45,6 +44,7 @@ class Storage {
 
     if (useSingle) {
       task = PutBySingleTask(
+        config: config,
         resource: resource,
         options: options,
         token: token,
@@ -52,13 +52,21 @@ class Storage {
       );
     } else {
       task = PutByPartTask(
+        config: config,
         token: token,
         options: options,
         resource: resource,
       );
     }
 
-    taskManager.addTask(task);
+    if (_taskManager.hasTask(task.taskID())) {
+      throw StorageError(
+        type: StorageErrorType.IN_PROGRESS,
+        message: '$resource is already in upload queue',
+      );
+    }
+
+    unawaited(_taskManager.addTask(task));
 
     return task.future;
   }
@@ -81,6 +89,7 @@ class Storage {
 
     if (useSingle) {
       task = PutBySingleTask(
+        config: config,
         resource: resource,
         options: options,
         token: token,
@@ -88,13 +97,21 @@ class Storage {
       );
     } else {
       task = PutByPartTask(
+        config: config,
         token: token,
         options: options,
         resource: resource,
       );
     }
 
-    taskManager.addTask(task);
+    if (_taskManager.hasTask(task.taskID())) {
+      throw StorageError(
+        type: StorageErrorType.IN_PROGRESS,
+        message: '$resource is already in upload queue',
+      );
+    }
+
+    unawaited(_taskManager.addTask(task));
 
     return task.future;
   }

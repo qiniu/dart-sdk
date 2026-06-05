@@ -1,0 +1,6 @@
+# 本地 monorepo 开发专用：强制 flutter 包解析本仓库 base 目录，
+# 避免因 pub.dev 上 qiniu_sdk_base 还未发布 0.8.0 而拉到旧版（缺 QiniuHttpClient 等）。
+# 该文件不会被 pub 发布工具打包到 pub.dev 产物中，对最终用户无影响。
+dependency_overrides:
+  qiniu_sdk_base:
+    path: ../base/

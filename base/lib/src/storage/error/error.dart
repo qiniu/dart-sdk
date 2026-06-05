@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 
+import '../../client/http_client_adapter.dart';
 import '../../error/error.dart';
 
 enum StorageErrorType {
@@ -27,6 +30,9 @@ enum StorageErrorType {
   /// 已在处理队列中
   IN_PROGRESS,
 
+  /// 资源读取异常
+  RESOURCE_READ_EXCEPTION,
+
   /// 未知或者不能处理的错误
   UNKNOWN,
 }
@@ -52,11 +58,26 @@ class StorageError extends QiniuError {
   }
 
   factory StorageError.fromDioError(DioException error) {
+    final rawError = error.error;
+    final StorageErrorType type;
+    if (rawError is QiniuIdleTimeoutException) {
+      // 七牛闲时超时携带 phase，精确映射
+      type = rawError.phase == QiniuIdleTimeoutException.writePhase
+          ? StorageErrorType.SEND_TIMEOUT
+          : StorageErrorType.RECEIVE_TIMEOUT;
+    } else if (error.type == DioExceptionType.unknown &&
+        rawError is TimeoutException) {
+      // 外部自定义 adapter 抛出的通用 TimeoutException，无法区分阶段，
+      // 统一归为 CONNECT_TIMEOUT 兜底
+      type = StorageErrorType.CONNECT_TIMEOUT;
+    } else {
+      type = _mapDioErrorType(error.type);
+    }
     return StorageError(
-      type: _mapDioErrorType(error.type),
+      type: type,
       code: error.response?.statusCode,
       message: error.response?.data.toString() ?? error.message,
-      rawError: error.error,
+      rawError: rawError,
     );
   }
 

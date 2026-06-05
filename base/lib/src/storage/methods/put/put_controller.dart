@@ -1,3 +1,3 @@
-import '../../task/request_task.dart';
+import '../../task/request_task_controller.dart';
 
 class PutController extends RequestTaskController {}

@@ -59,12 +59,12 @@ import 'package:qiniu_flutter_sdk/qiniu_flutter_sdk.dart';
   putController = PutController();
 
   // 添加整体进度监听
-  putController.onProgress((double percent) {
+  putController.addProgressListener((double percent) {
     print('任务进度变化：已发送：$percent');
   });
 
   // 添加发送进度监听
-  putController.onSendProgress((double percent) {
+  putController.addSendProgressListener((double percent) {
     print('已上传进度变化：已发送：$percent');
   });
 
@@ -74,7 +74,7 @@ import 'package:qiniu_flutter_sdk/qiniu_flutter_sdk.dart';
   });
 
   // 使用 storage 的 putFile 对象进行文件上传
-  storage.putFile(File('./file.txt'), 'TOKEN', PutOptions(
+  storage.putFile(File('./file.txt'), 'TOKEN', options: PutOptions(
     controller: putController,
   ))
 ```
@@ -89,7 +89,7 @@ import 'package:qiniu_flutter_sdk/qiniu_flutter_sdk.dart';
   putController = PutController();
 
   // 使用 storage 的 putFile 对象进行文件上传
-  storage.putFile(File('./file.txt'), 'TOKEN', PutOptions(
+  storage.putFile(File('./file.txt'), 'TOKEN', options: PutOptions(
       controller: putController,
   ))
 
@@ -112,7 +112,7 @@ import 'package:qiniu_flutter_sdk/qiniu_flutter_sdk.dart';
 
 ```dart
   // 创建 storage 对象
-  storage = Storage(Config(
+  storage = Storage(config: Config(
     // 通过自己的 hostProvider 来使用自己的 host 进行上传
     hostProvider: HostProvider,
     // 可以通过实现 cacheProvider 来自己实现缓存系统支持分片断点续传
@@ -143,7 +143,42 @@ import 'package:qiniu_flutter_sdk/qiniu_flutter_sdk.dart';
 #### `PutController`
 
 这里是一个重要的内容，对于整个上传任务的一些交互被封装到了这里，
-`PutController` 用于对上传任务添加进度、状态的监听，同时可以通过 `PutController.cancel()` 对正在上传的任务进行取消。使用方式可以参考：[`取消正常上传的任务`](#取消正常上传的任务)
+`PutController` 用于对上传任务添加进度、状态的监听，同时可以通过 `PutController.cancel()` 对正在上传的任务进行取消。使用方式可以参考：[`监听进度/状态`](#监听进度状态)
+
+- `addProgressListener` - 添加整体进度监听
+- `addSendProgressListener` - 添加发送进度监听
+- `addStatusListener` - 添加状态监听
+- `cancel` - 取消当前任务
+
+#### `PutOptions`
+
+上传选项，可配置以下参数：
+
+| 参数 | 说明 | 默认值 |
+| --- | --- | --- |
+| `key` | 资源名，不传则后端自动生成 | `null` |
+| `mimeType` | 资源的 MIME 类型 | `null` |
+| `forceBySingle` | 强制使用单文件上传，不使用分片 | `false` |
+| `partSize` | 分片大小，单位 MB | `4` |
+| `maxPartsRequestNumber` | 并发上传队列长度 | `3` |
+| `customVars` | 自定义变量，key 必须以 `x:` 开始 | `null` |
+| `controller` | 控制器，用于监听进度/状态/取消 | `null` |
+| `accelerateUploading` | 上传加速 | `false` |
+
+#### `StorageErrorType`
+
+上传过程中可能出现的错误类型：
+
+- `UNKNOWN` - 未知错误
+- `IN_PROGRESS` - 相同任务正在执行中
+- `NO_AVAILABLE_HOST` - 没有可用的上传域名
+- `NO_AVAILABLE_REGION` - 没有可用的区域
+- `CONNECT_TIMEOUT` - 连接超时
+- `SEND_TIMEOUT` - 发送数据超时
+- `RECEIVE_TIMEOUT` - 响应数据超时
+- `CANCEL` - 请求取消
+- `RESPONSE` - 服务端响应错误
+- `RESOURCE_READ_EXCEPTION` - 资源读取异常
 
 #### `Storage.putFile`
 

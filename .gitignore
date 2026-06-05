@@ -3,3 +3,5 @@
 .idea
 
 pubspec.lock
+.claude/settings.local.json
+**/.claude/settings.local.json

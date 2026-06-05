@@ -16,6 +16,7 @@ class CompletePartsTask extends RequestTask<PutResponse> {
   final Map<String, String>? customVars;
 
   CompletePartsTask({
+    required Config config,
     required this.token,
     required this.uploadId,
     required this.parts,
@@ -25,12 +26,12 @@ class CompletePartsTask extends RequestTask<PutResponse> {
     PutController? controller,
     this.accelerateUploading = false,
     this.regionIndex = 0,
-  }) : super(controller: controller);
+  }) : super(config, controller: controller);
 
   @override
-  void preStart() {
+  Future<void> preStart() async {
     _tokenInfo = Auth.parseUpToken(token);
-    super.preStart();
+    await super.preStart();
   }
 
   @override
@@ -49,9 +50,9 @@ class CompletePartsTask extends RequestTask<PutResponse> {
         '$host/buckets/$bucket/objects/$encodedKey/uploads/$uploadId';
 
     final data = <String, dynamic>{
-      'parts': parts
-        ..sort((a, b) => a.partNumber - b.partNumber)
-        ..map((part) => part.toJson()).toList(),
+      'parts': (parts..sort((a, b) => a.partNumber - b.partNumber))
+          .map((part) => part.toJson())
+          .toList(),
     };
 
     if (customVars != null) {

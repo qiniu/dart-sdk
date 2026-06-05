@@ -14,10 +14,7 @@ class ConsoleController extends ChangeNotifier {
 class ConsoleControllerProvider extends InheritedWidget {
   final ConsoleController controller = ConsoleController();
 
-  ConsoleControllerProvider({
-    super.key,
-    required super.child,
-  });
+  ConsoleControllerProvider({super.key, required super.child});
 
   static ConsoleController of(BuildContext context) {
     return context
@@ -89,10 +86,7 @@ class ConsoleState extends State<Console> with DisposableState {
   @override
   Widget build(BuildContext context) {
     return DefaultTextStyle(
-      style: TextStyle(
-        fontSize: 12,
-        color: Colors.green[800],
-      ),
+      style: TextStyle(fontSize: 12, color: Colors.green[800]),
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: const BoxDecoration(
@@ -101,9 +95,7 @@ class ConsoleState extends State<Console> with DisposableState {
         ),
         child: LimitedBox(
           maxHeight: 300,
-          child: ListView(
-            children: listChildren,
-          ),
+          child: ListView(children: listChildren),
         ),
       ),
     );

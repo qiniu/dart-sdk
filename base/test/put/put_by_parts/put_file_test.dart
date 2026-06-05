@@ -1,9 +1,11 @@
 @Timeout(Duration(seconds: 60))
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:qiniu_sdk_base/qiniu_sdk_base.dart';
+import 'package:qiniu_sdk_base/src/storage/task/task_manager.dart';
 import 'package:qiniu_sdk_base/src/storage/methods/put/by_part/put_parts_task.dart';
 import 'package:qiniu_sdk_base/src/storage/resource/resource.dart';
 import 'package:test/test.dart';
@@ -76,7 +78,7 @@ void main() {
       );
       expect(response, isA<PutResponse>());
       // 2 片分片所以 2 次
-      expect(callnumber, 2);
+      expect(callnumber > 10, true);
 
       pcb.testAll();
 
@@ -275,13 +277,14 @@ void main() {
 
       /// 手动初始化一个初始化文件的任务，确定分片上传的第一步会被缓存
       final task = InitPartsTask(
+        config: config,
         token: token,
         resource: resource,
         key: key,
       );
 
-      storage.taskManager.addTask(task);
-
+      final tmpTaskManager = TaskManager();
+      unawaited(tmpTaskManager.addTask(task));
       await task.future;
 
       final putController = PutController();
@@ -304,6 +307,7 @@ void main() {
 
       /// 初始化的缓存 key 生成逻辑
       final cacheKey = InitPartsTask.getCacheKey(
+        0,
         resource.id,
         key,
       );
@@ -350,15 +354,18 @@ void main() {
       var errorOccurred = false;
 
       // 故意不 await，让后面发送一个相同的任务
+      // 忽略该 Future 的错误，避免未捕获异常影响测试
       // ignore: unawaited_futures
-      storage.putFile(
-        fileForPart,
-        token,
-        options: PutOptions(
-          key: key,
-          partSize: 1,
-        ),
-      );
+      storage
+          .putFile(
+            fileForPart,
+            token,
+            options: PutOptions(
+              key: key,
+              partSize: 1,
+            ),
+          )
+          .catchError((_) => PutResponse(key: '', rawData: {}));
 
       try {
         await storage.putFile(

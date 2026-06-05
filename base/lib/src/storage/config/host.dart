@@ -205,6 +205,14 @@ class DefaultHostProviderV2 extends HostFreezer {
   })  : _bucketHosts = bucketHosts,
         _useHttps = useHttps;
 
+  /// 获取上传域名
+  /// 参数:
+  /// - [accessKey]: 用户的 Access Key
+  /// - [bucket]: 存储空间名称
+  /// - [accelerateUploading]: 是否使用加速上传
+  /// - [transregional]: 是否允许跨区域上传
+  /// - [regionIndex]: 指定上传区域的索引，仅在 [transregional] 为 false 时有效
+  /// 返回: 可用的上传域名地址
   @override
   Future<String> getUpHost({
     required String accessKey,
@@ -221,6 +229,7 @@ class DefaultHostProviderV2 extends HostFreezer {
       bucketName: bucket,
       accelerateUploading: accelerateUploading,
     );
+
     final regions = <Region>[];
     if (transregional) {
       regions.addAll(regionsProvider.regions);
@@ -231,6 +240,7 @@ class DefaultHostProviderV2 extends HostFreezer {
       }
       regions.add(region);
     }
+
     for (final region in regions) {
       final unfrozenDomain = region.up
           .map((domain) => _makeHost(domain, useHttps: _useHttps))

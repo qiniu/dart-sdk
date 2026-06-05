@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../../../../util/chunk_list.dart' show chunkList;
 import '../../../../../qiniu_sdk_base.dart';
 import '../../../resource/resource.dart';
+import '../../../task/request_task.dart';
 
 // 直传任务
 class PutBySingleTask extends RequestTask<PutResponse> {
@@ -21,38 +22,48 @@ class PutBySingleTask extends RequestTask<PutResponse> {
   late UpTokenInfo _tokenInfo;
 
   PutBySingleTask({
+    required Config config,
     required this.resource,
     required this.token,
     required this.options,
     required this.filename,
-  }) : super(controller: options.controller);
+  }) : super(config, controller: options.controller);
 
   @override
-  void preStart() {
+  String taskID() {
+    return resource.id;
+  }
+
+  @override
+  Future<void> preStart() async {
     _tokenInfo = Auth.parseUpToken(token);
-    super.preStart();
+    // 顶层任务：重置进度基线，避免复用同一 Controller 发起第二次上传时
+    // 进度被 `percent <= _lastNotified...` 过滤掉。retry 路径（preRestart）
+    // 不调用，保持进度单调性。
+    controller?.resetProgressBaseline();
+    await super.preStart();
   }
 
   @override
-  void postReceive(data) {
-    super.postReceive(data);
-    resource.close();
+  Future<void> postReceive(data) async {
+    await resource.close();
+    await super.postReceive(data);
   }
 
   @override
-  void postError(error) {
-    super.postError(error);
-    if (!isRetrying) {
-      resource.close();
-    }
+  Future<void> postError(error, {bool complete = false}) async {
+    await resource.close();
+    await super.postError(error, complete: complete);
+  }
+
+  @override
+  Future<void> preRestart() async {
+    await resource.close();
+    await super.preRestart();
   }
 
   @override
   Future<PutResponse> createTask() async {
-    if (isRetrying) {
-      // 单文件上传的重试需要从头开始传，所以先关了再开
-      await resource.close();
-    }
     await resource.open();
 
     final multipartFile = MultipartFile.fromStream(
@@ -71,7 +82,9 @@ class PutBySingleTask extends RequestTask<PutResponse> {
       'token': token,
     };
 
-    if (resource.name != null) {
+    if (options.key != null) {
+      formDataMap.addAll(<String, dynamic>{'key': options.key!});
+    } else if (resource.name != null) {
       formDataMap.addAll(<String, dynamic>{'key': resource.name});
     }
 

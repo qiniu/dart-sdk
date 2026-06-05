@@ -1,3 +1,42 @@
+## 0.8.0
+
+### Breaking changes
+
+- `Task` / `RequestTask` 生命周期方法签名由 `void` 改为 `Future<void>`
+  （`preStart` / `postStart` / `postReceive` / `postError` / `preRestart` / `postRestart`）。
+  外部继承 `RequestTask` 时所有重写方法必须改成 `async` / `Future<void>`。
+- `storage.dart` 不再 export `RequestTask` / `Task` / `TaskManager`，
+  这些类型回归内部实现。`HttpClientAdapter` 仍通过 `storage.dart` 透出，
+  自定义网络适配器请直接实现 `dio` 的 `HttpClientAdapter` 或继承本 SDK 的 `QiniuHttpClient`。
+- 删除已不再使用的 `RequestTaskManager`。
+
+### New
+
+- 新增 `QiniuHttpClient`：在 dio 默认 adapter 之上提供 `connectTimeout` /
+  `writeTimeout` / `readTimeout`（请求/响应流闲时超时，pause-aware），
+  并通过 `sendBufferSize`（默认 128KB）配合内核 SO_SNDBUF 触发写阶段背压检测。
+- 新增 `QiniuIdleTimeoutException`：明确标识读/写阶段的闲时超时错误，
+  上层 `StorageError.fromDioError` 据此精确映射到
+  `SEND_TIMEOUT` / `RECEIVE_TIMEOUT`。
+- `Config` 的默认 `httpClientAdapter` 改为 `QiniuHttpClient()`，
+  即默认启用 30 秒读写闲时超时。如需关闭，传入
+  `Config(httpClientAdapter: QiniuHttpClient(readTimeout: Duration.zero, writeTimeout: Duration.zero))`。
+- 新增 `StorageErrorType.RESOURCE_READ_EXCEPTION` 错误类型，
+  在资源读取异常（实际上传字节数与预期不符）时上报。
+
+### Changed
+
+- 分片上传进度改为基于字节权重计算，`RequestTaskController` 增加单调钳制
+  屏蔽 retry 引起的进度回退。
+- 分片上传断点续传恢复逻辑修复。
+- 分片上传 retry 改为区域间重试：单分片失败后冻结当前区域 host，
+  递增 regionIndex 切换下一区域。
+- `HostProvider` 新增 `unfreezeOne()` 默认实现（空方法）。
+  支持冻结的自定义实现仍需重写该方法以恢复正常工作。
+- 修复 User-Agent 偶尔无效的问题。
+- 调整 `Config.retryLimit` 默认值从 `10` 改为 `2`（单域名重试次数，
+  多域名场景下总重试次数 = `retryLimit × 可用域名数`）。
+
 ## 0.7.5
 
 - 文件进行第一次上传时，如果域名全部冻结，会随机选择一个域名进行上传

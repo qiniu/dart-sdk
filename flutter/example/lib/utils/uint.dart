@@ -16,7 +16,7 @@ String humanizeBigNumber(
     'N',
     'D',
     'C',
-    'X'
+    'X',
   ],
 }) {
   var index = 0;
@@ -34,9 +34,6 @@ String humanizeBigNumber(
   return '$displayValue ${units[index]}';
 }
 
-String humanizeFileSize(
-  double value, {
-  int decimal = 2,
-}) {
+String humanizeFileSize(double value, {int decimal = 2}) {
   return '${humanizeBigNumber(value, decimal: decimal, radix: 1024)}B';
 }

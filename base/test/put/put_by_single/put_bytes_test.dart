@@ -9,7 +9,7 @@ void main() {
   configEnv();
 
   final storage = Storage();
-  final bytes = fileForSingle.readAsBytesSync();
+  final bytes = fileForPart.readAsBytesSync();
 
   test(
     'customVars&returnBody should works well.',

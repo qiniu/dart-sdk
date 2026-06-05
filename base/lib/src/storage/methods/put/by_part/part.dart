@@ -24,3 +24,16 @@ class Part {
     };
   }
 }
+
+class _PartProgress {
+  final int partNumber;
+  final double size;
+  double percent;
+
+  double get sentSize => size * percent;
+
+  _PartProgress({
+    required this.partNumber,
+    required this.size,
+  }) : percent = 0.0;
+}

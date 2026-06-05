@@ -1,1 +1,5 @@
 pubspec.lock
+
+# 测试用例固定资源（mp4 等），仅本地/CI 跑测试时使用，
+# 没必要让所有 pub.dev 用户多下载 1MB 数据
+test_resource/
