@@ -22,11 +22,9 @@ class SelectFileState extends State<SelectFile> {
             label: const Text('点击选择文件'),
             icon: const Icon(Icons.folder),
             onPressed: () async {
-              final fileResult = await FilePicker.platform.pickFiles(
-                allowMultiple: false,
-              );
-              if (fileResult != null) {
-                widget.onSelected(fileResult.files.first);
+              final file = await FilePicker.pickFile();
+              if (file != null) {
+                widget.onSelected(file);
               }
             },
           ),

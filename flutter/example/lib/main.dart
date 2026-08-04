@@ -112,27 +112,28 @@ class BaseState extends State<Base> with DisposableState {
     printToConsole('开始上传文件');
 
     final putOptions = PutOptions(
-        key: key,
-        mimeType: mimeType,
-        partSize: partSize,
-        controller: putController,
-        forceBySingle: false,
-        maxPartsRequestNumber: 3);
+      key: key,
+      mimeType: mimeType,
+      partSize: partSize,
+      controller: putController,
+      forceBySingle: false,
+      maxPartsRequestNumber: 3,
+    );
 
+    final file = selectedFile!;
     final upload = kIsWeb
-        ? storage.putBytes(selectedFile!.bytes!, usedToken, options: putOptions)
-        : storage.putFile(
-            File(selectedFile!.path!),
-            usedToken,
-            options: putOptions,
-          );
+        ? file.readAsBytes().then(
+            (bytes) => storage.putBytes(bytes, usedToken, options: putOptions),
+          )
+        : storage.putFile(File(file.path!), usedToken, options: putOptions);
 
     final startTime = DateTime.now();
     upload
       ..then((PutResponse response) {
         final duration = DateTime.now().difference(startTime);
         printToConsole(
-            '上传成功，耗时: ${duration.inMilliseconds} 毫秒 速度： ${humanizeFileSize(selectedFile!.size * 1000 / duration.inMilliseconds.toDouble())}/s');
+          '上传成功，耗时: ${duration.inMilliseconds} 毫秒 速度： ${humanizeFileSize(selectedFile!.size * 1000 / duration.inMilliseconds.toDouble())}/s',
+        );
         printToConsole('上传已完成: 原始响应数据: ${jsonEncode(response.rawData)}');
         printToConsole('------------------------');
       })
@@ -193,16 +194,13 @@ class BaseState extends State<Base> with DisposableState {
     if (file.size != 0) {
       // 一般在非 web 平台上可以直接读取 size 属性
       printToConsole('文件尺寸：${humanizeFileSize(file.size.toDouble())}');
-    } else if (file.bytes != null) {
-      printToConsole('文件尺寸：${humanizeFileSize(file.bytes!.length.toDouble())}');
     }
 
     setState(() {
       printToConsole('设置 selectedFile');
       selectedFile = file;
-
-      startUpload();
     });
+    startUpload();
   }
 
   void onPartSizeChange(String partSize) {
@@ -260,7 +258,10 @@ class BaseState extends State<Base> with DisposableState {
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: StringInput(
-              onChanged: onKeyChange, label: '请输入 Key（可选）', value: 'Dart-Text'),
+            onChanged: onKeyChange,
+            label: '请输入 Key（可选）',
+            value: 'Dart-Text',
+          ),
         ),
         Padding(
           padding: const EdgeInsets.all(8.0),
@@ -300,7 +301,7 @@ class BaseState extends State<Base> with DisposableState {
           key: Key('console'),
           padding: EdgeInsets.all(8.0),
           child: Console(),
-        )
+        ),
       ],
     );
   }
